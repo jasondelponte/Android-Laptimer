@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
+import android.view.KeyEvent;
 import android.widget.TextView;
 
 public class DelayTimeCountDown extends Activity implements TimerServiceUpdateUIListener {
@@ -20,7 +21,7 @@ public class DelayTimeCountDown extends Activity implements TimerServiceUpdateUI
         
         currTimeTxt = (TextView)findViewById(R.id.timer_delay_countdown);
         myMessenger = new Messenger(myHandler);
-        notifyTimerServiceOfExit = true;
+        notifyTimerServiceOfExit = false;
 
         _connectToService();
     }
@@ -55,6 +56,15 @@ public class DelayTimeCountDown extends Activity implements TimerServiceUpdateUI
     	}
     	
     	_disconnectFromService();
+    }
+    
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+    	if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
+    		notifyTimerServiceOfExit = true;
+    	}
+    	
+    	return super.onKeyDown(keyCode, event);
     }
 
 	@Override
