@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+	<TextView android:id="@+id/timer_counter_txt"
+	    android:text="@string/timer_counter"
+		android:layout_width="fill_parent" 
+	    android:layout_height="wrap_content"
+	    android:gravity="center"
+	    android:textSize="40sp"
+	    android:layout_marginBottom="20sp"
+    />
+	
+	<TextView android:id="@+id/lap_timer_txt"
+	    android:text="@string/set_increment"
+		android:layout_width="fill_parent" 
+	    android:layout_height="wrap_content"
+		android:layout_below="@id/timer_counter_txt"
+	    android:gravity="center"
+	    android:textSize="30sp"
+	/>
+	
+	<ListView android:id="@+id/lap_list"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:layout_below="@id/lap_timer_txt"
+	/>
+</RelativeLayout>

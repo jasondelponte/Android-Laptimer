@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lap Timer</string>
+    <string name="app_desc">Simple timer with lap history application.</string>
+    <string name="timer_counter">00:00:00.0</string>
+	<string name="set_increment">Lap 1: 00:00:00.0</string>
+	<string name="timer_delay_countdown_label">Timer Delay Count Down</string>
+	<string name="timer_delay_countdown">0</string>
+	
+	<string name="timer_reset">Reset</string>
+	<string name="timer_count_down">Count Down</string>
+    <string name="save_lap_list">Save Lap List</string>
+    <string name="preferences">Preferences</string>
+    
+    <string name="pref_timer_start_delay">Timer Start Delay</string>
+    <string name="pref_timer_start_delay_key">timerStartDelayPref</string>
+    <string name="pref_timer_start_delay_desc">The number of seconds the timer is delayed when starting.</string>
+    <string name="pref_timer_start_delay_on_restarts">Used Timer Delay On Restarts</string>
+    <string name="pref_timer_start_delay_on_restarts_key">timerStartDelayOnRestartsPref</string>
+    <string name="pref_timer_start_delay_on_restarts_desc"></string>
+</resources>

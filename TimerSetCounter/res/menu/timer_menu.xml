@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:title="@string/timer_reset"
+		android:icon="@android:drawable/ic_menu_close_clear_cancel"
+		android:id="@+id/mi_reset_timer"
+	/>
+	<item android:title="@string/save_lap_list"
+		android:icon="@android:drawable/ic_menu_save"
+		android:enabled="false"
+		android:id="@+id/mi_save_lap_list"
+	/>
+	<item android:title="@string/preferences"
+		android:icon="@android:drawable/ic_menu_preferences"
+		android:id="@+id/mi_preferences"
+	/>
+</menu>
