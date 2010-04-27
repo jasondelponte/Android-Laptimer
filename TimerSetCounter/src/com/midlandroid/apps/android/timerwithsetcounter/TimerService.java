@@ -300,6 +300,7 @@ public class TimerService extends Service {
 		} catch (NumberFormatException e) {
 			timerStartDelay = 0;
 		}
+		delayTime = timerStartDelay;
 				
 		useDelayTimerOnRestarts = prefs.getBoolean(
 				res.getString(R.string.pref_timer_start_delay_on_restarts_key), false);

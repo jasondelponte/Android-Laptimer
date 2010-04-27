@@ -12,10 +12,8 @@ import android.os.Message;
 import android.os.Messenger;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnTouchListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -62,6 +60,7 @@ public class Main extends Activity implements TimerServiceUpdateUIListener {
     	currTimeTxt.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
+		    	_connectToService();
 				_startStopTimer();
 			}
     	});
@@ -71,13 +70,14 @@ public class Main extends Activity implements TimerServiceUpdateUIListener {
     			android.R.layout.simple_list_item_1);
     	lapList.setAdapter(lapListAdapater);
     	
+    	_connectToService();
     	_refreshUI();
     }
     
     public void onResume() {
     	super.onResume();
     	
-    	_refreshUI();
+    	_connectToService();
     }
     
     public void onPause() {
@@ -182,8 +182,6 @@ public class Main extends Activity implements TimerServiceUpdateUIListener {
     private void _msgTimerService(final int cmd, final Object payload) {
     	TimerService srvc = TimerService.getService();
     	if (srvc!=null) {
-    		_setupTimerListner(srvc);
-    		
         	// Get the handler
         	Handler handler = srvc.getMessageHandler();
         	// Start the timer
@@ -205,9 +203,11 @@ public class Main extends Activity implements TimerServiceUpdateUIListener {
     	startActivity(i);
     }
     
-    private void _setupTimerListner(final TimerService srvc) {
-    	//if (srvc.getServiceUpdateUIListener()==null)
+    private void _connectToService() {
+    	TimerService srvc = TimerService.getService();
+    	if (srvc!=null) {
     		srvc.setUpdateUIListener(this);
+    	}
     }
     
     private void _disconnectFromService() {
