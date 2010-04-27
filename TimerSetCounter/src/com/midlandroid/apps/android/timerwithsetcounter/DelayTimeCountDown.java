@@ -103,9 +103,9 @@ public class DelayTimeCountDown extends Activity implements TimerServiceUpdateUI
     private void _connectToService() {
     	TimerService srvc = TimerService.getService();
     	if (srvc!=null) {
-    		if (srvc.getDelayTimerUIListner()==null)
+    		//if (srvc.getDelayTimerUIListner()==null)
         		srvc.setDelayTimerUIListener(this);
-    		if (srvc.getDelayTimerMessenger()==null)
+    		//if (srvc.getDelayTimerMessenger()==null)
     			srvc.setDelayTimerMessenger(myMessenger);
     	}
     }

@@ -50,6 +50,11 @@ public class TimerService extends Service {
 	}
 	
 	@Override
+	public void onStart(Intent intent, int startId) {
+		
+	}
+	
+	@Override
 	public void onCreate() {
 		super.onCreate();
 		
@@ -63,7 +68,6 @@ public class TimerService extends Service {
 		initTime = 0;
 		prevTime = 0;
 		currTime = 0;
-		delayTime = timerStartDelay;
 		delayInitTime = 0;
 		useDelayTimerOnRestarts = false;
 		pausedAtTime = 0;
@@ -71,6 +75,7 @@ public class TimerService extends Service {
 		preferencesChanged = true;
 		
 		_getPrefs();
+		delayTime = timerStartDelay;
 	}
 	
 	@Override

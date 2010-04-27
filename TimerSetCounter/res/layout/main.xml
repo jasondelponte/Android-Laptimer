@@ -18,7 +18,7 @@
 	    android:layout_height="wrap_content"
 		android:layout_below="@id/timer_counter_txt"
 	    android:gravity="center"
-	    android:textSize="30sp"
+	    android:textSize="40sp"
 	/>
 	
 	<ListView android:id="@+id/lap_list"

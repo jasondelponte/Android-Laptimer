@@ -12,8 +12,10 @@ import android.os.Message;
 import android.os.Messenger;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -55,6 +57,7 @@ public class Main extends Activity implements TimerServiceUpdateUIListener {
 				_setIncrement();
 			}
     	});
+    	
     	currTimeTxt = (TextView)findViewById(R.id.timer_counter_txt);
     	currTimeTxt.setOnClickListener(new OnClickListener() {
 			@Override
@@ -203,7 +206,7 @@ public class Main extends Activity implements TimerServiceUpdateUIListener {
     }
     
     private void _setupTimerListner(final TimerService srvc) {
-    	if (srvc.getServiceUpdateUIListener()==null)
+    	//if (srvc.getServiceUpdateUIListener()==null)
     		srvc.setUpdateUIListener(this);
     }
     
