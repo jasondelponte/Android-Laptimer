@@ -2,6 +2,8 @@ package com.midlandroid.apps.android.timerwithsetcounter;
 
 import java.text.NumberFormat;
 
+import com.midlandroid.apps.android.timerwithsetcounter.util.TextUtil;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;

@@ -1,4 +1,4 @@
-package com.midlandroid.apps.android.timerwithsetcounter;
+package com.midlandroid.apps.android.timerwithsetcounter.util;
 
 import java.text.NumberFormat;
 

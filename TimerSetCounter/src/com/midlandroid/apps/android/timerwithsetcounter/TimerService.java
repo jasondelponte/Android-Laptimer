@@ -1,6 +1,5 @@
 package com.midlandroid.apps.android.timerwithsetcounter;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -9,9 +8,7 @@ import java.util.TimerTask;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.AssetManager;
 import android.content.res.Resources;
-import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -60,12 +57,13 @@ public class TimerService extends Service {
 		state = RunningState.RESETTED;
 		lapDataList = new ArrayList<LapData>();
 		uiUpdateListener = null;
+		uiDelayTimerListener = null;
 		timer = null;
 		delayTimer = null;
 		initTime = 0;
 		prevTime = 0;
 		currTime = 0;
-		delayTime = 0;
+		delayTime = timerStartDelay;
 		delayInitTime = 0;
 		useDelayTimerOnRestarts = false;
 		pausedAtTime = 0;
@@ -143,7 +141,7 @@ public class TimerService extends Service {
 			}
 			
 			if (state!=RunningState.RUNNING&&state!=RunningState.TIMER_DELAY){
-				if (useDelayTimerOnRestarts || (timerStartDelay-delayTime) > 0)
+				if (useDelayTimerOnRestarts || (delayTime > 0))
 					_startDelayTimer(msg.replyTo);
 				else
 					_startTimer();
@@ -179,7 +177,7 @@ public class TimerService extends Service {
 			_replyToMessage(MessageId.TimerServiceCmd.CMD_SHOW_TIMER_DELAY_UI, msgr);
 			
 			delayInitTime = 0;
-			delayTime = 0;
+			delayTime = timerStartDelay;
 			_setupDelayTimer();
 			
 			state = RunningState.TIMER_DELAY;
@@ -211,7 +209,7 @@ public class TimerService extends Service {
 		initTime = 0;
 		currTime = 0;
 		prevTime = 0;
-		delayTime = 0;
+		delayTime = timerStartDelay;
 		delayInitTime = 0;
 		pausedAtTime = 0;
 		setCount = 1;
@@ -281,7 +279,7 @@ public class TimerService extends Service {
 		try {
 			replyTo.send(msg);
 		} catch (RemoteException e) {
-			Log.e("TimerService._stateDelayTimer", e.getMessage(), e.getCause());
+			Log.e("TimerService._replyToMessage", e.getMessage(), e.getCause());
 		}
 	}
 	
@@ -289,8 +287,17 @@ public class TimerService extends Service {
 		SharedPreferences prefs = PreferenceManager
 			.getDefaultSharedPreferences(getBaseContext());
 		
-		timerStartDelay = Integer.parseInt(prefs.getString("timerStartDelayPref", "0"))*1000;
-		useDelayTimerOnRestarts = prefs.getBoolean("timerStartDelayOnRestartsPref", false);
+		Resources res = getResources();
+		
+		try {
+			timerStartDelay = Integer.valueOf(prefs.getString(
+					res.getString(R.string.pref_timer_start_delay_key), "0"))*1000;
+		} catch (NumberFormatException e) {
+			timerStartDelay = 0;
+		}
+				
+		useDelayTimerOnRestarts = prefs.getBoolean(
+				res.getString(R.string.pref_timer_start_delay_on_restarts_key), false);
 		
 		preferencesChanged = false;
 	}
@@ -299,7 +306,7 @@ public class TimerService extends Service {
 //		MediaPlayer mp = new MediaPlayer();
 //		AssetManager am = getResources().getAssets();
 //		try {
-//			mp.setDataSource(am.openFd("buzzerheavy.wav").getFileDescriptor());
+//			mp.setDataSource(am.openFd("buzzer1.wav").getFileDescriptor());
 //		} catch (IllegalArgumentException e) {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
@@ -320,21 +327,19 @@ public class TimerService extends Service {
 				delayTimer.schedule(new TimerTask() {
 					@Override
 					public void run() {
-						synchronized(TimerService.this) {
-							long schTime = this.scheduledExecutionTime();
-							
-							if (delayInitTime==0)
-								delayInitTime = schTime;
-							
-							delayTime = (schTime-delayInitTime);
-							_updateDelayTimerUI(delayTime);
-							
-							if (delayTime >= timerStartDelay) {
-								_finishDelayTimerUI();
-								this.cancel();
-								_playTimerStartAudio();
-								_startTimer();
-							}
+						long schTime = this.scheduledExecutionTime();
+						
+						if (delayInitTime==0)
+							delayInitTime = schTime;
+						
+						delayTime = timerStartDelay - (schTime-delayInitTime);
+						_updateDelayTimerUI(delayTime+1000);
+						
+						if (delayTime <= 0) {
+							cancel();
+							_finishDelayTimerUI();
+							_playTimerStartAudio();
+							_startTimer();
 						}
 					}
 				}, 0, TIMER_UPDATE_RATE);
@@ -349,20 +354,28 @@ public class TimerService extends Service {
 				timer.schedule(new TimerTask() {
 					@Override
 					public void run() {
-						synchronized(TimerService.this) {
-							long schTime = this.scheduledExecutionTime();
-							
-							if (initTime==0)
-								initTime = schTime;
-							
-							if (pausedAtTime!=0) {
-								initTime += (schTime - (initTime+pausedAtTime));						
-								pausedAtTime = 0;
-							}
-							
-							currTime = (schTime-initTime);
-							_updateUITimer(currTime, currTime-prevTime, setCount);
+						long schTime = this.scheduledExecutionTime();
+						
+						if (initTime==0)
+							initTime = schTime;
+						
+						if (pausedAtTime!=0) {
+							initTime += (schTime - (initTime+pausedAtTime));						
+							pausedAtTime = 0;
 						}
+
+						currTime = (schTime-initTime);
+						if (TimerService.this.state==RunningState.STOPPED || 
+								TimerService.this.state==RunningState.RESETTED) {
+							cancel();
+							if (TimerService.this.state==RunningState.RESETTED) {
+								currTime = 0;
+								initTime = 0;
+								setCount = 1;
+							}
+						}
+						
+						_updateUITimer(currTime, currTime-prevTime, setCount);
 					}
 				}, 0, TIMER_UPDATE_RATE);
 			}
