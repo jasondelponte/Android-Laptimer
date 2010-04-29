@@ -3,9 +3,18 @@
     <string name="app_name">Lap Timer</string>
     <string name="app_desc">Simple timer with lap history application.</string>
     <string name="timer_counter">00:00:00.0</string>
-	<string name="set_increment">Lap 1: 00:00:00.0</string>
+	<string name="lap_timer">00:00:00.0</string>
 	<string name="timer_delay_countdown_label">Timer Delay Count Down</string>
 	<string name="timer_delay_countdown">0</string>
+	
+	<string name="timer_mode_lbl">Timer Mode</string>
+	<string name="timer_counter_lbl">Total</string>
+	<string name="lap_counter_lbl">Lap</string>
+	<string name="lap_list_lbl">Laps</string>
+	
+	<string name="timer_start_btn_txt">Start</string>
+	<string name="timer_stop_btn_txt">Stop</string>
+	<string name="lap_increment_btn_txt">Lap 1</string>
 	
 	<string name="timer_reset">Reset</string>
 	<string name="timer_count_down">Count Down</string>

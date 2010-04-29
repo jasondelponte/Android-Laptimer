@@ -2,6 +2,7 @@ package com.midlandroid.apps.android.timerwithsetcounter;
 
 import java.text.NumberFormat;
 
+import com.midlandroid.apps.android.timerwithsetcounter.TimerService.RunningState;
 import com.midlandroid.apps.android.timerwithsetcounter.util.TextUtil;
 
 import android.app.Activity;
@@ -15,11 +16,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
 public class Main extends Activity implements TimerServiceUpdateUIListener {	
 	// Views
+	private Button startStopBtn;
+	private Button lapNumBtn;
 	private TextView lapTimeTxt;
 	private TextView currTimeTxt;
 	private ListView lapList;
@@ -49,7 +53,8 @@ public class Main extends Activity implements TimerServiceUpdateUIListener {
         }
     	
     	lapTimeTxt = (TextView)findViewById(R.id.lap_timer_txt);
-    	lapTimeTxt.setOnClickListener(new OnClickListener() {
+    	lapNumBtn = (Button)findViewById(R.id.lap_increment_btn);
+    	lapNumBtn.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				_setIncrement();
@@ -57,7 +62,8 @@ public class Main extends Activity implements TimerServiceUpdateUIListener {
     	});
     	
     	currTimeTxt = (TextView)findViewById(R.id.timer_counter_txt);
-    	currTimeTxt.setOnClickListener(new OnClickListener() {
+    	startStopBtn = (Button)findViewById(R.id.timer_start_stop_btn);
+    	startStopBtn.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 		    	_connectToService();
@@ -145,8 +151,8 @@ public class Main extends Activity implements TimerServiceUpdateUIListener {
 			@Override
 			public void run() {
 				currTimeTxt.setText(TextUtil.formatDateToString(currTime,numFormat));
-				lapTimeTxt.setText("Lap "+Integer.valueOf(setCount).toString()+": "+
-						TextUtil.formatDateToString(lapTime,numFormat));
+				lapTimeTxt.setText(TextUtil.formatDateToString(lapTime,numFormat));
+				lapNumBtn.setText("Lap "+Integer.valueOf(setCount).toString());
 			}
 		});
 	}
@@ -175,6 +181,16 @@ public class Main extends Activity implements TimerServiceUpdateUIListener {
     ////////////////////////////////////
     // Private methods
     ////////////////////////////////////
+    private void _updateTimerStartStopBtn() {
+    	TimerService srvc = TimerService.getService();
+    	if (srvc!=null) {
+    		if (srvc.getState()==RunningState.RUNNING||srvc.getState()==RunningState.TIMER_DELAY)
+    			startStopBtn.setText(getResources().getString(R.string.timer_stop_btn_txt));
+    		else
+    			startStopBtn.setText(getResources().getString(R.string.timer_start_btn_txt));
+    	}
+    }
+    
     private void _msgTimerService(final int cmd) {
     	_msgTimerService(cmd, null);
     }

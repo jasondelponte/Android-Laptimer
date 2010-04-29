@@ -1,24 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+    android:layout_height="fill_parent" >    
 
+	<TextView android:id="@+id/timer_counter_lbl"
+		android:text="@string/timer_counter_lbl"
+		android:layout_width="wrap_content" 
+	    android:layout_height="wrap_content"
+	    android:textSize="15sp"
+	/>
+	
 	<TextView android:id="@+id/timer_counter_txt"
 	    android:text="@string/timer_counter"
-		android:layout_width="fill_parent" 
+		android:layout_width="wrap_content" 
 	    android:layout_height="wrap_content"
-	    android:gravity="center"
-	    android:textSize="40sp"
-	    android:layout_marginBottom="20sp"
+		android:layout_below="@id/timer_counter_lbl"
+		android:layout_alignParentLeft="true"
+	    android:textSize="30sp"
+	    android:layout_marginBottom="10sp"
     />
+    
+    <Button android:id="@+id/timer_start_stop_btn"
+    	android:text="@string/timer_start_btn_txt"
+    	android:layout_width="fill_parent"
+    	android:layout_height="wrap_content"
+		android:layout_below="@id/timer_counter_lbl"
+		android:layout_toRightOf="@id/timer_counter_txt"
+	    android:textSize="20sp"
+	    android:layout_marginLeft="20sp"
+	/>
 	
-	<TextView android:id="@+id/lap_timer_txt"
-	    android:text="@string/set_increment"
-		android:layout_width="fill_parent" 
+	<TextView android:id="@+id/lap_counter_lbl"
+		android:text="@string/lap_counter_lbl"
+		android:layout_width="wrap_content" 
 	    android:layout_height="wrap_content"
 		android:layout_below="@id/timer_counter_txt"
-	    android:gravity="center"
-	    android:textSize="40sp"
+	    android:textSize="15sp"
+	/>
+	
+	<TextView android:id="@+id/lap_timer_txt"
+	    android:text="@string/lap_timer"
+		android:layout_width="wrap_content" 
+	    android:layout_height="wrap_content"
+		android:layout_below="@id/lap_counter_lbl"
+		android:layout_alignParentLeft="true"
+	    android:textSize="30sp"
+	    android:layout_marginBottom="10sp"
+	/>
+    
+    <Button android:id="@+id/lap_increment_btn"
+    	android:text="@string/lap_increment_btn_txt"
+    	android:layout_width="fill_parent"
+    	android:layout_height="wrap_content"
+		android:layout_below="@id/lap_counter_lbl"
+		android:layout_toRightOf="@id/lap_timer_txt"
+	    android:textSize="20sp"
+	    android:layout_marginLeft="20sp"
 	/>
 	
 	<ListView android:id="@+id/lap_list"
