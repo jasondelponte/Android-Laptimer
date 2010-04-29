@@ -2,7 +2,11 @@ package com.midlandroid.apps.android.timerwithsetcounter;
 
 import java.text.NumberFormat;
 
-import com.midlandroid.apps.android.timerwithsetcounter.TimerService.RunningState;
+import com.midlandroid.apps.android.timerwithsetcounter.timerservice.LapData;
+import com.midlandroid.apps.android.timerwithsetcounter.timerservice.TimerService;
+import com.midlandroid.apps.android.timerwithsetcounter.timerservice.TimerServiceUpdateUIListener;
+import com.midlandroid.apps.android.timerwithsetcounter.timerservice.TimerService.RunningState;
+import com.midlandroid.apps.android.timerwithsetcounter.util.MessageId;
 import com.midlandroid.apps.android.timerwithsetcounter.util.TextUtil;
 
 import android.app.Activity;

@@ -1,4 +1,5 @@
-package com.midlandroid.apps.android.timerwithsetcounter;
+package com.midlandroid.apps.android.timerwithsetcounter.timerservice;
+
 
 public interface TimerServiceUpdateUIListener {
 	public void updateTimerUI(final long currTime, final long lapTime, final int setCount);

@@ -14,7 +14,7 @@
             </intent-filter>
         </activity>
         
-        <service android:name=".TimerService"/>
+        <service android:name=".timerservice.TimerService"/>
     	<activity android:name=".Preferences"
 				android:label="@string/preferences"
     			android:launchMode="singleInstance" />

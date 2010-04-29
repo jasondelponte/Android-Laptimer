@@ -1,4 +1,4 @@
-package com.midlandroid.apps.android.timerwithsetcounter;
+package com.midlandroid.apps.android.timerwithsetcounter.timerservice;
 
 public class LapData {
 	private int lapNum;

@@ -1,9 +1,16 @@
-package com.midlandroid.apps.android.timerwithsetcounter;
+package com.midlandroid.apps.android.timerwithsetcounter.timerservice;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import com.midlandroid.apps.android.timerwithsetcounter.R;
+import com.midlandroid.apps.android.timerwithsetcounter.R.string;
+import com.midlandroid.apps.android.timerwithsetcounter.util.MessageId;
+import com.midlandroid.apps.android.timerwithsetcounter.util.MessageId.DelayTimerCountDownCmd;
+import com.midlandroid.apps.android.timerwithsetcounter.util.MessageId.MainCmd;
+import com.midlandroid.apps.android.timerwithsetcounter.util.MessageId.TimerServiceCmd;
 
 import android.app.Service;
 import android.content.Intent;

@@ -1,4 +1,4 @@
-package com.midlandroid.apps.android.timerwithsetcounter;
+package com.midlandroid.apps.android.timerwithsetcounter.util;
 
 public final class MessageId {
 	public static final int SRC_MAIN = 0;
