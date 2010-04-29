@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >    
+    android:layout_height="fill_parent"
+    android:background="@drawable/main_bg"
+    android:padding="5sp" >    
 
 	<TextView android:id="@+id/timer_counter_lbl"
 		android:text="@string/timer_counter_lbl"
 		android:layout_width="wrap_content" 
 	    android:layout_height="wrap_content"
+	    android:textColor="@drawable/main_fg"
 	    android:textSize="15sp"
 	/>
 	
@@ -14,8 +17,10 @@
 	    android:text="@string/timer_counter"
 		android:layout_width="wrap_content" 
 	    android:layout_height="wrap_content"
+	    android:textColor="@drawable/main_timer_fg"
 		android:layout_below="@id/timer_counter_lbl"
 		android:layout_alignParentLeft="true"
+		android:layout_marginLeft="5sp"
 	    android:textSize="30sp"
 	    android:layout_marginBottom="10sp"
     />
@@ -34,6 +39,7 @@
 		android:text="@string/lap_counter_lbl"
 		android:layout_width="wrap_content" 
 	    android:layout_height="wrap_content"
+	    android:textColor="@drawable/main_fg"
 		android:layout_below="@id/timer_counter_txt"
 	    android:textSize="15sp"
 	/>
@@ -42,8 +48,10 @@
 	    android:text="@string/lap_timer"
 		android:layout_width="wrap_content" 
 	    android:layout_height="wrap_content"
+	    android:textColor="@drawable/main_timer_fg"
 		android:layout_below="@id/lap_counter_lbl"
 		android:layout_alignParentLeft="true"
+		android:layout_marginLeft="5sp"
 	    android:textSize="30sp"
 	    android:layout_marginBottom="10sp"
 	/>
@@ -62,5 +70,6 @@
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"
 		android:layout_below="@id/lap_timer_txt"
+		android:background="@drawable/lap_list_bg"
 	/>
 </RelativeLayout>

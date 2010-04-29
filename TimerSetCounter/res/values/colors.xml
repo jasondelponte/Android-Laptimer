@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<drawable name="main_bg">#E0FFFF</drawable>
+<drawable name="main_timer_fg">#191970</drawable>
+<drawable name="main_fg">#000000</drawable>
+<drawable name="lap_list_bg">#000000</drawable>
+</resources>
