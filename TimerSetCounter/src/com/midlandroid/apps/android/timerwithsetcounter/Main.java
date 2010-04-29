@@ -51,10 +51,7 @@ public class Main extends Activity implements TimerServiceUpdateUIListener {
         keepTimerServiceAlive = false;
         myMessenger = new Messenger(myHandler);
 
-        if (TimerService.getService()==null) {
-			Intent i = new Intent(this, TimerService.class);
-			startService(i);
-        }
+        _createService();
     	
     	lapTimeTxt = (TextView)findViewById(R.id.lap_timer_txt);
     	lapNumBtn = (Button)findViewById(R.id.lap_increment_btn);
@@ -77,7 +74,7 @@ public class Main extends Activity implements TimerServiceUpdateUIListener {
     	
     	lapList = (ListView)findViewById(R.id.lap_list);    	
     	lapListAdapater = new ArrayAdapter<String>(this,
-    			android.R.layout.simple_list_item_1);
+    			R.layout.lap_list_text_item);
     	lapList.setAdapter(lapListAdapater);
     	
     	_connectToService();
@@ -86,6 +83,8 @@ public class Main extends Activity implements TimerServiceUpdateUIListener {
     
     public void onResume() {
     	super.onResume();
+
+        _createService();
     	
     	_connectToService();
     }
@@ -138,8 +137,8 @@ public class Main extends Activity implements TimerServiceUpdateUIListener {
 	@Override
 	public void addLapToUI(final LapData lapData) {
 		String item = "Lap "+lapData.getLapNum()+": "+
-				TextUtil.formatDateToString(lapData.getLapTime(), numFormat)+"\n";
-		item += "Total: "+TextUtil.formatDateToString(lapData.getTotalTime(), numFormat);
+				TextUtil.formatDateToString(lapData.getLapTime(), numFormat)+" - "+
+				"Total: "+TextUtil.formatDateToString(lapData.getTotalTime(), numFormat);
 		
 		lapListAdapater.insert(item, 0);
 	}
@@ -221,6 +220,13 @@ public class Main extends Activity implements TimerServiceUpdateUIListener {
     private void _showPreferences() {
     	Intent i = new Intent(this, Preferences.class);
     	startActivity(i);
+    }
+    
+    private void _createService() {
+        if (TimerService.getService()==null) {
+			Intent i = new Intent(this, TimerService.class);
+			startService(i);
+        }
     }
     
     private void _connectToService() {
