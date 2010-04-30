@@ -2,7 +2,8 @@ package com.midlandroid.apps.android.timerwithsetcounter;
 
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.LapData;
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.TimerService;
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.TimerServiceUpdateUIListener;
+import com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener.DelayTimerUpdateUIListener;
+import com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener.TimerUpdateUIListener;
 import com.midlandroid.apps.android.timerwithsetcounter.util.MessageId;
 
 import android.app.Activity;
@@ -13,7 +14,7 @@ import android.os.Messenger;
 import android.view.KeyEvent;
 import android.widget.TextView;
 
-public class DelayTimeCountDown extends Activity implements TimerServiceUpdateUIListener {
+public class DelayTimeCountDown extends Activity implements DelayTimerUpdateUIListener {
 	private TextView currTimeTxt;
 	private Messenger myMessenger;
 	private boolean notifyTimerServiceOfExit;
@@ -73,19 +74,11 @@ public class DelayTimeCountDown extends Activity implements TimerServiceUpdateUI
     }
 
 	@Override
-	public void addLapToUI(LapData lapData) {
-	}
-
-	@Override
-	public void clearLapList() {
-	}
-
-	@Override
-	public void updateTimerUI(final long currTime, final long lapTime, final int setCount) {
+	public void updateDelayTimerUI(final long time) {
 		this.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				currTimeTxt.setText(Long.valueOf(currTime/1000).toString());
+				currTimeTxt.setText(Long.valueOf(time/1000).toString());
 			}
 		});
 	}
@@ -105,13 +98,14 @@ public class DelayTimeCountDown extends Activity implements TimerServiceUpdateUI
     	}
 	};
     
+	/////////////////////////////////////
+	// Service Connection management
+	/////////////////////////////////////
     private void _connectToService() {
     	TimerService srvc = TimerService.getService();
     	if (srvc!=null) {
-    		//if (srvc.getDelayTimerUIListner()==null)
-        		srvc.setDelayTimerUIListener(this);
-    		//if (srvc.getDelayTimerMessenger()==null)
-    			srvc.setDelayTimerMessenger(myMessenger);
+    		srvc.setDelayTimerUIListener(this);
+			srvc.setDelayTimerMessenger(myMessenger);
     	}
     }
     

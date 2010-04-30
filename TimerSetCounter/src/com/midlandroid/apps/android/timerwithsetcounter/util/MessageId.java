@@ -21,4 +21,10 @@ public final class MessageId {
 	public final class DelayTimerCountDownCmd {
 		public static final int CMD_STOP_TIMER = 0;
 	}
+	
+	public static final int SRC_DELAYTIMER = 3;
+	public final class DelayTimerCmd {
+		public static final int CMD_TIMER_FINISHED = 0;
+	}
+	
 }

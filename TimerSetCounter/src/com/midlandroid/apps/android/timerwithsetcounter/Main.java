@@ -4,8 +4,8 @@ import java.text.NumberFormat;
 
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.LapData;
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.TimerService;
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.TimerServiceUpdateUIListener;
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.TimerService.RunningState;
+import com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener.TimerUpdateUIListener;
 import com.midlandroid.apps.android.timerwithsetcounter.util.MessageId;
 import com.midlandroid.apps.android.timerwithsetcounter.util.TextUtil;
 
@@ -24,7 +24,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class Main extends Activity implements TimerServiceUpdateUIListener {	
+public class Main extends Activity implements TimerUpdateUIListener {	
 	// Views
 	private Button startStopBtn;
 	private Button lapNumBtn;
