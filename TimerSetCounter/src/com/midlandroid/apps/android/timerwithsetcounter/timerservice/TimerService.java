@@ -1,13 +1,10 @@
 package com.midlandroid.apps.android.timerwithsetcounter.timerservice;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-
 import com.midlandroid.apps.android.timerwithsetcounter.R;
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.mode.DelayTimer;
+import com.midlandroid.apps.android.timerwithsetcounter.timerservice.mode.SimpleCountUp;
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.mode.TimerMode;
+import com.midlandroid.apps.android.timerwithsetcounter.timerservice.mode.TimerMode.RunningState;
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener.DelayTimerUpdateUIListener;
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener.TimerUpdateUIListener;
 import com.midlandroid.apps.android.timerwithsetcounter.util.MessageId;
@@ -25,45 +22,28 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class TimerService extends Service {
-	private static final int TIMER_UPDATE_RATE = 100;
-	
-	public  static enum RunningState {
-		RUNNING, STOPPED, RESETTED, TIMER_DELAY
-	}
-	
 	private static TimerService timerService = null;
 
 	// Current Timers
-	private TimerMode currTimer;
-	private TimerUpdateUIListener uiUpdateListener;
-	private RunningState state;
-	private List<LapData> lapDataList;
-	private Timer timer;
-	private long initTime;
-	private long prevTime;
-	private long currTime;
-	private long pausedAtTime;
-	private int setCount;
+	private TimerMode timerMode;
 	
+	// Preferences
 	private boolean preferencesChanged;
+	private int timerStartDelay;
+	private boolean useDelayTimer;
+	private boolean useDelayTimerOnRestarts;
 	private boolean useAudioAlerts;
 	
 	// Delay Timer
 	private DelayTimer delayTimer;
-	private int timerStartDelay;
-	private boolean useDelayTimer;
-	private boolean useDelayTimerOnRestarts;
 	private Messenger delayTimerMsgr;
 	
-	
+	/////////////////////////////////
+	// Overridden Service Methods
+	/////////////////////////////////
 	@Override
 	public IBinder onBind(Intent intent) {
 		return null;
-	}
-	
-	@Override
-	public void onStart(Intent intent, int startId) {
-		
 	}
 	
 	@Override
@@ -71,22 +51,16 @@ public class TimerService extends Service {
 		super.onCreate();
 		
 		timerService = this;
-		state = RunningState.RESETTED;
-		lapDataList = new ArrayList<LapData>();
-		uiUpdateListener = null;
-		timer = null;
-		delayTimer = null;
-		initTime = 0;
-		prevTime = 0;
-		currTime = 0;
-		useDelayTimerOnRestarts = false;
-		pausedAtTime = 0;
-		setCount = 1;
-		preferencesChanged = true;
-		useAudioAlerts = false;
 		
-		delayTimer = new DelayTimer(myHandler);
+		preferencesChanged = true;
 		timerStartDelay = 0;
+		useDelayTimerOnRestarts = false;
+		useAudioAlerts = false;
+
+		delayTimer = new DelayTimer(myHandler);
+		
+		// Default timer mode
+		timerMode = new SimpleCountUp();
 	}
 	
 	@Override
@@ -95,24 +69,20 @@ public class TimerService extends Service {
 		
 		timerService = null;
 		
-		_shutdownTimer();
+		_shutdownMainTimer();
 		_shutdownDelayTimer();
 	}
 	
-	public static TimerService getService() {
-		return timerService;
-	}
-	
-	public Handler getMessageHandler() {
-		return myHandler;
-	}
-	
+
+	/////////////////////////////////////////
+	// Public methods
+	/////////////////////////////////////////
 	public void setUpdateUIListener(TimerUpdateUIListener uiUpdateListener) {
-		this.uiUpdateListener = uiUpdateListener;
+		timerMode.setUpdateUIListener(uiUpdateListener);
 	}
 	
 	public TimerUpdateUIListener getServiceUpdateUIListener() {
-		return uiUpdateListener;
+		return timerMode.getUpdateUIListener();
 	}
 	
 	public void setDelayTimerUIListener(DelayTimerUpdateUIListener delayTimeCountDown) {
@@ -132,12 +102,19 @@ public class TimerService extends Service {
 	}
 	
 	public RunningState getState() {
-		return state;
+		return timerMode.getState();
 	}
 	
+
+	/////////////////////////////////////////
+	// Message Processor 
+	/////////////////////////////////////////
 	private Handler myHandler = new Handler() {
     	@Override
     	public void handleMessage(Message msg) {
+    		if (preferencesChanged)
+    			_getPrefs();
+    		
     		switch(msg.arg1) {
     		case MessageId.SRC_MAIN:
     			_handleMainCmds(msg);
@@ -155,11 +132,7 @@ public class TimerService extends Service {
 	private void _handleMainCmds(Message msg) {
 		switch(msg.arg2) {
 		case MessageId.MainCmd.CMD_START_STOP_TIMER:
-			if (preferencesChanged) {
-				_getPrefs();
-			}
-			
-			if (state!=RunningState.RUNNING&&state!=RunningState.TIMER_DELAY){
+			if (timerMode.getState()!=RunningState.RUNNING){
 				if (useDelayTimerOnRestarts || (timerStartDelay > 0 && useDelayTimer))
 					_startDelayTimer(msg.replyTo);
 				else
@@ -169,13 +142,15 @@ public class TimerService extends Service {
 			}
 			break;
 		case MessageId.MainCmd.CMD_RESET_TIMER:
-			_resetService();
+			_getPrefs();
+			_stopTimer();
+			timerMode.resetTimer();
 			break;
 		case MessageId.MainCmd.CMD_SET_INCREMENT:
-			_setIncrement();
+			timerMode.lapTimer();
 			break;
 		case MessageId.MainCmd.CMD_REFRESH:
-			_refreshUI();
+			timerMode.refreshUI();
 			break;
 		case MessageId.MainCmd.CMD_PREFERENCES_CHANGED:
 			preferencesChanged = true;
@@ -206,91 +181,26 @@ public class TimerService extends Service {
 	}
 	
 	private void _startDelayTimer(Messenger msgr) {
-		if (state!=RunningState.TIMER_DELAY) {
-			_replyToMessager(MessageId.TimerServiceCmd.CMD_SHOW_TIMER_DELAY_UI, msgr);
-			
-			delayTimer.startTimer(timerStartDelay);
-			
-			state = RunningState.TIMER_DELAY;
-		}
+		_replyToMessager(MessageId.TimerServiceCmd.CMD_SHOW_TIMER_DELAY_UI, msgr);
+		delayTimer.startTimer(timerStartDelay);
 	}
 	
 	private void _startTimer() {
-		if (state!=RunningState.RUNNING) {
-			_setupUpCountTimer();
-			
-			state = RunningState.RUNNING;
-		}
+		timerMode.startTimer();
 	}
 		
 	private void _stopTimer() {
-		if (state==RunningState.RUNNING || state==RunningState.TIMER_DELAY) {
-			pausedAtTime = currTime;
-			_shutdownTimer();
-			_shutdownDelayTimer();
-			
-			state = RunningState.STOPPED;
-		}
-	}
-	
-	private void _resetService() {	
-		_stopTimer();
-		
-		state = RunningState.RESETTED;
-		initTime = 0;
-		currTime = 0;
-		prevTime = 0;
-		pausedAtTime = 0;
-		setCount = 1;
-		lapDataList.clear();
-		
-		_getPrefs();
-		
-		_updateUITimer(currTime, currTime-prevTime, setCount);
-		_updateUIClearLaps();
-	}
-	
-	private void _setIncrement() {
-		if (state==RunningState.RUNNING) {
-			final LapData lapData = new LapData(setCount, currTime-prevTime, currTime);
-			lapDataList.add(lapData);
-			
-			_updateUIAddLap(lapData);
-	
-			setCount++;
-			prevTime = currTime;
-		}
-	}
-	
-	private void _refreshUI() {
-		_updateUITimer(currTime, currTime-prevTime, setCount);
-		
-		for (LapData lapData : lapDataList) {
-			_updateUIAddLap(lapData);
-		}
-	}
-	
-	private void _updateUITimer(final long currTime, final long lapTime, final int setCount) {
-		if (uiUpdateListener!=null) {
-			uiUpdateListener.updateTimerUI(currTime, lapTime, setCount);
-		}
-	}
-	
-	private void _updateUIAddLap(final LapData lapData) {
-		if (uiUpdateListener!=null) {
-			uiUpdateListener.addLapToUI(lapData);
-		}
-	}
-	
-	private void _updateUIClearLaps() {
-		if (uiUpdateListener!=null)
-			uiUpdateListener.clearLapList();
+		_shutdownMainTimer();
+		_shutdownDelayTimer();
 	}
 	
 	private void _finishDelayTimerUI() {
 		_replyToMessager(MessageId.TimerServiceCmd.CMD_FINISH_TIMER_DELAY_UI, delayTimerMsgr);
 	}
 
+	///////////////////////////////
+	// Private Methods
+	///////////////////////////////
 	private void _replyToMessager(final int cmd, Messenger replyTo) {
 		_replyToMessage(cmd, null, replyTo);
 	}
@@ -347,53 +257,28 @@ public class TimerService extends Service {
 //		}
 //		mp.start();
 	}
-		
-	private void _setupUpCountTimer() {
-		synchronized(this) {
-			if (timer==null) {
-				timer = new Timer();
-				timer.schedule(new TimerTask() {
-					@Override
-					public void run() {
-						long schTime = this.scheduledExecutionTime();
-						
-						if (initTime==0)
-							initTime = schTime;
-						
-						if (pausedAtTime!=0) {
-							initTime += (schTime - (initTime+pausedAtTime));						
-							pausedAtTime = 0;
-						}
-
-						currTime = (schTime-initTime);
-						if (TimerService.this.state==RunningState.STOPPED || 
-								TimerService.this.state==RunningState.RESETTED) {
-							cancel();
-							if (TimerService.this.state==RunningState.RESETTED) {
-								currTime = 0;
-								initTime = 0;
-								setCount = 1;
-							}
-						}
-						
-						_updateUITimer(currTime, currTime-prevTime, setCount);
-					}
-				}, 0, TIMER_UPDATE_RATE);
-			}
-		}
-	}
 	
-	private void _shutdownTimer() {
-		synchronized(this) {
-			if (timer!=null) {
-				timer.cancel();
-				timer.purge();
-				timer = null;
-			}
-		}
+	
+	////////////////////////////////////////
+	// Timer Controls
+	////////////////////////////////////////
+	private void _shutdownMainTimer() {
+		timerMode.stopTimer();
 	}
 	
 	private void _shutdownDelayTimer() {
 		delayTimer.stopTimer();
+	}
+	
+	
+	////////////////////////////////////////
+	// Public static methods
+	////////////////////////////////////////
+	public static TimerService getService() {
+		return timerService;
+	}
+	
+	public Handler getMessageHandler() {
+		return myHandler;
 	}
 }

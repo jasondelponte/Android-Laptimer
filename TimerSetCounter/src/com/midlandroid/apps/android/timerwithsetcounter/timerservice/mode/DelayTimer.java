@@ -18,18 +18,18 @@ public class DelayTimer {
 	private TimerTask timerTask;
 
 	//////////////////////////////////////
-	// Init
+	// Create new object
 	//////////////////////////////////////
 	public DelayTimer(Handler notifyTo) {
 		this.notifyTo = notifyTo;
 		timer = new Timer();
+		timerTask = null;
 	}
 
 	//////////////////////////////////////
 	// Public Controls
 	//////////////////////////////////////
 	public void startTimer(final long startTime) {
-		
 		// Setup the timer task
 		if (timerTask!=null)
 			timerTask.cancel();
@@ -59,7 +59,8 @@ public class DelayTimer {
 	}
 
 	public void stopTimer() {
-		timerTask.cancel();
+		if (timerTask!=null)
+			timerTask.cancel();
 	}
 	
 	public DelayTimerUpdateUIListener getUpdateUIListener() {
@@ -86,8 +87,11 @@ public class DelayTimer {
 			notifyTo.sendMessage(msg);
 		}
 	}
+
 	
-	
+	//////////////////////////////////////
+	// Cleanup
+	//////////////////////////////////////
 	@Override
 	protected void finalize() throws Throwable {
 	    try {

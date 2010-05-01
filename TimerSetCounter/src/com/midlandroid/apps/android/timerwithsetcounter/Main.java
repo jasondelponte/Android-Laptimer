@@ -4,7 +4,7 @@ import java.text.NumberFormat;
 
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.LapData;
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.TimerService;
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.TimerService.RunningState;
+import com.midlandroid.apps.android.timerwithsetcounter.timerservice.mode.TimerMode.RunningState;
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener.TimerUpdateUIListener;
 import com.midlandroid.apps.android.timerwithsetcounter.util.MessageId;
 import com.midlandroid.apps.android.timerwithsetcounter.util.TextUtil;
@@ -184,15 +184,15 @@ public class Main extends Activity implements TimerUpdateUIListener {
     ////////////////////////////////////
     // Private methods
     ////////////////////////////////////
-    private void _updateTimerStartStopBtn() {
-    	TimerService srvc = TimerService.getService();
-    	if (srvc!=null) {
-    		if (srvc.getState()==RunningState.RUNNING||srvc.getState()==RunningState.TIMER_DELAY)
-    			startStopBtn.setText(getResources().getString(R.string.timer_stop_btn_txt));
-    		else
-    			startStopBtn.setText(getResources().getString(R.string.timer_start_btn_txt));
-    	}
-    }
+//    private void _updateTimerStartStopBtn() {
+//    	TimerService srvc = TimerService.getService();
+//    	if (srvc!=null) {
+//    		if (srvc.getState()==RunningState.RUNNING)
+//    			startStopBtn.setText(getResources().getString(R.string.timer_stop_btn_txt));
+//    		else
+//    			startStopBtn.setText(getResources().getString(R.string.timer_start_btn_txt));
+//    	}
+//    }
     
     private void _msgTimerService(final int cmd) {
     	_msgTimerService(cmd, null);
@@ -240,7 +240,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	TimerService srvc = TimerService.getService();
     	if (srvc!=null) {
     		srvc.setUpdateUIListener(null);
-    		if (srvc.getState()==TimerService.RunningState.RESETTED && 
+    		if (srvc.getState()==RunningState.RESETTED && 
     				keepTimerServiceAlive==false) {
 		    	Intent i = new Intent(this, TimerService.class);
 		    	stopService(i);
@@ -253,6 +253,10 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	startActivity(i);
     }
     
+    
+    ///////////////////////////////////
+    // Message Handler
+    ///////////////////////////////////
     private Handler myHandler = new Handler() {
     	@Override
     	public void handleMessage(Message msg) {
