@@ -26,6 +26,8 @@ public class TimerService extends Service {
 
 	// Current Timers
 	private TimerMode timerMode;
+	private Messenger mainUIMsgr;
+	private Messenger delayTimerMsgr;
 	
 	// Preferences
 	private boolean preferencesChanged;
@@ -36,7 +38,6 @@ public class TimerService extends Service {
 	
 	// Delay Timer
 	private DelayTimer delayTimer;
-	private Messenger delayTimerMsgr;
 	
 	/////////////////////////////////
 	// Overridden Service Methods
@@ -54,6 +55,7 @@ public class TimerService extends Service {
 		
 		preferencesChanged = true;
 		timerStartDelay = 0;
+		useDelayTimer = false;
 		useDelayTimerOnRestarts = false;
 		useAudioAlerts = false;
 
@@ -61,6 +63,8 @@ public class TimerService extends Service {
 		
 		// Default timer mode
 		timerMode = new SimpleCountUp();
+		
+		_getPrefs();
 	}
 	
 	@Override
@@ -69,8 +73,8 @@ public class TimerService extends Service {
 		
 		timerService = null;
 		
-		_shutdownMainTimer();
-		_shutdownDelayTimer();
+		_killMainTimer();
+		_killDelayTimer();
 	}
 	
 
@@ -93,8 +97,8 @@ public class TimerService extends Service {
 		return delayTimer.getUpdateUIListener();
 	}
 	
-	public void setDelayTimerMessenger(Messenger delayTimerMsgr) {
-		this.delayTimerMsgr = delayTimerMsgr;
+	public void setDelayTimerMessenger(Messenger msgr) {
+		delayTimerMsgr = msgr;
 	}
 	
 	public Messenger getDelayTimerMessenger() {
@@ -130,21 +134,24 @@ public class TimerService extends Service {
 	};
 	
 	private void _handleMainCmds(Message msg) {
+		// Save off the reply to handler
+		mainUIMsgr = msg.replyTo;
+		
 		switch(msg.arg2) {
 		case MessageId.MainCmd.CMD_START_STOP_TIMER:
 			if (timerMode.getState()!=RunningState.RUNNING){
-				if (useDelayTimerOnRestarts || (timerStartDelay > 0 && useDelayTimer))
-					_startDelayTimer(msg.replyTo);
+				if (useDelayTimerOnRestarts || useDelayTimer)
+					_startDelayTimer();
 				else
-					_startTimer();
+					_startMainTimer();
 			} else {
-				_stopTimer();
+				_stopMainTimer();
 			}
 			break;
 		case MessageId.MainCmd.CMD_RESET_TIMER:
 			_getPrefs();
-			_stopTimer();
 			timerMode.resetTimer();
+			delayTimer.stopTimer();
 			break;
 		case MessageId.MainCmd.CMD_SET_INCREMENT:
 			timerMode.lapTimer();
@@ -161,7 +168,7 @@ public class TimerService extends Service {
 	private void _handleDelayTimeCountDownCmd(Message msg) {
 		switch(msg.arg2) {
 		case MessageId.DelayTimerCountDownCmd.CMD_STOP_TIMER:
-			_stopTimer();
+			_stopDelayTimer();
 			break;
 		}
 	}
@@ -171,31 +178,29 @@ public class TimerService extends Service {
 		case MessageId.DelayTimerCmd.CMD_TIMER_FINISHED:
 			useDelayTimer = false;
 			
+			_stopDelayTimer();
+			
 			if (useAudioAlerts)
 				_playTimerStartAudio();
 			
 			_finishDelayTimerUI();
-			_startTimer();
+			_startMainTimer();
 			break;
 		}
 	}
 	
-	private void _startDelayTimer(Messenger msgr) {
-		_replyToMessager(MessageId.TimerServiceCmd.CMD_SHOW_TIMER_DELAY_UI, msgr);
+	private void _startDelayTimer() {
+		_replyToMessager(MessageId.TimerServiceCmd.CMD_SHOW_TIMER_DELAY_UI, mainUIMsgr);
 		delayTimer.startTimer(timerStartDelay);
 	}
 	
-	private void _startTimer() {
+	private void _startMainTimer() {
 		timerMode.startTimer();
-	}
-		
-	private void _stopTimer() {
-		_shutdownMainTimer();
-		_shutdownDelayTimer();
 	}
 	
 	private void _finishDelayTimerUI() {
-		_replyToMessager(MessageId.TimerServiceCmd.CMD_FINISH_TIMER_DELAY_UI, delayTimerMsgr);
+		if (delayTimerMsgr!=null)
+			_replyToMessager(MessageId.TimerServiceCmd.CMD_FINISH_TIMER_DELAY_UI, delayTimerMsgr);
 	}
 
 	///////////////////////////////
@@ -228,7 +233,7 @@ public class TimerService extends Service {
 			timerStartDelay = 0;
 		}		
 		// Should the delay timer be used?
-		useDelayTimer = (timerStartDelay>0);
+		useDelayTimer = (timerStartDelay > 0);
 		
 				
 		// Use delay timer on restarts?
@@ -262,12 +267,20 @@ public class TimerService extends Service {
 	////////////////////////////////////////
 	// Timer Controls
 	////////////////////////////////////////
-	private void _shutdownMainTimer() {
+	private void _stopMainTimer() {
 		timerMode.stopTimer();
 	}
 	
-	private void _shutdownDelayTimer() {
+	private void _killMainTimer() {
+		timerMode.killTimer();
+	}
+	
+	private void _stopDelayTimer() {
 		delayTimer.stopTimer();
+	}
+	
+	private void _killDelayTimer() {
+		delayTimer.killTimer();
 	}
 	
 	

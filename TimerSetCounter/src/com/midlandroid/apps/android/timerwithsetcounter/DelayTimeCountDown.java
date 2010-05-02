@@ -5,6 +5,7 @@ import com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener.
 import com.midlandroid.apps.android.timerwithsetcounter.util.MessageId;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -14,9 +15,12 @@ import android.widget.TextView;
 
 public class DelayTimeCountDown extends Activity implements DelayTimerUpdateUIListener {
 	private TextView currTimeTxt;
-	private Messenger myMessenger;
 	private boolean notifyTimerServiceOfExit;
+	private Messenger myMsgr;
 	
+	///////////////////////////////////////
+	// Activity Overrides
+	///////////////////////////////////////
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -24,8 +28,9 @@ public class DelayTimeCountDown extends Activity implements DelayTimerUpdateUILi
         setContentView(R.layout.delay_timer_count_down);
         
         currTimeTxt = (TextView)findViewById(R.id.timer_delay_countdown);
-        myMessenger = new Messenger(myHandler);
         notifyTimerServiceOfExit = false;
+        
+        myMsgr = new Messenger(myHandler);
 
         _connectToService();
     }
@@ -70,7 +75,17 @@ public class DelayTimeCountDown extends Activity implements DelayTimerUpdateUILi
     	
     	return super.onKeyDown(keyCode, event);
     }
+    
+    protected void onActivityResult(int requestCode, int resultCode, Intent  data) {
+    	if (Main.SHOW_TIMER_DELAY_ACT==requestCode) {
+    		finish();
+    	}
+    }
 
+    
+    //////////////////////////////////////
+    // UI Update Call backs
+    //////////////////////////////////////
 	@Override
 	public void updateDelayTimerUI(final long time) {
 		this.runOnUiThread(new Runnable() {
@@ -88,8 +103,8 @@ public class DelayTimeCountDown extends Activity implements DelayTimerUpdateUILi
     		case MessageId.SRC_TIMERSERVICE:
     			switch(msg.arg2) {
     			case MessageId.TimerServiceCmd.CMD_FINISH_TIMER_DELAY_UI:
-    				notifyTimerServiceOfExit = false;
-    				finish();
+        			finish();
+    				break;
     			}
     			break;
     		}
@@ -103,7 +118,7 @@ public class DelayTimeCountDown extends Activity implements DelayTimerUpdateUILi
     	TimerService srvc = TimerService.getService();
     	if (srvc!=null) {
     		srvc.setDelayTimerUIListener(this);
-			srvc.setDelayTimerMessenger(myMessenger);
+    		srvc.setDelayTimerMessenger(myMsgr);
     	}
     }
     

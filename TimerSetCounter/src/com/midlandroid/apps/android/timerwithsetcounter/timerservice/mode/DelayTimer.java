@@ -31,9 +31,19 @@ public class DelayTimer {
 	//////////////////////////////////////
 	public void startTimer(final long startTime) {
 		// Setup the timer task
-		if (timerTask!=null)
+		if (timerTask!=null) {
 			timerTask.cancel();
+			timerTask = null;
+		}
 		
+		// If not enough time was added don't bother
+		// with the timer.
+		if (startTime < 1000) {
+			_notifyServiceOfCompletion();
+			return;
+		}
+		
+		// Create the timer thread.
 		timerTask = new TimerTask() {
 			private long delayInitTime = 0;
 			private long time;
@@ -49,8 +59,8 @@ public class DelayTimer {
 				
 				// Cancel the timer if when the time runs out
 				if (time <= 0) {
-					cancel();
 					_notifyServiceOfCompletion();
+					cancel();
 				}
 			}
 		};
@@ -61,6 +71,12 @@ public class DelayTimer {
 	public void stopTimer() {
 		if (timerTask!=null)
 			timerTask.cancel();
+	}
+	
+	public void killTimer() {
+		timer.cancel();
+		timer.purge();
+		timer = null;
 	}
 	
 	public DelayTimerUpdateUIListener getUpdateUIListener() {
@@ -86,22 +102,5 @@ public class DelayTimer {
 			msg.arg2 = MessageId.DelayTimerCmd.CMD_TIMER_FINISHED;
 			notifyTo.sendMessage(msg);
 		}
-	}
-
-	
-	//////////////////////////////////////
-	// Cleanup
-	//////////////////////////////////////
-	@Override
-	protected void finalize() throws Throwable {
-	    try {
-	    	if(timer!=null) {
-	    		timer.cancel();
-	    		timer.purge();
-	    		timer=null;
-	    	}
-	    } finally {
-	        super.finalize();
-	    }
 	}
 }

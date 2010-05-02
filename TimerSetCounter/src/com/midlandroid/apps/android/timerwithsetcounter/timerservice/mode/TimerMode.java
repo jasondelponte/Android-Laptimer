@@ -10,6 +10,7 @@ public abstract class TimerMode {
 	public abstract void startTimer();
 	public abstract void stopTimer();
 	public abstract void resetTimer();
+	public abstract void killTimer();
 	public abstract void lapTimer();
 	public abstract void refreshUI();
 	

@@ -81,6 +81,15 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	_refreshUI();
     }
     
+    @Override
+    public void onStart() {
+    	super.onStart();
+    	
+    	keepTimerServiceAlive = false;
+    }
+    
+    
+    @Override
     public void onResume() {
     	super.onResume();
 
@@ -89,9 +98,10 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	_connectToService();
     }
     
+    @Override
     public void onPause() {
     	super.onPause();
-
+    	
     	_disconnectFromService();
     }
     
@@ -118,13 +128,14 @@ public class Main extends Activity implements TimerUpdateUIListener {
     public boolean onOptionsItemSelected(MenuItem item) {
     	switch(item.getItemId()) {
     	case R.id.mi_reset_timer:
-    		keepTimerServiceAlive = false;
     		_resetTimer();
     		return true;
     	case R.id.mi_preferences:
-    		keepTimerServiceAlive = true;
     		_showPreferences();
     		_preferencesChanged();
+    		return true;
+    	case R.id.mi_timer_mode:
+    		_showTimerModeSelection();
     		return true;
     	}
     	return false;
@@ -165,6 +176,8 @@ public class Main extends Activity implements TimerUpdateUIListener {
     // User Action Handler Methods
     ////////////////////////////////////
     private void _startStopTimer() {
+    	keepTimerServiceAlive = true;
+    	
     	_msgTimerService(MessageId.MainCmd.CMD_START_STOP_TIMER);
     }
     
@@ -173,6 +186,8 @@ public class Main extends Activity implements TimerUpdateUIListener {
     }
     
     private void _resetTimer() {
+    	keepTimerServiceAlive = false;
+    	
     	_msgTimerService(MessageId.MainCmd.CMD_RESET_TIMER);
     }
     
@@ -218,8 +233,23 @@ public class Main extends Activity implements TimerUpdateUIListener {
     }
     
     private void _showPreferences() {
+		keepTimerServiceAlive = true;
+		
     	Intent i = new Intent(this, Preferences.class);
     	startActivity(i);
+    }
+    
+    private void _showTimerModeSelection() {
+		keepTimerServiceAlive = true;
+//    	TimerModeSelection timerMode = new TimerModeSelection(this, R.layout.main);
+//    	timerMode.setSelectionListener(new SelectionListener() {
+//			@Override
+//			public void selectionMade(String selection) {
+//				// TODO Auto-generated method stub
+//				
+//			}
+//    	});
+//    	timerMode.showPopup();
     }
     
     private void _createService() {
@@ -248,9 +278,10 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	}
     }
     
+    public static final int SHOW_TIMER_DELAY_ACT = 0;
     private void _showTimerDelayUI() {
     	Intent i = new Intent(this, DelayTimeCountDown.class);
-    	startActivity(i);
+    	startActivityForResult(i, SHOW_TIMER_DELAY_ACT);
     }
     
     

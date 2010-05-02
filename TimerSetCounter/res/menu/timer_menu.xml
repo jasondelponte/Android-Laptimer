@@ -6,7 +6,6 @@
 	/>
 	<item android:title="@string/timer_mode_lbl"
 		android:icon="@android:drawable/ic_menu_more"
-		android:enabled="false"
 		android:id="@+id/mi_timer_mode"
 	/>
 	<item android:title="@string/save_lap_list"

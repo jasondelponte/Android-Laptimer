@@ -55,14 +55,16 @@ public class SimpleCountUp extends TimerMode {
 
 				currTime = (schTime-initTime);
 				if (getState()!=RunningState.RUNNING) {
-					cancel();
 					
 					if (getState()==RunningState.RESETTED) {
 						_init();
 					}
-				} else {				
+					_updateUITimer(currTime, currTime-prevTime, lapCount);
+					cancel();
+				} else {
 					_updateUITimer(currTime, currTime-prevTime, lapCount);
 				}
+
 			}
 		};
 		
@@ -71,16 +73,22 @@ public class SimpleCountUp extends TimerMode {
 
 	@Override
 	public void stopTimer() {
-		setState(RunningState.STOPPED);
-		
 		stoppedAtTime = currTime;
 		
-		if (timerTask!=null)
-			timerTask.cancel();
+		if (getState()==RunningState.RUNNING)
+			setState(RunningState.STOPPED);
+	}
+	
+	@Override
+	public void killTimer() {
+		timer.cancel();
+		timer.purge();
+		timer = null;
 	}
 
 	@Override
 	public void resetTimer() {
+		setState(RunningState.RESETTED);
 		stopTimer();
 		
 		_init();
@@ -91,7 +99,8 @@ public class SimpleCountUp extends TimerMode {
 	@Override
 	public void lapTimer() {
 		if (getState()==RunningState.RUNNING) {
-			final LapData lapData = new LapData(lapCount, currTime-prevTime, currTime);
+			final LapData lapData = new LapData(lapCount,
+					currTime-prevTime, currTime);
 			lapDataList.add(lapData);
 			
 			_updateUIAddLap(lapData);
