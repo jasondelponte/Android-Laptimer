@@ -17,6 +17,6 @@ public class Preferences extends PreferenceActivity {
         EditTextPreference myEditTextPreference = (EditTextPreference) findPreference(
         		res.getString(R.string.pref_timer_start_delay_key)); 
         EditText myEditText = (EditText)myEditTextPreference.getEditText();
-        myEditText.setKeyListener(DigitsKeyListener.getInstance(false,true)); 
+        myEditText.setKeyListener(DigitsKeyListener.getInstance(false,false)); 
     }
 }

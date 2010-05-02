@@ -5,4 +5,5 @@
 <drawable name="main_fg">#000000</drawable>
 <drawable name="lap_list_bg">#E0FFFF</drawable>
 <drawable name="lap_list_fg">#191970</drawable>
+<drawable name="list_selector">#E0FFFF</drawable>
 </resources>
