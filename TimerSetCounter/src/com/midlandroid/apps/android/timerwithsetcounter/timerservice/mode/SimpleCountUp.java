@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.util.Log;
+
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.LapData;
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener.TimerUpdateUIListener;
 
@@ -55,10 +57,12 @@ public class SimpleCountUp extends TimerMode {
 
 				currTime = (schTime-initTime);
 				if (getState()!=RunningState.RUNNING) {
+					stoppedAtTime = currTime;
 					
 					if (getState()==RunningState.RESETTED) {
 						_init();
 					}
+					
 					_updateUITimer(currTime, currTime-prevTime, lapCount);
 					cancel();
 				} else {
@@ -72,9 +76,7 @@ public class SimpleCountUp extends TimerMode {
 	}
 
 	@Override
-	public void stopTimer() {
-		stoppedAtTime = currTime;
-		
+	public void stopTimer() {		
 		if (getState()==RunningState.RUNNING)
 			setState(RunningState.STOPPED);
 	}

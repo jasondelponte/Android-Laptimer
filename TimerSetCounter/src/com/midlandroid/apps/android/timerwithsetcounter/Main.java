@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,6 +32,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
 	private TextView lapTimeTxt;
 	private TextView currTimeTxt;
 	private ListView lapList;
+	private MenuItem timerModeMI;
 	// members
 	private ArrayAdapter<String> lapListAdapater;
 	private NumberFormat numFormat;
@@ -82,25 +84,20 @@ public class Main extends Activity implements TimerUpdateUIListener {
     }
     
     @Override
-    public void onStart() {
-    	super.onStart();
-    	
-    	keepTimerServiceAlive = false;
-    }
-    
-    
-    @Override
     public void onResume() {
     	super.onResume();
 
         _createService();
-    	
     	_connectToService();
+    	
+    	keepTimerServiceAlive = false;
     }
     
     @Override
     public void onPause() {
     	super.onPause();
+
+    	keepTimerServiceAlive = true;
     	
     	_disconnectFromService();
     }
@@ -112,6 +109,27 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	_disconnectFromService();
     }
     
+    @Override
+    protected void onActivityResult(int reqCode, int resCode, Intent data) {
+    	if (reqCode == 0) {
+    		if (resCode == RESULT_OK) {
+    			
+    		}
+    	}
+    }
+    
+    /////////////////////////////////
+    // Overridden controls
+    /////////////////////////////////
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+    	if (keyCode == KeyEvent.KEYCODE_MENU && event.getRepeatCount() == 0) {
+    		_setTimerModeMIEnabled();
+    	}
+    	
+    	return super.onKeyDown(keyCode, event);
+    }
+    
     
     ////////////////////////////////////
     // Options Menu
@@ -120,6 +138,10 @@ public class Main extends Activity implements TimerUpdateUIListener {
     public boolean onCreateOptionsMenu(Menu menu) {
     	super.onCreateOptionsMenu(menu);
     	getMenuInflater().inflate(R.menu.timer_menu, menu);
+    	
+    	timerModeMI = menu.findItem(R.id.mi_timer_mode);
+    	
+    	_setTimerModeMIEnabled();
     	
 		return true;
     }
@@ -177,7 +199,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
     ////////////////////////////////////
     private void _startStopTimer() {
     	keepTimerServiceAlive = true;
-    	
     	_msgTimerService(MessageId.MainCmd.CMD_START_STOP_TIMER);
     }
     
@@ -187,7 +208,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
     
     private void _resetTimer() {
     	keepTimerServiceAlive = false;
-    	
     	_msgTimerService(MessageId.MainCmd.CMD_RESET_TIMER);
     }
     
@@ -199,6 +219,12 @@ public class Main extends Activity implements TimerUpdateUIListener {
     ////////////////////////////////////
     // Private methods
     ////////////////////////////////////
+    private void _setTimerModeMIEnabled() {
+    	TimerService srvc = TimerService.getService();
+    	if (srvc!=null && timerModeMI!=null)
+    		timerModeMI.setEnabled(srvc.getState()!=RunningState.RUNNING);
+    	
+    }
 //    private void _updateTimerStartStopBtn() {
 //    	TimerService srvc = TimerService.getService();
 //    	if (srvc!=null) {
@@ -241,17 +267,19 @@ public class Main extends Activity implements TimerUpdateUIListener {
     
     private void _showTimerModeSelection() {
 		keepTimerServiceAlive = true;
-//    	TimerModeSelection timerMode = new TimerModeSelection(this, R.layout.main);
-//    	timerMode.setSelectionListener(new SelectionListener() {
-//			@Override
-//			public void selectionMade(String selection) {
-//				// TODO Auto-generated method stub
-//				
-//			}
-//    	});
-//    	timerMode.showPopup();
+		
     }
     
+    public static final int SHOW_TIMER_DELAY_ACT = 0;
+    private void _showTimerDelayUI() {
+    	Intent i = new Intent(this, DelayTimeCountDown.class);
+    	startActivityForResult(i, SHOW_TIMER_DELAY_ACT);
+    }
+
+    
+    //////////////////////////////////////
+    // Service Controls
+    //////////////////////////////////////
     private void _createService() {
         if (TimerService.getService()==null) {
 			Intent i = new Intent(this, TimerService.class);
@@ -276,12 +304,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
 		    	stopService(i);
     		}
     	}
-    }
-    
-    public static final int SHOW_TIMER_DELAY_ACT = 0;
-    private void _showTimerDelayUI() {
-    	Intent i = new Intent(this, DelayTimeCountDown.class);
-    	startActivityForResult(i, SHOW_TIMER_DELAY_ACT);
     }
     
     

@@ -71,5 +71,6 @@
 		android:layout_height="fill_parent"
 		android:layout_below="@id/lap_timer_txt"
 		android:background="@drawable/lap_list_bg"
+		android:drawSelectorOnTop="false"
 	/>
 </RelativeLayout>

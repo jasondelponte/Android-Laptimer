@@ -1,62 +1,39 @@
 package com.midlandroid.apps.android.timerwithsetcounter;
 
 import android.app.Activity;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.PopupWindow;
+import android.os.Bundle;
 
-public class TimerModeSelection {
-	private SelectionListener listener;
-	private PopupWindow popup;
-	private ListView listView;
-	private View parentLayout;
-	
-	public TimerModeSelection(Activity parent, int parentLayoutId) {
-		_init();
+public class TimerModeSelection extends Activity{
+	///////////////////////////////////
+	// Overridden Commands
+	///////////////////////////////////
+	@Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
 		
-		LayoutInflater inflater = parent.getLayoutInflater();
-		View mView = inflater.inflate(R.layout.timer_mode_selection,
-				(ViewGroup)parent.findViewById(R.id.timer_mode_selc_layout));
-		
-		popup = new PopupWindow(mView,
-				LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT, false);
-		
-		parentLayout = (View)parent.findViewById(parentLayoutId);
-		
-		
-		// TESTING
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(parent,
-				R.id.list_item_textview);
-		listView.setAdapter(adapter);
-		adapter.add("SimpleCountUp");
-		// TESTING
 	}
 	
-	public void showPopup() {
-		popup.showAtLocation(parentLayout, Gravity.CENTER, 0, 0);
+	@Override
+	public void onResume() {
+		super.onResume();
+		
 	}
 	
-	public void setSelectionListener(SelectionListener listener) {
-		this.listener = listener;
+	@Override
+	public void onPause() {
+		super.onPause();
+		
+	}
+	
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		
 	}
 
-	///////////////////////////////
-	// Private methods
-	///////////////////////////////
-	private void _init() {
-		listener = null;
-	}
 	
-	/**
-	 * Timer mode selection listener.
-	 * @author Jason Del Ponte
-	 */
-	public interface SelectionListener {
-		public void selectionMade(final String selection);
-	}
+	///////////////////////////////////
+	// Private Methods
+	///////////////////////////////////
 }

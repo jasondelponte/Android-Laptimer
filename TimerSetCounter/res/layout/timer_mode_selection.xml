@@ -2,11 +2,29 @@
 <LinearLayout
 	android:id="@+id/timer_mode_selc_layout"
 	xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="wrap_content"
-	android:layout_height="wrap_content">
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
 
-	<ListView android:id="@+id/timer_mode_selc_list"
+	<Spinner android:id="@+id/timer_mode_selc_cmbo"
 		android:layout_width="fill_parent"
-		android:layout_height="fill_parent"
+		android:layout_height="wrap_content"
+	/>
+	
+	<TextView android:id="@+id/timer_mode_desc"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="@string/timer_mode_default_desc"
+	/>
+	
+	<Button android:id="@+id/timer_mode_selc_btn"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_weight="1"
+	/>
+	
+	<Button android:id="@+id/timer_mode_selc_btn"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_weight="1"
 	/>
 </LinearLayout>
