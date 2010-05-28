@@ -11,19 +11,22 @@ import com.midlandroid.apps.android.timerwithsetcounter.util.TextUtil;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
+import android.preference.PreferenceManager;
+import android.text.ClipboardManager;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class Main extends Activity implements TimerUpdateUIListener {	
 	// Views
@@ -31,19 +34,21 @@ public class Main extends Activity implements TimerUpdateUIListener {
 	private Button lapNumBtn;
 	private TextView lapTimeTxt;
 	private TextView currTimeTxt;
-	private ListView lapList;
+	private TextView lapListTxt;
 	private MenuItem timerModeMI;
 	// members
-	private ArrayAdapter<String> lapListAdapater;
 	private NumberFormat numFormat;
 	private boolean keepTimerServiceAlive;
 	private Messenger myMessenger;
+	private String lapStrings;
+	private boolean isOneClickTextCopy;
 	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        isOneClickTextCopy = false;
         
         // Init
         numFormat = NumberFormat.getInstance();
@@ -56,6 +61,13 @@ public class Main extends Activity implements TimerUpdateUIListener {
         _createService();
     	
     	lapTimeTxt = (TextView)findViewById(R.id.lap_timer_txt);
+    	lapTimeTxt.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if (isOneClickTextCopy)
+					_addViewTextToClipBoard(v);
+			}
+    	});
     	lapNumBtn = (Button)findViewById(R.id.lap_increment_btn);
     	lapNumBtn.setOnClickListener(new OnClickListener() {
 			@Override
@@ -65,6 +77,13 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	});
     	
     	currTimeTxt = (TextView)findViewById(R.id.timer_counter_txt);
+    	currTimeTxt.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if (isOneClickTextCopy)
+					_addViewTextToClipBoard(v);
+			}
+    	});
     	startStopBtn = (Button)findViewById(R.id.timer_start_stop_btn);
     	startStopBtn.setOnClickListener(new OnClickListener() {
 			@Override
@@ -74,10 +93,15 @@ public class Main extends Activity implements TimerUpdateUIListener {
 			}
     	});
     	
-    	lapList = (ListView)findViewById(R.id.lap_list);    	
-    	lapListAdapater = new ArrayAdapter<String>(this,
-    			R.layout.lap_list_text_item);
-    	lapList.setAdapter(lapListAdapater);
+    	lapListTxt = (TextView)findViewById(R.id.lap_txt);
+    	lapListTxt.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if (isOneClickTextCopy)
+					_addViewTextToClipBoard(v);
+			}
+    	});
+    	lapStrings = "";
     	
     	_connectToService();
     	_refreshUI();
@@ -86,6 +110,9 @@ public class Main extends Activity implements TimerUpdateUIListener {
     @Override
     public void onResume() {
     	super.onResume();
+    	
+    	// Update the preferences
+    	_getPreferences();
 
         _createService();
     	_connectToService();
@@ -173,12 +200,17 @@ public class Main extends Activity implements TimerUpdateUIListener {
 				TextUtil.formatDateToString(lapData.getLapTime(), numFormat)+" - "+
 				"Total: "+TextUtil.formatDateToString(lapData.getTotalTime(), numFormat);
 		
-		lapListAdapater.insert(item, 0);
+		if (lapData.getLapNum()>1)
+			item += "\n";
+		
+		lapStrings = item + lapStrings;
+		lapListTxt.setText(lapStrings);
 	}
 
 	@Override
 	public void clearLapList() {
-		lapListAdapater.clear();
+		lapStrings = "";
+		lapListTxt.setText(lapStrings);
 	}
 
 	@Override
@@ -202,6 +234,15 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	_msgTimerService(MessageId.MainCmd.CMD_START_STOP_TIMER);
     }
     
+    private void _getPreferences() {
+    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		Resources res = getResources();
+		
+		// Use delay timer on restarts?
+		isOneClickTextCopy = prefs.getBoolean(
+				res.getString(R.string.pref_one_click_txt_cpy_key), false);
+    }
+    
     private void _setIncrement() {
     	_msgTimerService(MessageId.MainCmd.CMD_SET_INCREMENT);
     }
@@ -219,21 +260,20 @@ public class Main extends Activity implements TimerUpdateUIListener {
     ////////////////////////////////////
     // Private methods
     ////////////////////////////////////
-    private void _setTimerModeMIEnabled() {
-    	TimerService srvc = TimerService.getService();
-    	if (srvc!=null && timerModeMI!=null)
-    		timerModeMI.setEnabled(srvc.getState()!=RunningState.RUNNING);
-    	
+    private void _addViewTextToClipBoard(View v) {
+		 ClipboardManager clipboard = 
+		      (ClipboardManager) getSystemService(CLIPBOARD_SERVICE); 
+
+		 clipboard.setText(((TextView)v).getText());
+		 Toast t = Toast.makeText(this, R.string.text_copied_to_clipboard, Toast.LENGTH_SHORT);
+		 t.show();
     }
-//    private void _updateTimerStartStopBtn() {
+    
+    private void _setTimerModeMIEnabled() {
 //    	TimerService srvc = TimerService.getService();
-//    	if (srvc!=null) {
-//    		if (srvc.getState()==RunningState.RUNNING)
-//    			startStopBtn.setText(getResources().getString(R.string.timer_stop_btn_txt));
-//    		else
-//    			startStopBtn.setText(getResources().getString(R.string.timer_start_btn_txt));
-//    	}
-//    }
+//    	if (srvc!=null && timerModeMI!=null)
+//    		timerModeMI.setEnabled(srvc.getState()!=RunningState.RUNNING);
+    }
     
     private void _msgTimerService(final int cmd) {
     	_msgTimerService(cmd, null);
