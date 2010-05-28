@@ -13,4 +13,10 @@
 		android:key="@string/pref_timer_start_delay_on_restarts_key"
 		android:defaultValue="false"
 	/>
+	<CheckBoxPreference
+		android:title="@string/pref_one_click_txt_cpy"
+		android:summary="@string/pref_one_click_txt_cpy_desc"
+		android:key="@string/pref_one_click_txt_cpy_key"
+		android:defaultValue="true"
+	/>
 </PreferenceScreen>

@@ -6,4 +6,6 @@
 <drawable name="lap_list_bg">#E0FFFF</drawable>
 <drawable name="lap_list_fg">#191970</drawable>
 <drawable name="list_selector">#E0FFFF</drawable>
+<drawable name="count_text_bg">#000000</drawable>
+<drawable name="count_text_fg">#00FF00</drawable>
 </resources>

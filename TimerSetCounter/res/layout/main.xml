@@ -19,6 +19,9 @@
 	    android:layout_height="wrap_content"
 	    android:textColor="@drawable/main_timer_fg"
 		android:layout_below="@id/timer_counter_lbl"
+		android:padding="5sp"
+		android:editable="false"
+		android:cursorVisible="false"
 		android:layout_alignParentLeft="true"
 		android:layout_marginLeft="5sp"
 	    android:textSize="30sp"
@@ -50,10 +53,13 @@
 	    android:layout_height="wrap_content"
 	    android:textColor="@drawable/main_timer_fg"
 		android:layout_below="@id/lap_counter_lbl"
+		android:padding="5sp"
+		android:editable="false"
+		android:cursorVisible="false"
 		android:layout_alignParentLeft="true"
 		android:layout_marginLeft="5sp"
 	    android:textSize="30sp"
-	    android:layout_marginBottom="15sp"
+	    android:layout_marginBottom="10sp"
 	/>
     
     <Button android:id="@+id/lap_increment_btn"
@@ -66,11 +72,29 @@
 	    android:layout_marginLeft="20sp"
 	/>
 	
-	<ListView android:id="@+id/lap_list"
+	<TextView
+		android:id="@+id/lap_history_lbl"
+		android:text="@string/lap_history_lbl"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+	    android:textColor="@drawable/main_fg"
+		android:layout_below="@id/lap_timer_txt"
+	    android:textSize="15sp"
+	/>
+	
+	<ScrollView
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent"
-		android:layout_below="@id/lap_timer_txt"
-		android:background="@drawable/lap_list_bg"
-		android:drawSelectorOnTop="false"
-	/>
+		android:layout_below="@id/lap_history_lbl">
+		<TextView android:id="@+id/lap_txt"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+	    	android:textColor="@drawable/lap_list_fg"
+			android:padding="5sp"
+			android:editable="false"
+			android:cursorVisible="false"
+	    	android:textSize="15sp"
+			android:lineSpacingMultiplier="1.2"
+		/>
+	</ScrollView>
 </RelativeLayout>
