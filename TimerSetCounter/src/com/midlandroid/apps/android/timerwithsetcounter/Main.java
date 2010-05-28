@@ -229,20 +229,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
     ////////////////////////////////////
     // User Action Handler Methods
     ////////////////////////////////////
-    private void _startStopTimer() {
-    	keepTimerServiceAlive = true;
-    	_msgTimerService(MessageId.MainCmd.CMD_START_STOP_TIMER);
-    }
-    
-    private void _getPreferences() {
-    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-		Resources res = getResources();
-		
-		// Use delay timer on restarts?
-		isOneClickTextCopy = prefs.getBoolean(
-				res.getString(R.string.pref_one_click_txt_cpy_key), false);
-    }
-    
     private void _setIncrement() {
     	_msgTimerService(MessageId.MainCmd.CMD_SET_INCREMENT);
     }
@@ -260,6 +246,20 @@ public class Main extends Activity implements TimerUpdateUIListener {
     ////////////////////////////////////
     // Private methods
     ////////////////////////////////////
+    private void _startStopTimer() {
+    	keepTimerServiceAlive = true;
+    	_msgTimerService(MessageId.MainCmd.CMD_START_STOP_TIMER);
+    }
+    
+    private void _getPreferences() {
+    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		Resources res = getResources();
+		
+		// Use delay timer on restarts?
+		isOneClickTextCopy = prefs.getBoolean(
+				res.getString(R.string.pref_one_click_txt_cpy_key), true);
+    }
+    
     private void _addViewTextToClipBoard(View v) {
 		 ClipboardManager clipboard = 
 		      (ClipboardManager) getSystemService(CLIPBOARD_SERVICE); 
