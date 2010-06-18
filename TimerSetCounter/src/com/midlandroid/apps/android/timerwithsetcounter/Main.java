@@ -1,6 +1,10 @@
 package com.midlandroid.apps.android.timerwithsetcounter;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.NumberFormat;
+import java.util.Date;
 
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.LapData;
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.TimerService;
@@ -10,6 +14,8 @@ import com.midlandroid.apps.android.timerwithsetcounter.util.MessageId;
 import com.midlandroid.apps.android.timerwithsetcounter.util.TextUtil;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -19,12 +25,14 @@ import android.os.Message;
 import android.os.Messenger;
 import android.preference.PreferenceManager;
 import android.text.ClipboardManager;
+import android.text.format.DateFormat;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,12 +44,16 @@ public class Main extends Activity implements TimerUpdateUIListener {
 	private TextView currTimeTxt;
 	private TextView lapListTxt;
 	private MenuItem timerModeMI;
+	private MenuItem saveHistoryMI;
 	// members
+	private Integer lapCount;
 	private NumberFormat numFormat;
 	private boolean keepTimerServiceAlive;
 	private Messenger myMessenger;
 	private String lapStrings;
 	private boolean isOneClickTextCopy;
+	private boolean secondChanceReset;
+	private String outfileRootPath;
 	
     /** Called when the activity is first created. */
     @Override
@@ -49,6 +61,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         isOneClickTextCopy = false;
+        lapCount = 1;
         
         // Init
         numFormat = NumberFormat.getInstance();
@@ -104,6 +117,12 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	lapStrings = "";
     	
     	_connectToService();
+    }
+    
+    @Override
+    public void onStart() {
+    	super.onStart();
+
     	_refreshUI();
     }
     
@@ -151,7 +170,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
     	if (keyCode == KeyEvent.KEYCODE_MENU && event.getRepeatCount() == 0) {
-    		_setTimerModeMIEnabled();
+    		_setMenuItemEnabledBasedOnRunState();
     	}
     	
     	return super.onKeyDown(keyCode, event);
@@ -167,8 +186,9 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	getMenuInflater().inflate(R.menu.timer_menu, menu);
     	
     	timerModeMI = menu.findItem(R.id.mi_timer_mode);
+    	saveHistoryMI = menu.findItem(R.id.mi_save_lap_list);
     	
-    	_setTimerModeMIEnabled();
+    	_setMenuItemEnabledBasedOnRunState();
     	
 		return true;
     }
@@ -178,6 +198,9 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	switch(item.getItemId()) {
     	case R.id.mi_reset_timer:
     		_resetTimer();
+    		return true;
+    	case R.id.mi_save_lap_list:
+    		_showOutFileAlertPrompt();
     		return true;
     	case R.id.mi_preferences:
     		_showPreferences();
@@ -218,9 +241,10 @@ public class Main extends Activity implements TimerUpdateUIListener {
 		this.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
+				lapCount = setCount;
 				currTimeTxt.setText(TextUtil.formatDateToString(currTime,numFormat));
 				lapTimeTxt.setText(TextUtil.formatDateToString(lapTime,numFormat));
-				lapNumBtn.setText("Lap "+Integer.valueOf(setCount).toString());
+				lapNumBtn.setText("Lap "+ lapCount.toString());
 			}
 		});
 	}
@@ -234,6 +258,14 @@ public class Main extends Activity implements TimerUpdateUIListener {
     }
     
     private void _resetTimer() {
+    	if (secondChanceReset) {
+    		_showPromptToResetTimer();
+    	} else {
+    		_doResetTimer();
+    	}
+    }
+    
+    private void _doResetTimer() {
     	keepTimerServiceAlive = false;
     	_msgTimerService(MessageId.MainCmd.CMD_RESET_TIMER);
     }
@@ -258,6 +290,11 @@ public class Main extends Activity implements TimerUpdateUIListener {
 		// Use delay timer on restarts?
 		isOneClickTextCopy = prefs.getBoolean(
 				res.getString(R.string.pref_one_click_txt_cpy_key), true);
+		
+		outfileRootPath="";
+		//outfileRootPath = prefs.getString(res.getString(R.string.pref_outfile_root_key), "/sdcard/");
+		
+		secondChanceReset = prefs.getBoolean(res.getString(R.string.pref_second_chance_reset_key), true);
     }
     
     private void _addViewTextToClipBoard(View v) {
@@ -269,10 +306,12 @@ public class Main extends Activity implements TimerUpdateUIListener {
 		 t.show();
     }
     
-    private void _setTimerModeMIEnabled() {
-//    	TimerService srvc = TimerService.getService();
-//    	if (srvc!=null && timerModeMI!=null)
-//    		timerModeMI.setEnabled(srvc.getState()!=RunningState.RUNNING);
+    private void _setMenuItemEnabledBasedOnRunState() {
+    	TimerService srvc = TimerService.getService();
+    	if (srvc!=null && timerModeMI!=null) {
+    		//timerModeMI.setEnabled(srvc.getState()!=RunningState.RUNNING);
+    		saveHistoryMI.setEnabled(srvc.getState()!=RunningState.RUNNING);
+    	}
     }
     
     private void _msgTimerService(final int cmd) {
@@ -295,6 +334,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
     }
     
     private void _refreshUI() {
+    	lapListTxt.setText("");
     	_msgTimerService(MessageId.MainCmd.CMD_REFRESH);
     }
     
@@ -314,6 +354,124 @@ public class Main extends Activity implements TimerUpdateUIListener {
     private void _showTimerDelayUI() {
     	Intent i = new Intent(this, DelayTimeCountDown.class);
     	startActivityForResult(i, SHOW_TIMER_DELAY_ACT);
+    }
+    
+    private void _showOutFileAlertPrompt() {
+    	final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+    	
+    	alert.setTitle("File Selection");
+    	alert.setMessage("Path to write to:");
+    	
+    	final  EditText input = new EditText(this);    	
+    	input.setText("/sdcard/" + outfileRootPath + "laptimer_" + DateFormat.format("yyyyMMdd-kkmmss", new Date().getTime()) + ".txt");
+    	alert.setView(input);
+    	
+    	alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				_writeOutTimerToDisk(input.getText().toString(), false);
+			}
+		});
+    	
+    	alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// Canceled, do nothing.
+			}
+		});
+    	
+    	alert.show();
+    }
+    
+    private void _showPromptToOverwriteFile(final String path) {
+    	final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+    	
+    	alert.setTitle("File Exists");
+    	alert.setMessage("File exists overwrite it?");
+    	
+    	final  TextView input = new TextView(this);    	
+    	input.setText(path);
+    	alert.setView(input);
+    	
+    	alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				_writeOutTimerToDisk(input.getText().toString(), true);
+			}
+		});
+    	
+    	alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// Canceled, do nothing.
+			}
+		});
+    	
+    	alert.show();
+    }
+    
+    private void _showPromptToResetTimer() {
+    	final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+    	
+    	alert.setTitle("Confirm Timer Reset");
+    	alert.setMessage("Are you sure you want to reset the timer?");
+    	
+    	alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				_doResetTimer();
+			}
+		});
+    	
+    	alert.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// Canceled, do nothing.
+			}
+		});
+    	
+    	alert.show();
+    }
+    
+    private void _writeOutTimerToDisk(final String path, boolean overwrite) {
+		final File file = new File(path);
+		if (file.exists()==true && !overwrite) {
+			_showPromptToOverwriteFile(path);
+		} else {
+			String timerMode = "Unknown Mode";
+			Date timerStartedAt = new Date();
+			TimerService srvc = TimerService.getService();
+	    	if (srvc!=null) {
+	    		timerMode = srvc.getTimerModeName();
+	    		timerStartedAt = srvc.getTimerStartedAt();
+	    	}
+	    	
+			final String out = "" +
+					"Timer Mode: " + timerMode + "\n" +
+					"Started on: " + ((timerStartedAt!=null)?DateFormat.format("yyyy MM dd kk:mm:ss", timerStartedAt):"Unknown") + "\n" +
+					"Total Time: " + currTimeTxt.getText() + "\n" +
+					"Number of Laps: " + (lapCount-1) + "\n" + 
+					"**** LAP HISTORY ****\n" +
+					lapListTxt.getText();
+					
+			
+	    	final Thread thread = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						file.createNewFile();
+						FileOutputStream os = new FileOutputStream(file);
+						os.write(out.getBytes());
+						
+						os.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+						
+					}
+				}
+	    	});
+	    	thread.start();
+		}
     }
 
     

@@ -19,4 +19,18 @@
 		android:key="@string/pref_one_click_txt_cpy_key"
 		android:defaultValue="true"
 	/>
+	<CheckBoxPreference
+		android:title="@string/pref_second_chance_reset"
+		android:summary="@string/pref_second_chance_reset_desc"
+		android:key="@string/pref_second_chance_reset_key"
+		android:defaultValue="true"
+	/>
+	<!--
+	<EditTextPreference
+		android:title="@string/pref_outfile_root"
+		android:summary="@string/pref_outfile_root_desc"
+		android:key="@string/pref_outfile_root_key"
+		android:defaultValue="/sdcard/"
+	/>
+	-->
 </PreferenceScreen>

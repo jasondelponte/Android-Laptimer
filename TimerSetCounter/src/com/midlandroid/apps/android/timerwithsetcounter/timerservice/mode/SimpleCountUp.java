@@ -118,6 +118,11 @@ public class SimpleCountUp extends TimerMode {
 			_updateUIAddLap(lapData);
 		}
 	}
+
+	@Override
+	public String getTimerModeName() {
+		return "Simple Up Counting Timer";
+	}
 	
 	
 	//////////////////////////////////////////

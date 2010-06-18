@@ -13,6 +13,7 @@ public abstract class TimerMode {
 	public abstract void killTimer();
 	public abstract void lapTimer();
 	public abstract void refreshUI();
+	public abstract String getTimerModeName();
 	
 	protected RunningState runningState;
 	public RunningState getState() {

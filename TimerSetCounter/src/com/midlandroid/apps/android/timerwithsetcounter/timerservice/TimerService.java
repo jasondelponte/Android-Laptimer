@@ -1,5 +1,7 @@
 package com.midlandroid.apps.android.timerwithsetcounter.timerservice;
 
+import java.util.Date;
+
 import com.midlandroid.apps.android.timerwithsetcounter.R;
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.mode.DelayTimer;
 import com.midlandroid.apps.android.timerwithsetcounter.timerservice.mode.SimpleCountUp;
@@ -28,6 +30,8 @@ public class TimerService extends Service {
 	private TimerMode timerMode;
 	private Messenger mainUIMsgr;
 	private Messenger delayTimerMsgr;
+	
+	private Date timeStartedAt;
 	
 	// Preferences
 	private boolean preferencesChanged;
@@ -63,7 +67,7 @@ public class TimerService extends Service {
 		
 		// Default timer mode
 		timerMode = new SimpleCountUp();
-		
+				
 		_getPrefs();
 	}
 	
@@ -109,6 +113,14 @@ public class TimerService extends Service {
 		return timerMode.getState();
 	}
 	
+	public String getTimerModeName() {
+		return timerMode.getTimerModeName();
+	}
+	
+	public Date getTimerStartedAt() {
+		return timeStartedAt;
+	}
+	
 
 	/////////////////////////////////////////
 	// Message Processor 
@@ -150,6 +162,7 @@ public class TimerService extends Service {
 			break;
 		case MessageId.MainCmd.CMD_RESET_TIMER:
 			_getPrefs();
+			timeStartedAt = null;
 			timerMode.resetTimer();
 			delayTimer.stopTimer();
 			break;
@@ -195,6 +208,7 @@ public class TimerService extends Service {
 	}
 	
 	private void _startMainTimer() {
+		timeStartedAt = new Date();
 		timerMode.startTimer();
 	}
 	

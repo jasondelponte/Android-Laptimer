@@ -35,4 +35,10 @@
     <string name="pref_one_click_txt_cpy">One Click Text Copy</string>
     <string name="pref_one_click_txt_cpy_key">oneClickTextCopyPref</string>
     <string name="pref_one_click_txt_cpy_desc">Allows the user to add the text in the timer, lap, and lap list text boxes to the clipboard.</string>
+    <string name="pref_outfile_root">Outfile Root Path</string>
+    <string name="pref_outfile_root_desc">The root directory all output files will be saved at by default.</string>
+    <string name="pref_outfile_root_key">outfileRoot</string>
+    <string name="pref_second_chance_reset">Confirm Timer Reset</string>
+    <string name="pref_second_chance_reset_key">secondChanceReset</string>
+    <string name="pref_second_chance_reset_desc">Prompts the user to confirm when resetting the timer.</string>
 </resources>

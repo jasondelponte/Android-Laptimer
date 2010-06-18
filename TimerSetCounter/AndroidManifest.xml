@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="com.midlandroid.apps.android.timerwithsetcounter"
-      android:versionName="1.1.0 Beta" android:versionCode="14">
+      android:versionName="1.1.0 Beta" android:versionCode="15">
     <application android:label="@string/app_name"
     		android:description="@string/app_desc"
     		android:testOnly="false"
@@ -23,4 +23,6 @@
 	<activity android:label="@string/timer_delay_countdown_label" android:name="DelayTimeCountDown"></activity>
 </application>
     <uses-sdk android:minSdkVersion="4" />
+
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"></uses-permission>
 </manifest> 
