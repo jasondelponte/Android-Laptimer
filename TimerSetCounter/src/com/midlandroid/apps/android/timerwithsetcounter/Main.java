@@ -433,11 +433,42 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	alert.show();
     }
     
+    private void _showErrorCreatingOutfileAlert(IOException e) {
+    	final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+    	
+    	alert.setTitle("Error!");
+    	alert.setMessage("Failed to save file because "+ e.getMessage());
+    	
+    	alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				//_doResetTimer();
+			}
+		});
+    	
+//    	alert.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+//			@Override
+//			public void onClick(DialogInterface dialog, int which) {
+//				// Canceled, do nothing.
+//			}
+//		});
+    	
+    	alert.show();
+    }
+    
     private void _writeOutTimerToDisk(final String path, boolean overwrite) {
 		final File file = new File(path);
 		if (file.exists()==true && !overwrite) {
 			_showPromptToOverwriteFile(path);
 		} else {
+			// Make sure we can write the file first
+			try {
+				file.createNewFile();
+			} catch (IOException e) {
+				_showErrorCreatingOutfileAlert(e);
+			}
+			
+			// Get the values needed for the output file.
 			String timerMode = "Unknown Mode";
 			Date timerStartedAt = new Date();
 			TimerService srvc = TimerService.getService();
@@ -445,7 +476,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
 	    		timerMode = srvc.getTimerModeName();
 	    		timerStartedAt = srvc.getTimerStartedAt();
 	    	}
-	    	
 			final String out = "" +
 					"Timer Mode: " + timerMode + "\n" +
 					"Started on: " + ((timerStartedAt!=null)?DateFormat.format("yyyy MM dd kk:mm:ss", timerStartedAt):"Unknown") + "\n" +
@@ -454,19 +484,16 @@ public class Main extends Activity implements TimerUpdateUIListener {
 					"**** LAP HISTORY ****\n" +
 					lapListTxt.getText();
 					
-			
 	    	final Thread thread = new Thread(new Runnable() {
 				@Override
 				public void run() {
 					try {
-						file.createNewFile();
 						FileOutputStream os = new FileOutputStream(file);
 						os.write(out.getBytes());
 						
 						os.close();
 					} catch (IOException e) {
 						e.printStackTrace();
-						
 					}
 				}
 	    	});
