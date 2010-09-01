@@ -12,6 +12,7 @@ import com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener.
 import com.midlandroid.apps.android.timerwithsetcounter.util.MessageId;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -19,11 +20,13 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.PowerManager;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class TimerService extends Service {
+	private static final String LOG_TAG = TimerService.class.getSimpleName();
 	private static TimerService timerService = null;
 
 	// Current Timers
@@ -39,9 +42,13 @@ public class TimerService extends Service {
 	private boolean useDelayTimer;
 	private boolean useDelayTimerOnRestarts;
 	private boolean useAudioAlerts;
+	private boolean useWakeLock;
 	
 	// Delay Timer
 	private DelayTimer delayTimer;
+	
+	// power manger wake lock
+	PowerManager.WakeLock wakeLock;
 	
 	/////////////////////////////////
 	// Overridden Service Methods
@@ -62,6 +69,7 @@ public class TimerService extends Service {
 		useDelayTimer = false;
 		useDelayTimerOnRestarts = false;
 		useAudioAlerts = false;
+		useWakeLock = false;
 
 		delayTimer = new DelayTimer(myHandler);
 		
@@ -152,12 +160,15 @@ public class TimerService extends Service {
 		switch(msg.arg2) {
 		case MessageId.MainCmd.CMD_START_STOP_TIMER:
 			if (timerMode.getState()!=RunningState.RUNNING){
-				if (useDelayTimerOnRestarts || useDelayTimer)
+				if (useDelayTimerOnRestarts || useDelayTimer) {
 					_startDelayTimer();
-				else
+				} else {
 					_startMainTimer();
+					_grabWakeLock();
+				}
 			} else {
 				_stopMainTimer();
+				_releaseWakeLock();
 			}
 			break;
 		case MessageId.MainCmd.CMD_RESET_TIMER:
@@ -165,6 +176,7 @@ public class TimerService extends Service {
 			timeStartedAt = null;
 			timerMode.resetTimer();
 			delayTimer.stopTimer();
+			_releaseWakeLock();
 			break;
 		case MessageId.MainCmd.CMD_SET_INCREMENT:
 			timerMode.lapTimer();
@@ -259,6 +271,31 @@ public class TimerService extends Service {
 		useAudioAlerts = false;
 		
 		preferencesChanged = false;
+	}
+	
+	/**
+	 * Grab the wake lock preventing the screen from timing out
+	 * if the option is set
+	 */
+	private void _grabWakeLock() {
+		if (useWakeLock) {
+			if (wakeLock != null) {
+				PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+				wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, LOG_TAG);
+			}
+			
+			if (!wakeLock.isHeld())
+				wakeLock.acquire();
+		}
+	}
+	
+	/**
+	 * Releases the previously grabbed wake lock
+	 */
+	private void _releaseWakeLock() {
+		if (useWakeLock && wakeLock != null && wakeLock.isHeld()) {
+			wakeLock.release();
+		}
 	}
 	
 	private void _playTimerStartAudio() {
