@@ -266,6 +266,10 @@ public class TimerService extends Service {
 		useDelayTimerOnRestarts = prefs.getBoolean(
 				res.getString(R.string.pref_timer_start_delay_on_restarts_key), false);
 		
+		// Should the power manager wake lock be used?
+		useWakeLock = prefs.getBoolean(
+				res.getString(R.string.pref_use_wakelock_key), true);
+		
 		
 		// Should Audio alerts be played?
 		useAudioAlerts = false;
@@ -279,7 +283,7 @@ public class TimerService extends Service {
 	 */
 	private void _grabWakeLock() {
 		if (useWakeLock) {
-			if (wakeLock != null) {
+			if (wakeLock == null) {
 				PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 				wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, LOG_TAG);
 			}
