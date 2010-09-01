@@ -1,15 +1,15 @@
-package com.midlandroid.apps.android.timerwithsetcounter.timerservice;
+package com.midlandroid.apps.android.laptimer.timerservice;
 
 import java.util.Date;
 
-import com.midlandroid.apps.android.timerwithsetcounter.R;
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.mode.DelayTimer;
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.mode.SimpleCountUp;
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.mode.TimerMode;
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.mode.TimerMode.RunningState;
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener.DelayTimerUpdateUIListener;
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener.TimerUpdateUIListener;
-import com.midlandroid.apps.android.timerwithsetcounter.util.MessageId;
+import com.midlandroid.apps.android.laptimer.timerservice.mode.DelayTimer;
+import com.midlandroid.apps.android.laptimer.timerservice.mode.SimpleCountUp;
+import com.midlandroid.apps.android.laptimer.timerservice.mode.TimerMode;
+import com.midlandroid.apps.android.laptimer.timerservice.mode.TimerMode.RunningState;
+import com.midlandroid.apps.android.laptimer.timerservice.uilistener.DelayTimerUpdateUIListener;
+import com.midlandroid.apps.android.laptimer.timerservice.uilistener.TimerUpdateUIListener;
+import com.midlandroid.apps.android.laptimer.util.MessageId;
+import com.midlandroid.apps.android.laptimer.R;
 
 import android.app.Service;
 import android.content.Context;

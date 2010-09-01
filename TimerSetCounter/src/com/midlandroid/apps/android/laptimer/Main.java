@@ -1,4 +1,4 @@
-package com.midlandroid.apps.android.timerwithsetcounter;
+package com.midlandroid.apps.android.laptimer;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -6,12 +6,13 @@ import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.Date;
 
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.LapData;
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.TimerService;
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.mode.TimerMode.RunningState;
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener.TimerUpdateUIListener;
-import com.midlandroid.apps.android.timerwithsetcounter.util.MessageId;
-import com.midlandroid.apps.android.timerwithsetcounter.util.TextUtil;
+import com.midlandroid.apps.android.laptimer.timerservice.LapData;
+import com.midlandroid.apps.android.laptimer.timerservice.TimerService;
+import com.midlandroid.apps.android.laptimer.timerservice.mode.TimerMode.RunningState;
+import com.midlandroid.apps.android.laptimer.timerservice.uilistener.TimerUpdateUIListener;
+import com.midlandroid.apps.android.laptimer.util.MessageId;
+import com.midlandroid.apps.android.laptimer.util.TextUtil;
+import com.midlandroid.apps.android.laptimer.R;
 
 import android.app.Activity;
 import android.app.AlertDialog;

@@ -1,4 +1,4 @@
-package com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener;
+package com.midlandroid.apps.android.laptimer.timerservice.uilistener;
 
 public interface DelayTimerUpdateUIListener {
 	public void updateDelayTimerUI(final long time);

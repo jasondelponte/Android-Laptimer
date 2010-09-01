@@ -1,4 +1,4 @@
-package com.midlandroid.apps.android.timerwithsetcounter.timerservice.mode;
+package com.midlandroid.apps.android.laptimer.timerservice.mode;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -6,8 +6,8 @@ import java.util.TimerTask;
 import android.os.Handler;
 import android.os.Message;
 
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener.DelayTimerUpdateUIListener;
-import com.midlandroid.apps.android.timerwithsetcounter.util.MessageId;
+import com.midlandroid.apps.android.laptimer.timerservice.uilistener.DelayTimerUpdateUIListener;
+import com.midlandroid.apps.android.laptimer.util.MessageId;
 
 public class DelayTimer {
 	private static final int TIMER_UPDATE_RATE = 100;

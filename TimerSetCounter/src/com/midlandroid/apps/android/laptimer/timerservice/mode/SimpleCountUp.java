@@ -1,11 +1,11 @@
-package com.midlandroid.apps.android.timerwithsetcounter.timerservice.mode;
+package com.midlandroid.apps.android.laptimer.timerservice.mode;
 
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.LapData;
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener.TimerUpdateUIListener;
+import com.midlandroid.apps.android.laptimer.timerservice.LapData;
+import com.midlandroid.apps.android.laptimer.timerservice.uilistener.TimerUpdateUIListener;
 
 public class SimpleCountUp extends TimerMode {
 	private static final int TIMER_UPDATE_RATE = 100;

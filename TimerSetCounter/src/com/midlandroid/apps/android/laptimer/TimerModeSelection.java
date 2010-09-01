@@ -1,4 +1,6 @@
-package com.midlandroid.apps.android.timerwithsetcounter;
+package com.midlandroid.apps.android.laptimer;
+
+import com.midlandroid.apps.android.laptimer.R;
 
 import android.app.Activity;
 import android.os.Bundle;

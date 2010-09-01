@@ -1,8 +1,9 @@
-package com.midlandroid.apps.android.timerwithsetcounter;
+package com.midlandroid.apps.android.laptimer;
 
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.TimerService;
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener.DelayTimerUpdateUIListener;
-import com.midlandroid.apps.android.timerwithsetcounter.util.MessageId;
+import com.midlandroid.apps.android.laptimer.timerservice.TimerService;
+import com.midlandroid.apps.android.laptimer.timerservice.uilistener.DelayTimerUpdateUIListener;
+import com.midlandroid.apps.android.laptimer.util.MessageId;
+import com.midlandroid.apps.android.laptimer.R;
 
 import android.app.Activity;
 import android.content.Intent;

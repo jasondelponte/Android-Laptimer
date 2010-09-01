@@ -1,6 +1,6 @@
-package com.midlandroid.apps.android.timerwithsetcounter.timerservice.mode;
+package com.midlandroid.apps.android.laptimer.timerservice.mode;
 
-import com.midlandroid.apps.android.timerwithsetcounter.timerservice.uilistener.TimerUpdateUIListener;
+import com.midlandroid.apps.android.laptimer.timerservice.uilistener.TimerUpdateUIListener;
 
 public abstract class TimerMode {
 	public  static enum RunningState {
