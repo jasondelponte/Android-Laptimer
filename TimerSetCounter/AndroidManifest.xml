@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.midlandroid.apps.android.timerwithsetcounter"
-      android:versionName="1.1.0 Beta" android:versionCode="15">
+      package="com.midlandroid.apps.android.laptimer"
+      android:versionName="1.1.0 Beta" android:versionCode="16">
     <application android:label="@string/app_name"
     		android:description="@string/app_desc"
     		android:testOnly="false"

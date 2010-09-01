@@ -41,4 +41,7 @@
     <string name="pref_second_chance_reset">Confirm Timer Reset</string>
     <string name="pref_second_chance_reset_key">secondChanceReset</string>
     <string name="pref_second_chance_reset_desc">Prompts the user to confirm when resetting the timer.</string>
+    <string name="pref_use_wakelock">Prevent screen timeout</string>
+    <string name="pref_use_wakelock_key">useWakeLock</string>
+    <string name="pref_use_wakelock_desc">Sets where while the timer is running should the screen be prevented from shutting off.</string>
 </resources>

@@ -1,4 +1,4 @@
-package com.midlandroid.apps.android.timerwithsetcounter.util;
+package com.midlandroid.apps.android.laptimer.util;
 
 import java.text.NumberFormat;
 

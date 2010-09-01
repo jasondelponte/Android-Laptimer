@@ -13,7 +13,7 @@
 		android:key="@string/pref_timer_start_delay_on_restarts_key"
 		android:defaultValue="false"
 	/>
-	<CheckBoxPreference
+	-->	<CheckBoxPreference
 		android:title="@string/pref_one_click_txt_cpy"
 		android:summary="@string/pref_one_click_txt_cpy_desc"
 		android:key="@string/pref_one_click_txt_cpy_key"
@@ -25,6 +25,12 @@
 		android:key="@string/pref_second_chance_reset_key"
 		android:defaultValue="true"
 	/>
+    <CheckBoxPreference
+        android:title="@string/pref_use_wakelock"
+        android:summary="@string/pref_use_wakelock_desc"
+        android:key="@string/pref_use_wakelock_key"
+        android:defaultValue="true"
+    />
 	<!--
 	<EditTextPreference
 		android:title="@string/pref_outfile_root"
