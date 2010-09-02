@@ -1,0 +1,14 @@
+Tasks to do:
+
+---  Correct the way the background service is used and how others get a
+     connection to it's handle.
+---  Replace timer and timertasks with delayed message handlers.
+---  Replace way current timer modes are used to be called through an interface.
+---  Instead of having the timer run in the background save the state when the 
+     app is no longer on top, and restore it when the app restored.  This will
+     also restore the state the app was previously in.  This should save a 
+     signficant portion of the battery usage.
+---  Add class to provide uniform getting of the preferences.
+---  Add comment section to timer save window.
+---  Add audio notification support
+---  Add remaining timer modes.

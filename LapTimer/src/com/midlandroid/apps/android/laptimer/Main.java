@@ -1,27 +1,30 @@
 package com.midlandroid.apps.android.laptimer;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.Date;
 
+import com.midlandroid.apps.android.laptimer.background.BackgroundSrvc;
 import com.midlandroid.apps.android.laptimer.timerservice.LapData;
 import com.midlandroid.apps.android.laptimer.timerservice.TimerService;
 import com.midlandroid.apps.android.laptimer.timerservice.mode.TimerMode.RunningState;
 import com.midlandroid.apps.android.laptimer.timerservice.uilistener.TimerUpdateUIListener;
 import com.midlandroid.apps.android.laptimer.util.MessageId;
+import com.midlandroid.apps.android.laptimer.util.SimpleFileAccess;
 import com.midlandroid.apps.android.laptimer.util.TextUtil;
 import com.midlandroid.apps.android.laptimer.R;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.preference.PreferenceManager;
@@ -33,7 +36,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -72,8 +74,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
         keepTimerServiceAlive = false;
         myMessenger = new Messenger(myHandler);
 
-        _createService();
-    	
+    	// Get handles to each of the UI's elements
     	lapTimeTxt = (TextView)findViewById(R.id.lap_timer_txt);
     	lapTimeTxt.setOnClickListener(new OnClickListener() {
 			@Override
@@ -102,7 +103,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	startStopBtn.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-		    	_connectToService();
 				_startStopTimer();
 			}
     	});
@@ -116,8 +116,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
 			}
     	});
     	lapStrings = "";
-    	
-    	_connectToService();
     }
     
     @Override
@@ -133,9 +131,9 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	
     	// Update the preferences
     	_getPreferences();
-
-        _createService();
-    	_connectToService();
+        
+        // Attach to the service
+        _doBindService();
     	
     	keepTimerServiceAlive = false;
     }
@@ -146,14 +144,16 @@ public class Main extends Activity implements TimerUpdateUIListener {
 
     	keepTimerServiceAlive = true;
     	
-    	_disconnectFromService();
+    	// Disconnect from the service
+    	_doUnbindService();
     }
     
     @Override
     public void onDestroy() {
     	super.onDestroy();
-    	
-    	_disconnectFromService();
+
+    	// Disconnect from the service
+    	_doUnbindService();
     }
     
     @Override
@@ -357,60 +357,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	startActivityForResult(i, SHOW_TIMER_DELAY_ACT);
     }
     
-    private void _showOutFileAlertPrompt() {
-    	final AlertDialog.Builder alert = new AlertDialog.Builder(this);
-    	
-    	alert.setTitle("File Selection");
-    	alert.setMessage("Path to write to:");
-    	
-    	final  EditText input = new EditText(this);    	
-    	input.setText("/sdcard/" + outfileRootPath + "laptimer_" + DateFormat.format("yyyyMMdd-kkmmss", new Date().getTime()) + ".txt");
-    	alert.setView(input);
-    	
-    	alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				_writeOutTimerToDisk(input.getText().toString(), false);
-			}
-		});
-    	
-    	alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				// Canceled, do nothing.
-			}
-		});
-    	
-    	alert.show();
-    }
-    
-    private void _showPromptToOverwriteFile(final String path) {
-    	final AlertDialog.Builder alert = new AlertDialog.Builder(this);
-    	
-    	alert.setTitle("File Exists");
-    	alert.setMessage("File exists overwrite it?");
-    	
-    	final  TextView input = new TextView(this);    	
-    	input.setText(path);
-    	alert.setView(input);
-    	
-    	alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				_writeOutTimerToDisk(input.getText().toString(), true);
-			}
-		});
-    	
-    	alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				// Canceled, do nothing.
-			}
-		});
-    	
-    	alert.show();
-    }
-    
     private void _showPromptToResetTimer() {
     	final AlertDialog.Builder alert = new AlertDialog.Builder(this);
     	
@@ -433,42 +379,8 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	
     	alert.show();
     }
-    
-    private void _showErrorCreatingOutfileAlert(IOException e) {
-    	final AlertDialog.Builder alert = new AlertDialog.Builder(this);
-    	
-    	alert.setTitle("Error!");
-    	alert.setMessage("Failed to save file because "+ e.getMessage());
-    	
-    	alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				//_doResetTimer();
-			}
-		});
-    	
-//    	alert.setNegativeButton("NO", new DialogInterface.OnClickListener() {
-//			@Override
-//			public void onClick(DialogInterface dialog, int which) {
-//				// Canceled, do nothing.
-//			}
-//		});
-    	
-    	alert.show();
-    }
-    
-    private void _writeOutTimerToDisk(final String path, boolean overwrite) {
-		final File file = new File(path);
-		if (file.exists()==true && !overwrite) {
-			_showPromptToOverwriteFile(path);
-		} else {
-			// Make sure we can write the file first
-			try {
-				file.createNewFile();
-			} catch (IOException e) {
-				_showErrorCreatingOutfileAlert(e);
-			}
-			
+        
+    private void _showOutFileAlertPrompt() {
 			// Get the values needed for the output file.
 			String timerMode = "Unknown Mode";
 			Date timerStartedAt = new Date();
@@ -484,52 +396,87 @@ public class Main extends Activity implements TimerUpdateUIListener {
 					"Number of Laps: " + (lapCount-1) + "\n" + 
 					"**** LAP HISTORY ****\n" +
 					lapListTxt.getText();
-					
-	    	final Thread thread = new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						FileOutputStream os = new FileOutputStream(file);
-						os.write(out.getBytes());
-						
-						os.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-	    	});
-	    	thread.start();
-		}
+			
+			// Using the Simple file access util class output the text to a file
+			// while also prompting the user for the path and any confirmations
+			// needed.
+			new SimpleFileAccess().showOutFileAlertPromptAndWriteTo(this, outfileRootPath, out);
     }
 
     
     //////////////////////////////////////
     // Service Controls
     //////////////////////////////////////
-    private void _createService() {
-        if (TimerService.getService()==null) {
-			Intent i = new Intent(this, TimerService.class);
-			startService(i);
+//    private void _createService() {
+//        if (TimerService.getService()==null) {
+//			Intent i = new Intent(this, TimerService.class);
+//			startService(i);
+//        }
+//    }
+//    
+//    private void _connectToService() {
+//    	TimerService srvc = TimerService.getService();
+//    	if (srvc!=null) {
+//    		srvc.setUpdateUIListener(this);
+//    	}
+//    }
+//    
+//    private void _disconnectFromService() {
+//    	TimerService srvc = TimerService.getService();
+//    	if (srvc!=null) {
+//    		srvc.setUpdateUIListener(null);
+//    		if (srvc.getState()==RunningState.RESETTED && 
+//    				keepTimerServiceAlive==false) {
+//		    	Intent i = new Intent(this, TimerService.class);
+//		    	stopService(i);
+//    		}
+//    	}
+//    }
+    
+    private boolean isSrvcbound = false;
+    private BackgroundSrvc boundService;
+    private ServiceConnection srvcConnection = new ServiceConnection() {
+    	public void onServiceConnected(ComponentName className, IBinder service) {
+            // This is called when the connection with the service has been
+            // established, giving us the service object we can use to
+            // interact with the service.  Because we have bound to a explicit
+            // service that we know is running in our own process, we can
+            // cast its IBinder to a concrete class and directly access it.
+    		boundService = ((BackgroundSrvc.LocalBinder)service).getService();
+    	}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+	        // This is called when the connection with the service has been
+	        // unexpectedly disconnected -- that is, its process crashed.
+	        // Because it is running in our same process, we should never
+	        // see this happen.
+			boundService = null;
+		}
+    };
+    
+    /**
+     * Create a connection to the background service.
+     */
+    private void _doBindService() {
+        // Establish a connection with the service.  We use an explicit
+        // class name because we want a specific service implementation that
+        // we know will be running in our own process (and thus won't be
+        // supporting component replacement by other applications).
+        bindService(new Intent(this, 
+        		BackgroundSrvc.class), srvcConnection, Context.BIND_AUTO_CREATE);
+        isSrvcbound = true;
+    }
+
+    /**
+     * Remove the connection to the background service.
+     */
+    private void _doUnbindService() {
+        if (isSrvcbound) {
+            // Detach our existing connection.
+            unbindService(srvcConnection);
+            isSrvcbound = false;
         }
-    }
-    
-    private void _connectToService() {
-    	TimerService srvc = TimerService.getService();
-    	if (srvc!=null) {
-    		srvc.setUpdateUIListener(this);
-    	}
-    }
-    
-    private void _disconnectFromService() {
-    	TimerService srvc = TimerService.getService();
-    	if (srvc!=null) {
-    		srvc.setUpdateUIListener(null);
-    		if (srvc.getState()==RunningState.RESETTED && 
-    				keepTimerServiceAlive==false) {
-		    	Intent i = new Intent(this, TimerService.class);
-		    	stopService(i);
-    		}
-    	}
     }
     
     
