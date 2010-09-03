@@ -1,11 +1,12 @@
-package com.midlandroid.apps.android.laptimer.timerservice.mode;
+package com.midlandroid.apps.android.laptimer.timers;
 
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.midlandroid.apps.android.laptimer.timerservice.LapData;
-import com.midlandroid.apps.android.laptimer.timerservice.uilistener.TimerUpdateUIListener;
+import android.os.Messenger;
+
+import com.midlandroid.apps.android.laptimer.util.LapData;
 
 public class SimpleCountUp extends TimerMode {
 	private static final int TIMER_UPDATE_RATE = 100;
@@ -21,7 +22,7 @@ public class SimpleCountUp extends TimerMode {
 	private long prevTime;
 	private int lapCount;
 	
-	public SimpleCountUp() {
+	public SimpleCountUp(Messenger messenger) {
 		timer = new Timer();
 		lapDataList = new ArrayList<LapData>();
 		

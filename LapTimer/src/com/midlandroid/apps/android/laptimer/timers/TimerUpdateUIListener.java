@@ -1,6 +1,6 @@
-package com.midlandroid.apps.android.laptimer.timerservice.uilistener;
+package com.midlandroid.apps.android.laptimer.timers;
 
-import com.midlandroid.apps.android.laptimer.timerservice.LapData;
+import com.midlandroid.apps.android.laptimer.util.LapData;
 
 
 public interface TimerUpdateUIListener {

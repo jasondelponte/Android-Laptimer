@@ -16,14 +16,15 @@
             </intent-filter>
         </activity>
         
-        <service android:name=".timerservice.TimerService"/>
-    	<activity android:name=".Preferences"
-				android:label="@string/preferences"
-    			android:launchMode="singleInstance" />
-	<activity android:label="@string/timer_delay_countdown_label" android:name="DelayTimeCountDown"></activity>
-</application>
+        <activity android:name=".Preferences"
+                android:label="@string/preferences"
+                android:launchMode="singleInstance" />
+        
+        <service android:name=".background.BackgroundSrvc"/>
+    </application>
+    
     <uses-sdk android:minSdkVersion="4" />
 
-<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"></uses-permission>
-<uses-permission android:name="android.permission.WAKE_LOCK"></uses-permission>
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"></uses-permission>
+	<uses-permission android:name="android.permission.WAKE_LOCK"></uses-permission>
 </manifest> 

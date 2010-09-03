@@ -10,6 +10,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -21,7 +22,8 @@ public class SimpleFileAccess {
 	private String outText;
 	
 	
-	public void showOutFileAlertPromptAndWriteTo(Context context, final String rootPath, final String outText) {
+	public void showOutFileAlertPromptAndWriteTo(Context context, final String rootPath, final String outText) {	
+		Log.d(LOG_TAG, "showOutFileAlertPromptAndWriteTo");
 		
     	final AlertDialog.Builder alert = new AlertDialog.Builder(context);
     	

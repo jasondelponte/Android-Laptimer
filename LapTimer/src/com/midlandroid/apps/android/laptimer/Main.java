@@ -4,10 +4,9 @@ import java.text.NumberFormat;
 import java.util.Date;
 
 import com.midlandroid.apps.android.laptimer.background.BackgroundSrvc;
-import com.midlandroid.apps.android.laptimer.timerservice.LapData;
-import com.midlandroid.apps.android.laptimer.timerservice.TimerService;
-import com.midlandroid.apps.android.laptimer.timerservice.mode.TimerMode.RunningState;
-import com.midlandroid.apps.android.laptimer.timerservice.uilistener.TimerUpdateUIListener;
+import com.midlandroid.apps.android.laptimer.timers.TimerUpdateUIListener;
+import com.midlandroid.apps.android.laptimer.timers.TimerMode.RunningState;
+import com.midlandroid.apps.android.laptimer.util.LapData;
 import com.midlandroid.apps.android.laptimer.util.MessageId;
 import com.midlandroid.apps.android.laptimer.util.SimpleFileAccess;
 import com.midlandroid.apps.android.laptimer.util.TextUtil;
@@ -20,16 +19,15 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
-import android.preference.PreferenceManager;
+import android.os.RemoteException;
 import android.text.ClipboardManager;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -39,39 +37,44 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class Main extends Activity implements TimerUpdateUIListener {	
+public class Main extends Activity implements TimerUpdateUIListener {
+	private static final String LOG_TAG = Main.class.getSimpleName();
+	
 	// Views
 	private Button startStopBtn;
 	private Button lapNumBtn;
 	private TextView lapTimeTxt;
 	private TextView currTimeTxt;
 	private TextView lapListTxt;
-	private MenuItem timerModeMI;
+	//private MenuItem timerModeMI;
 	private MenuItem saveHistoryMI;
+	
 	// members
 	private Integer lapCount;
 	private NumberFormat numFormat;
 	private boolean keepTimerServiceAlive;
 	private Messenger myMessenger;
 	private String lapStrings;
-	private boolean isOneClickTextCopy;
-	private boolean secondChanceReset;
-	private String outfileRootPath;
 	
-    /** Called when the activity is first created. */
+	
     @Override
+    /**
+     * Called when the activity is first created.
+     */
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
         setContentView(R.layout.main);
-        isOneClickTextCopy = false;
+        
         lapCount = 1;
         
-        // Init
+        // initialize the variables
         numFormat = NumberFormat.getInstance();
         numFormat.setMinimumIntegerDigits(2);
         numFormat.setMaximumIntegerDigits(2);
         numFormat.setParseIntegerOnly(true);
         keepTimerServiceAlive = false;
+        
         myMessenger = new Messenger(myHandler);
 
     	// Get handles to each of the UI's elements
@@ -79,7 +82,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	lapTimeTxt.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if (isOneClickTextCopy)
+				if (boundService.getAppPreferences().getUseOneClickTextCopy())
 					_addViewTextToClipBoard(v);
 			}
     	});
@@ -87,7 +90,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	lapNumBtn.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				_setIncrement();
+				_lapIncrement();
 			}
     	});
     	
@@ -95,7 +98,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	currTimeTxt.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if (isOneClickTextCopy)
+				if (boundService.getAppPreferences().getUseOneClickTextCopy())
 					_addViewTextToClipBoard(v);
 			}
     	});
@@ -111,32 +114,27 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	lapListTxt.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if (isOneClickTextCopy)
+				if (boundService.getAppPreferences().getUseOneClickTextCopy())
 					_addViewTextToClipBoard(v);
 			}
     	});
     	lapStrings = "";
     }
     
-    @Override
-    public void onStart() {
-    	super.onStart();
-
-    	_refreshUI();
-    }
     
     @Override
     public void onResume() {
     	super.onResume();
     	
-    	// Update the preferences
-    	_getPreferences();
+    	// Refresh the UI's views
+    	_refreshUI();
         
         // Attach to the service
         _doBindService();
     	
     	keepTimerServiceAlive = false;
     }
+    
     
     @Override
     public void onPause() {
@@ -148,22 +146,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	_doUnbindService();
     }
     
-    @Override
-    public void onDestroy() {
-    	super.onDestroy();
-
-    	// Disconnect from the service
-    	_doUnbindService();
-    }
-    
-    @Override
-    protected void onActivityResult(int reqCode, int resCode, Intent data) {
-    	if (reqCode == 0) {
-    		if (resCode == RESULT_OK) {
-    			
-    		}
-    	}
-    }
     
     /////////////////////////////////
     // Overridden controls
@@ -186,13 +168,14 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	super.onCreateOptionsMenu(menu);
     	getMenuInflater().inflate(R.menu.timer_menu, menu);
     	
-    	timerModeMI = menu.findItem(R.id.mi_timer_mode);
+    	//timerModeMI = menu.findItem(R.id.mi_timer_mode);
     	saveHistoryMI = menu.findItem(R.id.mi_save_lap_list);
     	
-    	_setMenuItemEnabledBasedOnRunState();
+    	//_setMenuItemEnabledBasedOnRunState();
     	
 		return true;
     }
+    
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -205,7 +188,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
     		return true;
     	case R.id.mi_preferences:
     		_showPreferences();
-    		_preferencesChanged();
     		return true;
     	case R.id.mi_timer_mode:
     		_showTimerModeSelection();
@@ -230,12 +212,14 @@ public class Main extends Activity implements TimerUpdateUIListener {
 		lapStrings = item + lapStrings;
 		lapListTxt.setText(lapStrings);
 	}
+	
 
 	@Override
 	public void clearLapList() {
 		lapStrings = "";
 		lapListTxt.setText(lapStrings);
 	}
+	
 
 	@Override
 	public void updateTimerUI(final long currTime, final long lapTime, final int setCount) {
@@ -254,50 +238,65 @@ public class Main extends Activity implements TimerUpdateUIListener {
     ////////////////////////////////////
     // User Action Handler Methods
     ////////////////////////////////////
-    private void _setIncrement() {
-    	_msgTimerService(MessageId.MainCmd.CMD_SET_INCREMENT);
+    /**
+     * Notifies the background service that the user has selected
+     * to start or stop the timer.
+     */
+    private void _startStopTimer() {
+    	keepTimerServiceAlive = true;
+    	_msgTimerService(MessageId.CMD_START_STOP_TIMER);
     }
     
+    
+	/**
+	 * Notifies the background service that the lap count should
+	 * be incremented.
+	 */
+    private void _lapIncrement() {
+    	_msgTimerService(MessageId.CMD_LAP_INCREMENT);
+    }
+    
+    
+    /**
+     * Resets the timer.  If the user has specified to be warned when 
+     * reseting the timer prompt them instead.
+     */
     private void _resetTimer() {
-    	if (secondChanceReset) {
+    	if (boundService.getAppPreferences().getUseSecondChanceReset()) {
     		_showPromptToResetTimer();
     	} else {
     		_doResetTimer();
     	}
     }
     
+    
+    /**
+     * Notifies the background service that the timer should be stopped
+     * and reseted.
+     */
     private void _doResetTimer() {
     	keepTimerServiceAlive = false;
-    	_msgTimerService(MessageId.MainCmd.CMD_RESET_TIMER);
+    	_msgTimerService(MessageId.CMD_RESET_TIMER);
     }
     
-    private void _preferencesChanged() {
-    	_msgTimerService(MessageId.MainCmd.CMD_PREFERENCES_CHANGED);
+    
+    /**
+     * Notifies the background service that this UI needs to be updated.
+     */
+    private void _refreshUI() {
+    	lapListTxt.setText("");
+    	_msgTimerService(MessageId.CMD_REFRESH_MAIN_UI);
     }
     
 
     ////////////////////////////////////
     // Private methods
     ////////////////////////////////////
-    private void _startStopTimer() {
-    	keepTimerServiceAlive = true;
-    	_msgTimerService(MessageId.MainCmd.CMD_START_STOP_TIMER);
-    }
-    
-    private void _getPreferences() {
-    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-		Resources res = getResources();
-		
-		// Use delay timer on restarts?
-		isOneClickTextCopy = prefs.getBoolean(
-				res.getString(R.string.pref_one_click_txt_cpy_key), true);
-		
-		outfileRootPath="";
-		//outfileRootPath = prefs.getString(res.getString(R.string.pref_outfile_root_key), "/sdcard/");
-		
-		secondChanceReset = prefs.getBoolean(res.getString(R.string.pref_second_chance_reset_key), true);
-    }
-    
+    /**
+     * Adds the text of the provided view to the android system's
+     * clipboard buffer.
+     * @param v View with text to be added to the clipboard
+     */
     private void _addViewTextToClipBoard(View v) {
 		 ClipboardManager clipboard = 
 		      (ClipboardManager) getSystemService(CLIPBOARD_SERVICE); 
@@ -307,38 +306,48 @@ public class Main extends Activity implements TimerUpdateUIListener {
 		 t.show();
     }
     
+    
+    /**
+     * Using the state of the background service the menu items are
+     * enabled or disabled.
+     */
     private void _setMenuItemEnabledBasedOnRunState() {
-    	TimerService srvc = TimerService.getService();
-    	if (srvc!=null && timerModeMI!=null) {
-    		//timerModeMI.setEnabled(srvc.getState()!=RunningState.RUNNING);
-    		saveHistoryMI.setEnabled(srvc.getState()!=RunningState.RUNNING);
-    	}
+		//timerModeMI.setEnabled(boundService.getTimerState() != RunningState.RUNNING);
+		saveHistoryMI.setEnabled(boundService.getTimerState() != RunningState.RUNNING);
     }
     
+    
+    /**
+     * Creates and sends a message to the background service.
+     * @param cmd Message id
+     */
     private void _msgTimerService(final int cmd) {
     	_msgTimerService(cmd, null);
     }
     
+    
+    /**
+     * Creates and sends a message to the background service with
+     * the provided payload
+     * @param cmd Message id
+     * @param payload Data to be send to background service
+     */
     private void _msgTimerService(final int cmd, final Object payload) {
-    	TimerService srvc = TimerService.getService();
-    	if (srvc!=null) {
-        	// Get the handler
-        	Handler handler = srvc.getMessageHandler();
-        	// Start the timer
-        	Message msg = Message.obtain();
-        	msg.arg1 = MessageId.SRC_MAIN;
-        	msg.arg2 = cmd;
-        	msg.obj = payload;
-        	msg.replyTo = myMessenger;
-        	handler.sendMessage(msg);
-    	}
+    	Message msg = myHandler.obtainMessage();
+    	msg.what = cmd;
+    	msg.obj = payload;
+    	msg.replyTo = myMessenger;
+    	try {
+			boundService.myMessenger.send(msg);
+		} catch (RemoteException e) {
+			Log.e(LOG_TAG, "Failed to message background service", e);
+		}
     }
     
-    private void _refreshUI() {
-    	lapListTxt.setText("");
-    	_msgTimerService(MessageId.MainCmd.CMD_REFRESH);
-    }
     
+    /**
+     * Displays the Android Preferences UI to the user.
+     */
     private void _showPreferences() {
 		keepTimerServiceAlive = true;
 		
@@ -346,17 +355,19 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	startActivity(i);
     }
     
+    
+    /**
+     * Displays the timer mode selection UI 
+     */
     private void _showTimerModeSelection() {
 		keepTimerServiceAlive = true;
-		
     }
     
-    public static final int SHOW_TIMER_DELAY_ACT = 0;
-    private void _showTimerDelayUI() {
-    	Intent i = new Intent(this, DelayTimeCountDown.class);
-    	startActivityForResult(i, SHOW_TIMER_DELAY_ACT);
-    }
     
+    /**
+     * Prompts the user if they are sure they really want to 
+     * reset the current timer.
+     */
     private void _showPromptToResetTimer() {
     	final AlertDialog.Builder alert = new AlertDialog.Builder(this);
     	
@@ -379,48 +390,37 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	
     	alert.show();
     }
-        
+    
+
+    /**
+     * Prompts the user to provide a filename that will be used
+     * when writing the contents of the current timer event to.
+     */
     private void _showOutFileAlertPrompt() {
-			// Get the values needed for the output file.
-			String timerMode = "Unknown Mode";
-			Date timerStartedAt = new Date();
-			TimerService srvc = TimerService.getService();
-	    	if (srvc!=null) {
-	    		timerMode = srvc.getTimerModeName();
-	    		timerStartedAt = srvc.getTimerStartedAt();
-	    	}
-			final String out = "" +
-					"Timer Mode: " + timerMode + "\n" +
-					"Started on: " + ((timerStartedAt!=null)?DateFormat.format("yyyy MM dd kk:mm:ss", timerStartedAt):"Unknown") + "\n" +
-					"Total Time: " + currTimeTxt.getText() + "\n" +
-					"Number of Laps: " + (lapCount-1) + "\n" + 
-					"**** LAP HISTORY ****\n" +
-					lapListTxt.getText();
-			
-			// Using the Simple file access util class output the text to a file
-			// while also prompting the user for the path and any confirmations
-			// needed.
-			new SimpleFileAccess().showOutFileAlertPromptAndWriteTo(this, outfileRootPath, out);
+		// Get the values needed for the output file.
+		String timerMode = boundService.getTimerModeName();
+		Date timerStartedAt = new Date(boundService.getTimerStartTime());
+		
+		// Build the output string
+		final String out = "" +
+				"Timer Mode: " + timerMode + "\n" +
+				"Started on: " + ((timerStartedAt!=null)?DateFormat.format("yyyy MM dd kk:mm:ss", timerStartedAt):"Unknown") + "\n" +
+				"Total Time: " + currTimeTxt.getText() + "\n" +
+				"Number of Laps: " + (lapCount-1) + "\n" + 
+				"**** LAP HISTORY ****\n" +
+				lapListTxt.getText();
+		
+		// Using the Simple file access util class output the text to a file
+		// while also prompting the user for the path and any confirmations
+		// needed.
+		new SimpleFileAccess().showOutFileAlertPromptAndWriteTo(this,
+				boundService.getAppPreferences().getOutfileRootPath(), out);
     }
 
     
     //////////////////////////////////////
     // Service Controls
-    //////////////////////////////////////
-//    private void _createService() {
-//        if (TimerService.getService()==null) {
-//			Intent i = new Intent(this, TimerService.class);
-//			startService(i);
-//        }
-//    }
-//    
-//    private void _connectToService() {
-//    	TimerService srvc = TimerService.getService();
-//    	if (srvc!=null) {
-//    		srvc.setUpdateUIListener(this);
-//    	}
-//    }
-//    
+    //////////////////////////////////////    
 //    private void _disconnectFromService() {
 //    	TimerService srvc = TimerService.getService();
 //    	if (srvc!=null) {
@@ -443,6 +443,9 @@ public class Main extends Activity implements TimerUpdateUIListener {
             // service that we know is running in our own process, we can
             // cast its IBinder to a concrete class and directly access it.
     		boundService = ((BackgroundSrvc.LocalBinder)service).getService();
+    		
+    		// Update the app's default shared preferences 
+    		_updateAppPreferences();
     	}
 
 		@Override
@@ -454,6 +457,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
 			boundService = null;
 		}
     };
+    
     
     /**
      * Create a connection to the background service.
@@ -467,6 +471,16 @@ public class Main extends Activity implements TimerUpdateUIListener {
         		BackgroundSrvc.class), srvcConnection, Context.BIND_AUTO_CREATE);
         isSrvcbound = true;
     }
+    
+    
+    /**
+     * Tell the service to update it's preferences
+     */
+    private void _updateAppPreferences() {
+    	if (isSrvcbound && boundService != null)
+    		boundService.updateAppPreferences();
+    }
+    
 
     /**
      * Remove the connection to the background service.
@@ -486,15 +500,10 @@ public class Main extends Activity implements TimerUpdateUIListener {
     private Handler myHandler = new Handler() {
     	@Override
     	public void handleMessage(Message msg) {
-    		switch(msg.arg1) {
-    		case MessageId.SRC_TIMERSERVICE:
-    			switch(msg.arg2) {
-    			case MessageId.TimerServiceCmd.CMD_SHOW_TIMER_DELAY_UI:
-        			_showTimerDelayUI();
-    				break;
-    			}
-    			break;
-    		}
+//    		switch(msg.what) {
+//    		case MessageId.SRC_TIMERSERVICE:
+//    			break;
+//    		}
     	}
     };
 }
