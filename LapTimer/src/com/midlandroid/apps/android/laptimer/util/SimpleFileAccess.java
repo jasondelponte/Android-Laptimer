@@ -24,31 +24,36 @@ public class SimpleFileAccess {
 	
 	public void showOutFileAlertPromptAndWriteTo(Context context, final String rootPath, final String outText) {	
 		Log.d(LOG_TAG, "showOutFileAlertPromptAndWriteTo");
-		
-    	final AlertDialog.Builder alert = new AlertDialog.Builder(context);
     	
-    	alert.setTitle("File Selection");
-    	alert.setMessage("Path to write to:");
+    	// Save off the output text
+    	this.outText = outText;
     	
+    	// Build the full path
     	final  EditText input = new EditText(context);   
     	outFilePath = "/sdcard/" + rootPath + "laptimer_" + DateFormat.format("yyyyMMdd-kkmmss", new Date().getTime()) + ".txt";
+    	
+    	// Create the alert that will prompt the user
+    	final AlertDialog.Builder alert = new AlertDialog.Builder(context);
+    	alert.setTitle("File Selection");
+    	alert.setMessage("Path to write to:");
     	input.setText(outFilePath);
     	alert.setView(input);
-    	
+
+    	// Create the click listeners for user response
     	alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				_writeTextToFlle(false);
 			}
 		});
-    	
     	alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				// Canceled, do nothing.
 			}
 		});
-    	
+
+    	// Display the alert
     	alert.show();
     }
 	

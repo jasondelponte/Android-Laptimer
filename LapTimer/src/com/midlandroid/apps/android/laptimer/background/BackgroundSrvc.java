@@ -1,5 +1,6 @@
 package com.midlandroid.apps.android.laptimer.background;
 
+import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Stack;
 
@@ -7,6 +8,7 @@ import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountDown;
 import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountUp;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerMode;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerMode.RunningState;
+import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateUIListener;
 import com.midlandroid.apps.android.laptimer.util.AppPreferences;
 import com.midlandroid.apps.android.laptimer.util.MessageId;
 
@@ -35,6 +37,7 @@ public class BackgroundSrvc extends Service {
 	private AppPreferences appPrefs;
 	private PowerManager.WakeLock wakeLock;
 	private NotificationManager mNM;
+	private TimerUpdateUIListener uiUpdateListener;
 	
 	// Timer controls
 	private Stack<TimerMode> timerModes;
@@ -79,8 +82,14 @@ public class BackgroundSrvc extends Service {
 		// Create the app preferences handler
 		appPrefs = new AppPreferences(this.getBaseContext());
 		
+		// Initial timer state
+		timerState = RunningState.RESETTED;
+		
 		// Create the stack that will be used to move between the timer modes
 		timerModes = new Stack<TimerMode>();
+		
+		// Create a queue for commands 
+		timerCommands = new LinkedList<Integer>();
 		
 		// Set timer mode
 		// TODO replace this with user specified timer modes
@@ -135,6 +144,7 @@ public class BackgroundSrvc extends Service {
             	break;
             	
             case MessageId.CMD_TIMER_FINISHED:
+            	_doFinishCurrTimer();
             	break;
             	
 	        default:
@@ -155,9 +165,9 @@ public class BackgroundSrvc extends Service {
     public void updateAppPreferences() {
     	appPrefs.loadPrefs();
     }
-    
-    
-    /**
+
+
+	/**
      * Returns the container object of the application's default shared preferences
      * @return
      */
@@ -197,6 +207,29 @@ public class BackgroundSrvc extends Service {
 	}
 	
 	
+	/**
+	 * Sets the Timer update UI listener object that can be used by each
+	 * timer mode
+	 * @param uiListener
+	 */
+	public void setUpdateUIListener(TimerUpdateUIListener uiListener) {
+		uiUpdateListener = uiListener;
+	}
+	
+	
+	/**
+	 * Clears all timer modes' UI update listeners
+	 */
+	public void clearUpdateUIListener() {
+		uiUpdateListener = null;
+		
+		// Clear the timer mode's ui update listeners
+		for (TimerMode mode : timerModes) {
+			mode.setUpdateUIListener(null);
+		}
+	}
+	
+	
 	///////////////////////////////////////////////////
 	// Private Methods
 	///////////////////////////////////////////////////
@@ -217,6 +250,7 @@ public class BackgroundSrvc extends Service {
 				Integer cmd = null;
 				while((cmd = timerCommands.poll())!=null) {
 					switch(cmd) {
+					
 					case MessageId.CMD_LAP_INCREMENT:
 						mode.procLapEvent();
 						break;
@@ -267,10 +301,17 @@ public class BackgroundSrvc extends Service {
 			timerModes.push(new SimpleCountDown(myMessenger, appPrefs.getTimerStartDelay()));
 		}
 		
+		// Update the timer mode's ui update listeners
+		TimerUpdateUIListener uiListener = uiUpdateListener;
+		for (TimerMode mode : timerModes) {
+			mode.setUpdateUIListener(uiListener);
+		}
+		
 		// Find out what time we are starting the timers at and start them
-		timerStartTime = System.currentTimeMillis();
+		timerStartTime = SystemClock.uptimeMillis();
 		inHandler.removeCallbacks(timerUpdateTask);
 		inHandler.postDelayed(timerUpdateTask, 200);
+		timerState = RunningState.RUNNING;
 
 		// Grab the power manager wake lock if it's enabled
 		if (appPrefs.getUseWakeLock()) {
@@ -297,6 +338,7 @@ public class BackgroundSrvc extends Service {
 		Log.d(LOG_TAG, "doStopTimer");
 		
 		inHandler.removeCallbacks(timerUpdateTask);
+		timerState = RunningState.STOPPED;
 		
 		// Release the power manager wake lock if it was enabled
 		if (appPrefs.getUseWakeLock()) {
@@ -327,6 +369,14 @@ public class BackgroundSrvc extends Service {
 
 		// Tell the timer to refresh the UI
 		timerCommands.add(new Integer(MessageId.CMD_REFRESH_MAIN_UI));
+	}
+	
+    
+    /**
+     * Finish the current timer
+     */
+    private void _doFinishCurrTimer() {
+    	timerModes.pop();
 	}
 	
 	
