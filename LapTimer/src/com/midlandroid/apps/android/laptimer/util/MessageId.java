@@ -7,4 +7,5 @@ public final class MessageId {
 	public static final int CMD_REFRESH_MAIN_UI = 3;
 	public static final int CMD_TIMER_FINISHED = 4;
 	public static final int CMD_SOUND_ALARM = 5;
+	public static final int CMD_CLEAR_TIMER_HISTORY = 6;
 }

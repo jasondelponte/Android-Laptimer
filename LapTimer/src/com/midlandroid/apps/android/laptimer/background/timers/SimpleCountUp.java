@@ -1,172 +1,147 @@
 package com.midlandroid.apps.android.laptimer.background.timers;
 
-import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.List;
+import java.util.Vector;
 
+import android.os.Message;
 import android.os.Messenger;
+import android.os.RemoteException;
+import android.util.Log;
 
 import com.midlandroid.apps.android.laptimer.util.LapData;
+import com.midlandroid.apps.android.laptimer.util.MessageId;
 
+/**
+ * Simple timer for counting up.  The ceiling of the timer can be set so 
+ * it will act just like a down counting timer when finished.
+ * @author Jason Del Ponte
+ *
+ */
 public class SimpleCountUp extends TimerMode {
-	private static final int TIMER_UPDATE_RATE = 100;
+	private static final String LOG_TAG = SimpleCountUp.class.getSimpleName();
 	
-	private TimerUpdateUIListener uiListener;
-	private Timer timer;
-	private TimerTask timerTask;
-	
-	private ArrayList<LapData> lapDataList;
+	private List<LapData> lapDataList;
+	private TimerUpdateUIListener updateUI;
+
+	private Messenger messenger;
+	private boolean alreadyNotified;
+	private long maxTime;
+	private boolean useMaxTime;
 	private long currTime;
-	private long initTime;
-	private long stoppedAtTime;
-	private long prevTime;
-	private int lapCount;
+	private long lapTime;
 	
+	/**
+	 * Creates a new instance of this timer with the messenger provided,
+	 * and no max time limit.
+	 * @param messenger
+	 */
 	public SimpleCountUp(Messenger messenger) {
-		timer = new Timer();
-		lapDataList = new ArrayList<LapData>();
+		useMaxTime = false;
+		this.messenger = messenger;
+		this.maxTime = 0;
 		
-		_init();
+		
+		
+		currTime = 0;
+		alreadyNotified = false;
+		lapDataList = new Vector<LapData>();
 	}
 	
-
-	//////////////////////////////////////////
-	// Overridden public methods
-	//////////////////////////////////////////
-	@Override
-	public void startTimer() {
-		setState(RunningState.RUNNING);
-		
-		// Setup the timer task
-		if (timerTask!=null)
-			timerTask.cancel();
-		
-		timerTask = new TimerTask() {
-			@Override
-			public void run() {
-				long schTime = this.scheduledExecutionTime();
-				
-				if (initTime==0)
-					initTime = schTime;
-				
-				if (stoppedAtTime!=0) {
-					initTime += (schTime - (initTime+stoppedAtTime));						
-					stoppedAtTime = 0;
-				}
-
-				currTime = (schTime-initTime);
-				if (getState()!=RunningState.RUNNING) {
-					stoppedAtTime = currTime;
-					
-					if (getState()==RunningState.RESETTED) {
-						_init();
-					}
-					
-					_updateUITimer(currTime, currTime-prevTime, lapCount);
-					cancel();
-				} else {
-					_updateUITimer(currTime, currTime-prevTime, lapCount);
-				}
-
-			}
-		};
-		
-		timer.schedule(timerTask, 0, TIMER_UPDATE_RATE);
-	}
-
-	@Override
-	public void stopTimer() {		
-		if (getState()==RunningState.RUNNING)
-			setState(RunningState.STOPPED);
-	}
 	
-	@Override
-	public void killTimer() {
-		timer.cancel();
-		timer.purge();
-		timer = null;
-	}
-
-	@Override
-	public void resetTimer() {
-		setState(RunningState.RESETTED);
-		stopTimer();
+	/**
+	 * Creates a new instance of this timer with the messenger provided,
+	 * and a max time specified.
+	 * @param messenger
+	 * @param maxTime
+	 */
+	public SimpleCountUp(Messenger messenger, int maxTime) {
+		useMaxTime = true;
+		this.messenger = messenger;
+		this.maxTime = maxTime;
 		
-		_init();
-		_updateUITimer(currTime, prevTime, lapCount);
-		_updateUIClearLaps();
+		currTime = lapTime = 0;
+		alreadyNotified = false;
 	}
 
+
 	@Override
-	public void lapTimer() {
-		if (getState()==RunningState.RUNNING) {
-			final LapData lapData = new LapData(lapCount,
-					currTime-prevTime, currTime);
-			lapDataList.add(lapData);
-			
-			_updateUIAddLap(lapData);
-	
-			lapCount++;
-			prevTime = currTime;
+	public void procTimerUpdate(long updateTime) {
+		// Increment the counter
+		currTime += updateTime;
+		lapTime += updateTime;
+		
+		// Only do the checks if max time is selected to be used.
+		if (useMaxTime && currTime >= maxTime && !alreadyNotified) {
+			_notifyMessenger(MessageId.CMD_SOUND_ALARM);
+			_notifyMessenger(MessageId.CMD_TIMER_FINISHED);
+			alreadyNotified = true;
+			return;
+		}
+		
+		// Update the UI
+		if (updateUI != null) {
+			updateUI.updateCurrentTime(currTime);
+			updateUI.updateLapTime(lapTime);
 		}
 	}
 
+	
 	@Override
-	public void refreshUI() {
-		_updateUITimer(currTime, currTime-prevTime, lapCount);
+	public void procLapEvent() {
+		// Lap increment
+		if (updateUI != null) {
+			updateUI.updateLapIncrement(currTime, lapTime);
+		}
 		
-		for (LapData lapData : lapDataList) {
-			_updateUIAddLap(lapData);
+		// Reset the lap time
+		lapTime = 0;
+	}
+
+
+	@Override
+	public void procRefreshUI() {
+		if (updateUI != null) {
+			updateUI.updateCurrentTime(currTime);
+			updateUI.updateLapTime(lapTime);
+			updateUI.updateLapList(lapDataList);
 		}
 	}
+	
+	@Override
+	public void procResetTimer() {
+		currTime = lapTime = 0;
+	}
+
 
 	@Override
 	public String getTimerModeName() {
-		return "Simple Up Counting Timer";
+		return LOG_TAG;
 	}
 	
 	
-	//////////////////////////////////////////
-	// Private Methods
-	//////////////////////////////////////////
-	private void _init() {
-		setState(RunningState.RESETTED);
-		currTime = 0;
-		initTime = 0;
-		stoppedAtTime = 0;
-		prevTime = 0;
-		lapCount = 1;
-		lapDataList.clear();
-	}
-	
-	private void _updateUITimer(final long currTime, final long lapTime, final int lapCount) {
-		if (uiListener!=null) {
-			uiListener.updateTimerUI(currTime, lapTime, lapCount);
+	/**
+	 * Notifies the provided messenger with the command passed in
+	 * @param cmd message id to use
+	 */
+	private void _notifyMessenger(final int cmd) {
+		Message msg = Message.obtain();
+		msg.what = cmd;
+		try {
+			messenger.send(msg);
+		} catch (RemoteException e) {
+			Log.e(LOG_TAG, "Failed to notify messenger", e);
 		}
 	}
-	
-	private void _updateUIAddLap(final LapData lapData) {
-		if (uiListener!=null) {
-			uiListener.addLapToUI(lapData);
-		}
-	}
-	
-	private void _updateUIClearLaps() {
-		if (uiListener!=null)
-			uiListener.clearLapList();
-	}
-	
 
-	///////////////////////////////////////////
-	// UI Listeners
-	///////////////////////////////////////////
-	@Override
-	public TimerUpdateUIListener getUpdateUIListener() {
-		return uiListener;
-	}
 
 	@Override
 	public void setUpdateUIListener(TimerUpdateUIListener updateUIListener) {
-		uiListener = updateUIListener;
+		updateUI = updateUIListener;
+	}
+
+
+	@Override
+	public TimerUpdateUIListener getUpdateUIListener() {
+		return updateUI;
 	}
 }

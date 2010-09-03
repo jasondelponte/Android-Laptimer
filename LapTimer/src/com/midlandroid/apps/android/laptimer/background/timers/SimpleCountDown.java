@@ -13,10 +13,13 @@ import android.util.Log;
  */
 public class SimpleCountDown extends TimerMode {
 	private static final String LOG_TAG = SimpleCountDown.class.getSimpleName();
+
+	private TimerUpdateUIListener updateUI;
 	
 	private Messenger messenger;
 	private boolean alreadyNotified;
 	private long currTime;
+	private long startTime;
 	
 	/**
 	 * Create a new instance of the class 
@@ -27,7 +30,7 @@ public class SimpleCountDown extends TimerMode {
 		this.messenger = messenger;
 		
 		// Initialize the timer values
-		currTime = startFrom;
+		currTime = startTime = startFrom;
 		alreadyNotified = false;
 	}
 	
@@ -45,6 +48,31 @@ public class SimpleCountDown extends TimerMode {
 			_notifyMessenger(MessageId.CMD_SOUND_ALARM);
 			_notifyMessenger(MessageId.CMD_TIMER_FINISHED);
 			alreadyNotified = true;
+		}
+		
+		// Update the UI
+		if (updateUI!=null)
+			updateUI.updateCurrentTime(currTime);
+	}
+
+
+	@Override
+	public void procLapEvent() {
+		// Do nothing
+	}
+
+
+	@Override
+	public void procResetTimer() {
+		currTime = startTime;
+	}
+
+
+	@Override
+	public void procRefreshUI() {
+		if (updateUI!=null) {
+			updateUI.updateCurrentTime(currTime);
+			updateUI.updateLapTime(0);
 		}
 	}
 	
@@ -75,14 +103,12 @@ public class SimpleCountDown extends TimerMode {
 
 	@Override
 	public void setUpdateUIListener(TimerUpdateUIListener updateUIListener) {
-		// TODO Auto-generated method stub
-		
+		updateUI = updateUIListener;
 	}
 
 
 	@Override
 	public TimerUpdateUIListener getUpdateUIListener() {
-		// TODO Auto-generated method stub
-		return null;
+		return updateUI;
 	}
 }

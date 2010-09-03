@@ -2,6 +2,7 @@ package com.midlandroid.apps.android.laptimer;
 
 import java.text.NumberFormat;
 import java.util.Date;
+import java.util.List;
 
 import com.midlandroid.apps.android.laptimer.background.BackgroundSrvc;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateUIListener;
@@ -50,11 +51,15 @@ public class Main extends Activity implements TimerUpdateUIListener {
 	private MenuItem saveHistoryMI;
 	
 	// members
-	private Integer lapCount;
+	private long currTime;
+	private long lapTime;
+	private int lapCount;
+	
 	private NumberFormat numFormat;
 	private boolean keepTimerServiceAlive;
 	private Messenger myMessenger;
-	private String lapStrings;
+	
+	private String timerHistory;
 	
 	
     @Override
@@ -66,6 +71,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
         
         setContentView(R.layout.main);
         
+        currTime = lapTime = 0;
         lapCount = 1;
         
         // initialize the variables
@@ -118,7 +124,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
 					_addViewTextToClipBoard(v);
 			}
     	});
-    	lapStrings = "";
+    	timerHistory = "";
     }
     
     
@@ -195,44 +201,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	}
     	return false;
     }
-    
-    
-    ////////////////////////////////////
-    // Timer Service UI Update Listeners
-    ////////////////////////////////////
-	@Override
-	public void addLapToUI(final LapData lapData) {
-		String item = "Lap "+lapData.getLapNum()+": "+
-				TextUtil.formatDateToString(lapData.getLapTime(), numFormat)+" - "+
-				"Total: "+TextUtil.formatDateToString(lapData.getTotalTime(), numFormat);
-		
-		if (lapData.getLapNum()>1)
-			item += "\n";
-		
-		lapStrings = item + lapStrings;
-		lapListTxt.setText(lapStrings);
-	}
-	
-
-	@Override
-	public void clearLapList() {
-		lapStrings = "";
-		lapListTxt.setText(lapStrings);
-	}
-	
-
-	@Override
-	public void updateTimerUI(final long currTime, final long lapTime, final int setCount) {
-		this.runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				lapCount = setCount;
-				currTimeTxt.setText(TextUtil.formatDateToString(currTime,numFormat));
-				lapTimeTxt.setText(TextUtil.formatDateToString(lapTime,numFormat));
-				lapNumBtn.setText("Lap "+ lapCount.toString());
-			}
-		});
-	}
     
     
     ////////////////////////////////////
@@ -500,10 +468,69 @@ public class Main extends Activity implements TimerUpdateUIListener {
     private Handler myHandler = new Handler() {
     	@Override
     	public void handleMessage(Message msg) {
-//    		switch(msg.what) {
-//    		case MessageId.SRC_TIMERSERVICE:
-//    			break;
-//    		}
+    		switch(msg.what) {
+    		case MessageId.CMD_CLEAR_TIMER_HISTORY:
+    			timerHistory = "";
+    			lapListTxt.setText(timerHistory);
+    			break;
+    		}
     	}
     };
+    
+    
+    ////////////////////////////////////
+    // Timer Service UI Update Listeners
+    ////////////////////////////////////
+	@Override
+	public void updateCurrentTime(final long currTime) {
+//		this.runOnUiThread(new Runnable() {
+//			@Override
+//			public void run() {
+				currTimeTxt.setText(TextUtil.formatDateToString(currTime, numFormat));
+				Main.this.currTime = currTime;
+//			}
+//		});
+	}
+
+
+	@Override
+	public void updateLapTime(final long lapTime) {
+//		this.runOnUiThread(new Runnable() {
+//			@Override
+//			public void run() {
+				currTimeTxt.setText(TextUtil.formatDateToString(lapTime, numFormat));
+				Main.this.lapTime = lapTime;
+//			}
+//		});
+	}
+
+
+	@Override
+	public void updateLapIncrement(final long currTime, final long lapTime) {
+//		this.runOnUiThread(new Runnable() {
+//			@Override
+//			public void run() {
+				// Create a line of text recording the lap increment
+				String item = "Lap " + Integer.toString(lapCount) + ": " +
+						TextUtil.formatDateToString(lapTime, numFormat) + " - " +
+						"Total: "+TextUtil.formatDateToString(currTime, numFormat) +
+						"\n";
+				
+				// Add the item to the beginning of the history
+				timerHistory = item + timerHistory;
+				lapListTxt.setText(timerHistory);
+				
+				// Increment the lap count, and update the lap button
+				lapCount++;
+				lapNumBtn.setText("Lap "+ Integer.toString(lapCount));
+//			}
+//		});
+	}
+
+
+	@Override
+	public void updateLapList(final List<LapData> laps) {
+		// TODO Auto-generated method stub
+		
+	}
 }

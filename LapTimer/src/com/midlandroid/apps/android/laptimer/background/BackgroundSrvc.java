@@ -1,5 +1,6 @@
 package com.midlandroid.apps.android.laptimer.background;
 
+import java.util.Queue;
 import java.util.Stack;
 
 import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountDown;
@@ -37,6 +38,7 @@ public class BackgroundSrvc extends Service {
 	
 	// Timer controls
 	private Stack<TimerMode> timerModes;
+	private Queue<Integer> timerCommands;
     private RunningState timerState;
 	private boolean delayTimerAlreadyUsed;
 	private long timerStartTime;
@@ -208,10 +210,40 @@ public class BackgroundSrvc extends Service {
 			// Run the timer modes time update process
 			TimerMode mode = timerModes.peek();
 			if (mode != null) {
-				mode.procTimerUpdate(millis);
+				
+				// Process the timer commands if there are any
+				boolean doTimeUpdate = true;
+				boolean doScheduleNextUpdate = true;
+				Integer cmd = null;
+				while((cmd = timerCommands.poll())!=null) {
+					switch(cmd) {
+					case MessageId.CMD_LAP_INCREMENT:
+						mode.procLapEvent();
+						break;
+						
+					case MessageId.CMD_REFRESH_MAIN_UI:
+						mode.procRefreshUI();
+						break;
+						
+					case MessageId.CMD_RESET_TIMER:
+						doTimeUpdate = false;
+						doScheduleNextUpdate = false;
+						mode.procResetTimer();
+						mode.procRefreshUI();
+						
+						// Finished with the timers
+						_doStopTimer();
+						break;
+					}
+				}
+				
+				// Update the timer with the new time.
+				if (doTimeUpdate)
+					mode.procTimerUpdate(millis);
 				
 				// Schedule the next update
-				inHandler.postDelayed(this, 200);
+				if (doScheduleNextUpdate)
+					inHandler.postDelayed(this, 200);
 				
 			} else {
 				// Nothing to do, but stop the timer
@@ -253,6 +285,8 @@ public class BackgroundSrvc extends Service {
 	private void _doLapIncrement() {
 		Log.d(LOG_TAG, "doLapIncrement");
 		
+		// Tell the timer a new lap event was received
+		timerCommands.add(new Integer(MessageId.CMD_LAP_INCREMENT));
 	}
 	
 	
@@ -277,8 +311,8 @@ public class BackgroundSrvc extends Service {
 	private void _doResetTimer() {
 		Log.d(LOG_TAG, "doResetTimer");
 	
-		// Stop the timer if it's running
-		_doStopTimer();
+		// Tell the timer to reset and stop
+		timerCommands.add(new Integer(MessageId.CMD_RESET_TIMER));
 		
 		// Reset the values
 		delayTimerAlreadyUsed = false;
@@ -290,6 +324,9 @@ public class BackgroundSrvc extends Service {
 	 */
 	private void _doRefreshMainUI() {
 		Log.d(LOG_TAG, "doRefreshMainUI");
+
+		// Tell the timer to refresh the UI
+		timerCommands.add(new Integer(MessageId.CMD_REFRESH_MAIN_UI));
 	}
 	
 	
