@@ -1,4 +1,4 @@
-package com.midlandroid.apps.android.laptimer.timers;
+package com.midlandroid.apps.android.laptimer.background.timers;
 
 import java.util.ArrayList;
 import java.util.Timer;

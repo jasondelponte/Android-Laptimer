@@ -4,8 +4,8 @@ import java.text.NumberFormat;
 import java.util.Date;
 
 import com.midlandroid.apps.android.laptimer.background.BackgroundSrvc;
-import com.midlandroid.apps.android.laptimer.timers.TimerUpdateUIListener;
-import com.midlandroid.apps.android.laptimer.timers.TimerMode.RunningState;
+import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateUIListener;
+import com.midlandroid.apps.android.laptimer.background.timers.TimerMode.RunningState;
 import com.midlandroid.apps.android.laptimer.util.LapData;
 import com.midlandroid.apps.android.laptimer.util.MessageId;
 import com.midlandroid.apps.android.laptimer.util.SimpleFileAccess;

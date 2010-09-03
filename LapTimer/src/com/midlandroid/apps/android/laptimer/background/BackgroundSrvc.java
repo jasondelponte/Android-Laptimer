@@ -2,10 +2,10 @@ package com.midlandroid.apps.android.laptimer.background;
 
 import java.util.Stack;
 
-import com.midlandroid.apps.android.laptimer.timers.SimpleCountDown;
-import com.midlandroid.apps.android.laptimer.timers.SimpleCountUp;
-import com.midlandroid.apps.android.laptimer.timers.TimerMode;
-import com.midlandroid.apps.android.laptimer.timers.TimerMode.RunningState;
+import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountDown;
+import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountUp;
+import com.midlandroid.apps.android.laptimer.background.timers.TimerMode;
+import com.midlandroid.apps.android.laptimer.background.timers.TimerMode.RunningState;
 import com.midlandroid.apps.android.laptimer.util.AppPreferences;
 import com.midlandroid.apps.android.laptimer.util.MessageId;
 
