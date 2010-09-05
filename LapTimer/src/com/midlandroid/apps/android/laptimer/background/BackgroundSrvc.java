@@ -1,7 +1,5 @@
 package com.midlandroid.apps.android.laptimer.background;
 
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Stack;
 
 import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountDown;
@@ -10,7 +8,7 @@ import com.midlandroid.apps.android.laptimer.background.timers.TimerMode;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerMode.RunningState;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateUIListener;
 import com.midlandroid.apps.android.laptimer.util.AppPreferences;
-import com.midlandroid.apps.android.laptimer.util.MessageId;
+import com.midlandroid.apps.android.laptimer.util.ServiceCommand;
 
 
 import android.app.NotificationManager;
@@ -23,12 +21,13 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.PowerManager;
-import android.os.SystemClock;
 import android.util.Log;
 
 public class BackgroundSrvc extends Service {
 	private static final String LOG_TAG = BackgroundSrvc.class.getSimpleName();
-	
+
+    private static BackgroundSrvc service;
+		
     ///** Keeps track of all current registered clients. */
     //private ArrayList<Messenger> mClients = new ArrayList<Messenger>();
 	
@@ -41,10 +40,13 @@ public class BackgroundSrvc extends Service {
 	
 	// Timer controls
 	private Stack<TimerMode> timerModes;
-	private Queue<Integer> timerCommands;
+	private int timerCommand;
+    private int timerCommandToRestore;
     private RunningState timerState;
 	private boolean delayTimerAlreadyUsed;
 	private long timerStartTime;
+	private long timerPausedAt;
+	private long timerStartOffset;
 
 
     /**
@@ -72,6 +74,8 @@ public class BackgroundSrvc extends Service {
 	public void onCreate() {
 		super.onCreate();
 		
+		service = this;
+		
 		// Get the handle to the notification service
         mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 		
@@ -89,7 +93,7 @@ public class BackgroundSrvc extends Service {
 		timerModes = new Stack<TimerMode>();
 		
 		// Create a queue for commands 
-		timerCommands = new LinkedList<Integer>();
+		timerCommand = timerCommandToRestore = ServiceCommand.CMD_NONE;
 		
 		// Set timer mode
 		// TODO replace this with user specified timer modes
@@ -123,7 +127,7 @@ public class BackgroundSrvc extends Service {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
-            case MessageId.CMD_START_STOP_TIMER:
+            case ServiceCommand.CMD_START_STOP_TIMER:
             	if (timerState != RunningState.RUNNING) {
         			_doStartTimer();
             	} else {
@@ -131,19 +135,21 @@ public class BackgroundSrvc extends Service {
             	}
             	break;
             	
-            case MessageId.CMD_LAP_INCREMENT:
-            	_doLapIncrement();
+            case ServiceCommand.CMD_LAP_INCREMENT:
+            	// ignore the lap increment if the timers not running.
+            	if (timerState == RunningState.RUNNING)
+            		_doLapIncrement();
             	break;
             	
-            case MessageId.CMD_RESET_TIMER:
+            case ServiceCommand.CMD_RESET_TIMER:
             	_doResetTimer();
             	break;
             	
-            case MessageId.CMD_REFRESH_MAIN_UI:
+            case ServiceCommand.CMD_REFRESH_MAIN_UI:
             	_doRefreshMainUI();
             	break;
             	
-            case MessageId.CMD_TIMER_FINISHED:
+            case ServiceCommand.CMD_TIMER_FINISHED:
             	_doFinishCurrTimer();
             	break;
             	
@@ -157,6 +163,15 @@ public class BackgroundSrvc extends Service {
     
     // Target we publish for clients to send messages to IncomingHandler.
     public final Messenger myMessenger = new Messenger(inHandler);
+    
+    
+    /**
+     * Returns a references handle to this service
+     * @return
+     */
+    public static BackgroundSrvc getService() {
+    	return service;
+    }
     
     
     /**
@@ -212,8 +227,13 @@ public class BackgroundSrvc extends Service {
 	 * timer mode
 	 * @param uiListener
 	 */
-	public void setUpdateUIListener(TimerUpdateUIListener uiListener) {
+	public void setUpdateUIListener(final TimerUpdateUIListener uiListener) {
 		uiUpdateListener = uiListener;
+		
+		// Set the timer mode's ui update listeners
+		for (TimerMode mode : timerModes) {
+			mode.setUpdateUIListener(uiListener);
+		}
 	}
 	
 	
@@ -233,13 +253,13 @@ public class BackgroundSrvc extends Service {
 	///////////////////////////////////////////////////
 	// Private Methods
 	///////////////////////////////////////////////////
+	private static int TIMER_UPDATE_STEP_MILLS = 100;
 	// Runnable used to update the timer
 	private Runnable timerUpdateTask = new Runnable() {
+		private long totalRunTime = 0;
+		
 		@Override
 		public void run() {
-			// get the time difference since last update
-			long millis = SystemClock.uptimeMillis() - timerStartTime;
-
 			// Run the timer modes time update process
 			TimerMode mode = timerModes.peek();
 			if (mode != null) {
@@ -247,37 +267,70 @@ public class BackgroundSrvc extends Service {
 				// Process the timer commands if there are any
 				boolean doTimeUpdate = true;
 				boolean doScheduleNextUpdate = true;
-				Integer cmd = null;
-				while((cmd = timerCommands.poll())!=null) {
-					switch(cmd) {
+				
+				switch(timerCommand) {
+				case ServiceCommand.CMD_LAP_INCREMENT:
+					timerCommand = timerCommandToRestore;
+					mode.procLapEvent();
+					break;
 					
-					case MessageId.CMD_LAP_INCREMENT:
-						mode.procLapEvent();
-						break;
-						
-					case MessageId.CMD_REFRESH_MAIN_UI:
-						mode.procRefreshUI();
-						break;
-						
-					case MessageId.CMD_RESET_TIMER:
-						doTimeUpdate = false;
-						doScheduleNextUpdate = false;
-						mode.procResetTimer();
-						mode.procRefreshUI();
-						
-						// Finished with the timers
-						_doStopTimer();
-						break;
-					}
+				case ServiceCommand.CMD_REFRESH_MAIN_UI:
+					mode.procRefreshUI();
+					break;
+					
+				case ServiceCommand.CMD_PROC_TIMER_UPDATES:
+					timerState = RunningState.RUNNING;
+					break;
+					
+				case ServiceCommand.CMD_STOP_TIMER:
+					doTimeUpdate = false;
+					timerState = RunningState.STOPPED;
+					break;
+					
+				case ServiceCommand.CMD_RESET_TIMER:
+					doTimeUpdate = false;
+					doScheduleNextUpdate = false;
+					mode.procResetTimer();
+					
+					// Reset the start timer offsets
+					timerStartTime = timerPausedAt = totalRunTime = 0; 
+					
+					// Reset the UI
+					if (uiUpdateListener!=null) {
+						uiUpdateListener.resetUI();
+					}					
+
+					// Update the timer state
+					timerState = RunningState.RESETTED;
+					break;
 				}
 				
 				// Update the timer with the new time.
-				if (doTimeUpdate)
-					mode.procTimerUpdate(millis);
-				
+				if (doTimeUpdate) {
+					// get the time difference since last update
+					long currSysTime = System.currentTimeMillis();
+					
+					// Update the total runtime in case we were paused.
+					if (timerStartOffset!=0) {
+						// the total time should only be offset once per restart
+						totalRunTime += timerStartOffset;
+						timerStartOffset = 0;
+					}
+					
+					// Calculate the new run time and current slice
+					long newRunTime = currSysTime - timerStartTime;
+					long currTimeSlice = newRunTime - totalRunTime;
+					
+					// Do the time slice
+					mode.procTimerUpdate(currTimeSlice);
+					
+					// Save off the total run time
+					totalRunTime = newRunTime;
+				}
+
 				// Schedule the next update
 				if (doScheduleNextUpdate)
-					inHandler.postDelayed(this, 200);
+					inHandler.postDelayed(this, TIMER_UPDATE_STEP_MILLS);
 				
 			} else {
 				// Nothing to do, but stop the timer
@@ -292,26 +345,36 @@ public class BackgroundSrvc extends Service {
 	 * system message Handler
 	 */
 	private void _doStartTimer() {
-		Log.d(LOG_TAG, "doCreateTimer");
+		Log.d(LOG_TAG, "doStartTimer");
 		
 		// Should a delay timer be used in addition to the normal timer
 		if (appPrefs.getUseDelayTimer() && 
 				(!delayTimerAlreadyUsed || appPrefs.getUseDelayTimerOnRestarts())) {
 			// Create a special count down timer to be used as a delayed timer
 			timerModes.push(new SimpleCountDown(myMessenger, appPrefs.getTimerStartDelay()));
+			delayTimerAlreadyUsed = true;
 		}
 		
-		// Update the timer mode's ui update listeners
+		// Update the timer mode's UI update listeners
 		TimerUpdateUIListener uiListener = uiUpdateListener;
 		for (TimerMode mode : timerModes) {
 			mode.setUpdateUIListener(uiListener);
 		}
 		
+		// Let the timer process know what we are doing.
+		timerCommand = ServiceCommand.CMD_PROC_TIMER_UPDATES;
+		
 		// Find out what time we are starting the timers at and start them
-		timerStartTime = SystemClock.uptimeMillis();
+		if (timerStartTime == 0)
+			timerStartTime = System.currentTimeMillis();
+		else
+			timerStartOffset = System.currentTimeMillis() - timerPausedAt;
+
+		// Remove the old call backs
 		inHandler.removeCallbacks(timerUpdateTask);
-		inHandler.postDelayed(timerUpdateTask, 200);
-		timerState = RunningState.RUNNING;
+		
+		// Schedule the first update
+		inHandler.postDelayed(timerUpdateTask, TIMER_UPDATE_STEP_MILLS);
 
 		// Grab the power manager wake lock if it's enabled
 		if (appPrefs.getUseWakeLock()) {
@@ -327,7 +390,8 @@ public class BackgroundSrvc extends Service {
 		Log.d(LOG_TAG, "doLapIncrement");
 		
 		// Tell the timer a new lap event was received
-		timerCommands.add(new Integer(MessageId.CMD_LAP_INCREMENT));
+		timerCommandToRestore = timerCommand;
+		timerCommand = ServiceCommand.CMD_LAP_INCREMENT;
 	}
 	
 	
@@ -337,8 +401,11 @@ public class BackgroundSrvc extends Service {
 	private void _doStopTimer() {
 		Log.d(LOG_TAG, "doStopTimer");
 		
-		inHandler.removeCallbacks(timerUpdateTask);
-		timerState = RunningState.STOPPED;
+		// Save off the time the timer was stopped in case it is restarted
+		timerPausedAt = System.currentTimeMillis();
+		
+		// Tell the timer to stop processing updates.
+		timerCommand = ServiceCommand.CMD_STOP_TIMER;
 		
 		// Release the power manager wake lock if it was enabled
 		if (appPrefs.getUseWakeLock()) {
@@ -354,10 +421,15 @@ public class BackgroundSrvc extends Service {
 		Log.d(LOG_TAG, "doResetTimer");
 	
 		// Tell the timer to reset and stop
-		timerCommands.add(new Integer(MessageId.CMD_RESET_TIMER));
+		timerCommand = ServiceCommand.CMD_RESET_TIMER;
 		
 		// Reset the values
 		delayTimerAlreadyUsed = false;
+		
+		// Release the power manager wake lock if it was enabled
+		if (appPrefs.getUseWakeLock()) {
+			_releaseWakeLock();
+		}
 	}
 	
 	
@@ -368,7 +440,7 @@ public class BackgroundSrvc extends Service {
 		Log.d(LOG_TAG, "doRefreshMainUI");
 
 		// Tell the timer to refresh the UI
-		timerCommands.add(new Integer(MessageId.CMD_REFRESH_MAIN_UI));
+		timerCommand = ServiceCommand.CMD_REFRESH_MAIN_UI;
 	}
 	
     
@@ -376,7 +448,21 @@ public class BackgroundSrvc extends Service {
      * Finish the current timer
      */
     private void _doFinishCurrTimer() {
-    	timerModes.pop();
+    	TimerUpdateUIListener uiUpdate = uiUpdateListener;
+    	
+    	TimerMode finMode = timerModes.pop();
+    	TimerMode nexMode = timerModes.peek();
+    	// notify the user that the current timer has finished
+    	if (uiUpdate != null) {
+    		if (finMode != null)
+    			uiUpdate.addTextLineToTimerHistory(finMode.getTimerModeName()+" Finished");
+    		
+    		if (nexMode != null)
+    			uiUpdate.addTextLineToTimerHistory(nexMode.getTimerModeName()+" Started");
+    		
+    		// Reset the lap data since they are timer specific
+    		uiUpdate.resetLaps();
+    	}
 	}
 	
 	

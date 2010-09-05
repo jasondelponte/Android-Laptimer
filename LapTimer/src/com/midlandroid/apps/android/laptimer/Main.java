@@ -2,13 +2,11 @@ package com.midlandroid.apps.android.laptimer;
 
 import java.text.NumberFormat;
 import java.util.Date;
-import java.util.List;
 
 import com.midlandroid.apps.android.laptimer.background.BackgroundSrvc;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateUIListener;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerMode.RunningState;
-import com.midlandroid.apps.android.laptimer.util.LapData;
-import com.midlandroid.apps.android.laptimer.util.MessageId;
+import com.midlandroid.apps.android.laptimer.util.ServiceCommand;
 import com.midlandroid.apps.android.laptimer.util.SimpleFileAccess;
 import com.midlandroid.apps.android.laptimer.util.TextUtil;
 import com.midlandroid.apps.android.laptimer.R;
@@ -57,7 +55,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
 	private int lapCount;
 	
 	private NumberFormat numFormat;
-	private boolean keepTimerServiceAlive;
 	private Messenger myMessenger;
 	
 	private String timerHistory;
@@ -74,7 +71,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
         numFormat.setMinimumIntegerDigits(2);
         numFormat.setMaximumIntegerDigits(2);
         numFormat.setParseIntegerOnly(true);
-        keepTimerServiceAlive = false;
         
         myMessenger = new Messenger(myHandler);
 
@@ -149,11 +145,14 @@ public class Main extends Activity implements TimerUpdateUIListener {
     @Override
     public void onResume() {
     	super.onResume();
-        
+
         // Attach to the service
-        _doBindService();
+    	_doBindService();
+        
+    	//boundService = BackgroundSrvc.getService();
     	
-    	keepTimerServiceAlive = false;
+        // Refresh the UI
+        _refreshUI();
     }
     
     
@@ -161,13 +160,14 @@ public class Main extends Activity implements TimerUpdateUIListener {
     public void onPause() {
     	super.onPause();
 
-    	keepTimerServiceAlive = true;
-
 		// Clear our current UI listener
-		boundService.clearUpdateUIListener();
-    	
-    	// Disconnect from the service
-    	_doUnbindService();
+    	if (boundService!=null) {
+    		boundService.clearUpdateUIListener();
+
+	    	// Disconnect from the service if the timer is not running
+			if (boundService.getTimerState() == RunningState.RESETTED)
+				_doUnbindService();
+    	}
     }
     
     
@@ -195,7 +195,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	//timerModeMI = menu.findItem(R.id.mi_timer_mode);
     	saveHistoryMI = menu.findItem(R.id.mi_save_lap_list);
     	
-    	//_setMenuItemEnabledBasedOnRunState();
+    	_setMenuItemEnabledBasedOnRunState();
     	
 		return true;
     }
@@ -229,8 +229,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
      * to start or stop the timer.
      */
     private void _startStopTimer() {
-    	keepTimerServiceAlive = true;
-    	_msgTimerService(MessageId.CMD_START_STOP_TIMER);
+    	_msgTimerService(ServiceCommand.CMD_START_STOP_TIMER);
     }
     
     
@@ -239,7 +238,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
 	 * be incremented.
 	 */
     private void _lapIncrement() {
-    	_msgTimerService(MessageId.CMD_LAP_INCREMENT);
+    	_msgTimerService(ServiceCommand.CMD_LAP_INCREMENT);
     }
     
     
@@ -261,8 +260,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
      * and reseted.
      */
     private void _doResetTimer() {
-    	keepTimerServiceAlive = false;
-    	_msgTimerService(MessageId.CMD_RESET_TIMER);
+    	_msgTimerService(ServiceCommand.CMD_RESET_TIMER);
     }
     
     
@@ -271,7 +269,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
      */
     private void _refreshUI() {
     	timerHistoryTxt.setText("");
-    	_msgTimerService(MessageId.CMD_REFRESH_MAIN_UI);
+    	_msgTimerService(ServiceCommand.CMD_REFRESH_MAIN_UI);
     }
     
 
@@ -321,15 +319,17 @@ public class Main extends Activity implements TimerUpdateUIListener {
      * @param payload Data to be send to background service
      */
     private void _msgTimerService(final int cmd, final Object payload) {
-    	Message msg = myHandler.obtainMessage();
-    	msg.what = cmd;
-    	msg.obj = payload;
-    	msg.replyTo = myMessenger;
-    	try {
-			boundService.myMessenger.send(msg);
-		} catch (RemoteException e) {
-			Log.e(LOG_TAG, "Failed to message background service", e);
-		}
+    	if (boundService != null) {
+	    	Message msg = myHandler.obtainMessage();
+	    	msg.what = cmd;
+	    	msg.obj = payload;
+	    	msg.replyTo = myMessenger;
+	    	try {
+				boundService.myMessenger.send(msg);
+			} catch (RemoteException e) {
+				Log.e(LOG_TAG, "Failed to message background service", e);
+			}
+    	}
     }
     
     
@@ -337,8 +337,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
      * Displays the Android Preferences UI to the user.
      */
     private void _showPreferences() {
-		keepTimerServiceAlive = true;
-		
     	Intent i = new Intent(this, Preferences.class);
     	startActivity(i);
     }
@@ -348,7 +346,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
      * Displays the timer mode selection UI 
      */
     private void _showTimerModeSelection() {
-		keepTimerServiceAlive = true;
+    	// TODO Add functionality
     }
     
     
@@ -406,19 +404,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
     
     //////////////////////////////////////
     // Service Controls
-    //////////////////////////////////////    
-//    private void _disconnectFromService() {
-//    	TimerService srvc = TimerService.getService();
-//    	if (srvc!=null) {
-//    		srvc.setUpdateUIListener(null);
-//    		if (srvc.getState()==RunningState.RESETTED && 
-//    				keepTimerServiceAlive==false) {
-//		    	Intent i = new Intent(this, TimerService.class);
-//		    	stopService(i);
-//    		}
-//    	}
-//    }
-    
+    ////////////////////////////////////// 
     private boolean isSrvcbound = false;
     private BackgroundSrvc boundService;
     private ServiceConnection srvcConnection = new ServiceConnection() {
@@ -430,7 +416,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
             // cast its IBinder to a concrete class and directly access it.
     		boundService = ((BackgroundSrvc.LocalBinder)service).getService();
     		
-    		// Provide the bound service with our timer ui listener
+    		// Provide the bound service with our timer UI listener
     		boundService.setUpdateUIListener(Main.this);
     		
     		// Update the app's default shared preferences 
@@ -462,6 +448,9 @@ public class Main extends Activity implements TimerUpdateUIListener {
         bindService(new Intent(this, 
         		BackgroundSrvc.class), srvcConnection, Context.BIND_AUTO_CREATE);
         isSrvcbound = true;
+    	
+    	//startService(new Intent(this, BackgroundSrvc.class));
+    	
     }
     
     
@@ -483,6 +472,8 @@ public class Main extends Activity implements TimerUpdateUIListener {
             unbindService(srvcConnection);
             isSrvcbound = false;
         }
+    	
+    	//stopService(new Intent(this, BackgroundSrvc.class));
     }
     
     
@@ -493,7 +484,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	@Override
     	public void handleMessage(Message msg) {
     		switch(msg.what) {
-    		case MessageId.CMD_CLEAR_TIMER_HISTORY:
+    		case ServiceCommand.CMD_CLEAR_TIMER_HISTORY:
     			timerHistory = revTimerHistory = "";
     			timerHistoryTxt.setText(timerHistory);
     			break;
@@ -551,11 +542,54 @@ public class Main extends Activity implements TimerUpdateUIListener {
 //			}
 //		});
 	}
-
-
+	
+	
 	@Override
-	public void updateLapList(final List<LapData> laps) {
-		// TODO Auto-generated method stub
+	public void resetLaps() {
+//		this.runOnUiThread(new Runnable() {
+//			@Override
+//			public void run() {
+				// Reset the lap count, and update the lap button
+				lapCount=1;
+				lapNumBtn.setText("Lap "+ Integer.toString(lapCount));
+//			}
+//		});
+	}
+	
+	
+	@Override
+	public void resetUI() {
+//		this.runOnUiThread(new Runnable() {
+//			@Override
+//			public void run() {
+				// Reset current timer and update text
+				currTime = 0;
+				currTimeTxt.setText(TextUtil.formatDateToString(currTime, numFormat));
+				// Reset lap timer and update text
+				lapTime = 0;
+				lapTimeTxt.setText(TextUtil.formatDateToString(lapTime, numFormat));
 		
+				// Reset the timer history and update UI
+				timerHistory = revTimerHistory = "";
+				timerHistoryTxt.setText(timerHistory);
+			
+				// Reset the lap count, and update the lap button
+				lapCount=1;
+				lapNumBtn.setText("Lap "+ Integer.toString(lapCount));
+//			}
+//		});
+	}
+	
+	
+	@Override
+	public void addTextLineToTimerHistory(final String text) {
+//		this.runOnUiThread(new Runnable() {
+//			@Override
+//			public void run() {
+				timerHistory = text+"\n" + timerHistory;
+				revTimerHistory += "\n"+text;
+				timerHistoryTxt.setText(timerHistory);
+//			}
+//		});
 	}
 }

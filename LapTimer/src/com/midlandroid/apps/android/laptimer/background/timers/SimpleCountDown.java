@@ -1,6 +1,6 @@
 package com.midlandroid.apps.android.laptimer.background.timers;
 
-import com.midlandroid.apps.android.laptimer.util.MessageId;
+import com.midlandroid.apps.android.laptimer.util.ServiceCommand;
 
 import android.os.Message;
 import android.os.Messenger;
@@ -45,8 +45,8 @@ public class SimpleCountDown extends TimerMode {
 		
 		// Check if it is time to finish, and don't spam the messenger
 		if (currTime <= 0 && !alreadyNotified) {
-			_notifyMessenger(MessageId.CMD_SOUND_ALARM);
-			_notifyMessenger(MessageId.CMD_TIMER_FINISHED);
+			_notifyMessenger(ServiceCommand.CMD_SOUND_ALARM);
+			_notifyMessenger(ServiceCommand.CMD_TIMER_FINISHED);
 			alreadyNotified = true;
 		}
 		

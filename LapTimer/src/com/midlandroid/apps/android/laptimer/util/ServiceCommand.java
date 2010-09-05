@@ -1,6 +1,6 @@
 package com.midlandroid.apps.android.laptimer.util;
 
-public final class MessageId {
+public final class ServiceCommand {
 	public static final int CMD_START_STOP_TIMER = 0;
 	public static final int CMD_RESET_TIMER = 1;
 	public static final int CMD_LAP_INCREMENT = 2;
@@ -8,4 +8,7 @@ public final class MessageId {
 	public static final int CMD_TIMER_FINISHED = 4;
 	public static final int CMD_SOUND_ALARM = 5;
 	public static final int CMD_CLEAR_TIMER_HISTORY = 6;
+	public static final int CMD_STOP_TIMER = 7;
+	public static final int CMD_NONE = 8;
+	public static final int CMD_PROC_TIMER_UPDATES = 9;
 }

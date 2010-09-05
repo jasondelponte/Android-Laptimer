@@ -1,15 +1,12 @@
 package com.midlandroid.apps.android.laptimer.background.timers;
 
-import java.util.List;
-import java.util.Vector;
 
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.midlandroid.apps.android.laptimer.util.LapData;
-import com.midlandroid.apps.android.laptimer.util.MessageId;
+import com.midlandroid.apps.android.laptimer.util.ServiceCommand;
 
 /**
  * Simple timer for counting up.  The ceiling of the timer can be set so 
@@ -20,7 +17,6 @@ import com.midlandroid.apps.android.laptimer.util.MessageId;
 public class SimpleCountUp extends TimerMode {
 	private static final String LOG_TAG = SimpleCountUp.class.getSimpleName();
 	
-	private List<LapData> lapDataList;
 	private TimerUpdateUIListener updateUI;
 
 	private Messenger messenger;
@@ -44,7 +40,6 @@ public class SimpleCountUp extends TimerMode {
 		
 		currTime = 0;
 		alreadyNotified = false;
-		lapDataList = new Vector<LapData>();
 	}
 	
 	
@@ -72,8 +67,8 @@ public class SimpleCountUp extends TimerMode {
 		
 		// Only do the checks if max time is selected to be used.
 		if (useMaxTime && currTime >= maxTime && !alreadyNotified) {
-			_notifyMessenger(MessageId.CMD_SOUND_ALARM);
-			_notifyMessenger(MessageId.CMD_TIMER_FINISHED);
+			_notifyMessenger(ServiceCommand.CMD_SOUND_ALARM);
+			_notifyMessenger(ServiceCommand.CMD_TIMER_FINISHED);
 			alreadyNotified = true;
 			return;
 		}
@@ -103,7 +98,6 @@ public class SimpleCountUp extends TimerMode {
 		if (updateUI != null) {
 			updateUI.updateCurrentTime(currTime);
 			updateUI.updateLapTime(lapTime);
-			updateUI.updateLapList(lapDataList);
 		}
 	}
 	
