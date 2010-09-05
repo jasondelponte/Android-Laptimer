@@ -151,11 +151,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
 
         // Attach to the service
     	_doBindService();
-        
-    	//boundService = BackgroundSrvc.getService();
-    	
-        // Refresh the UI
-        _refreshUI();
     }
     
     
@@ -167,8 +162,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	RunningState currState = RunningState.RESETTED;
     	if (boundService != null)
     		currState = boundService.getTimerState();
-    	
-    	Log.d(LOG_TAG, "RunningState: "+currState);
     	
     	// Disconnect from the service
     	_doUnbindService();
