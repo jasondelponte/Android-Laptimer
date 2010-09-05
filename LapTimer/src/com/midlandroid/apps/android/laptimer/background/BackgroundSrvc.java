@@ -25,11 +25,6 @@ import android.util.Log;
 
 public class BackgroundSrvc extends Service {
 	private static final String LOG_TAG = BackgroundSrvc.class.getSimpleName();
-
-    private static BackgroundSrvc service;
-		
-    ///** Keeps track of all current registered clients. */
-    //private ArrayList<Messenger> mClients = new ArrayList<Messenger>();
 	
     // Background service controls
 	private TaskQueue bckgrndTasks;
@@ -73,9 +68,8 @@ public class BackgroundSrvc extends Service {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		
-		service = this;
-		
+		Log.d(LOG_TAG, "onCreate called");
+
 		// Get the handle to the notification service
         mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 		
@@ -107,6 +101,7 @@ public class BackgroundSrvc extends Service {
 	@Override
 	public void onStart(Intent intent, int startId) {
 		super.onStart(intent, startId);
+		Log.d(LOG_TAG, "onStart called");
 	}
 	
 	
@@ -163,15 +158,6 @@ public class BackgroundSrvc extends Service {
     
     // Target we publish for clients to send messages to IncomingHandler.
     public final Messenger myMessenger = new Messenger(inHandler);
-    
-    
-    /**
-     * Returns a references handle to this service
-     * @return
-     */
-    public static BackgroundSrvc getService() {
-    	return service;
-    }
     
     
     /**

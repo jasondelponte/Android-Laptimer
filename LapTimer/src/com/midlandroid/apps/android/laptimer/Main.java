@@ -66,6 +66,9 @@ public class Main extends Activity implements TimerUpdateUIListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         
+        // Create the background service
+        startService(new Intent(this, BackgroundSrvc.class));
+        
         // initialize the variables
         numFormat = NumberFormat.getInstance();
         numFormat.setMinimumIntegerDigits(2);
@@ -159,15 +162,20 @@ public class Main extends Activity implements TimerUpdateUIListener {
     @Override
     public void onPause() {
     	super.onPause();
-
-		// Clear our current UI listener
-    	if (boundService!=null) {
-    		boundService.clearUpdateUIListener();
-
-	    	// Disconnect from the service if the timer is not running
-			if (boundService.getTimerState() == RunningState.RESETTED)
-				_doUnbindService();
-    	}
+    	
+    	// Get the current running state
+    	RunningState currState = RunningState.RESETTED;
+    	if (boundService != null)
+    		currState = boundService.getTimerState();
+    	
+    	Log.d(LOG_TAG, "RunningState: "+currState);
+    	
+    	// Disconnect from the service
+    	_doUnbindService();
+    	
+    	// Shutdown the service if its not running
+    	if (currState == RunningState.RESETTED)
+    		stopService(new Intent(this, BackgroundSrvc.class));
     }
     
     
@@ -404,7 +412,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
     
     //////////////////////////////////////
     // Service Controls
-    ////////////////////////////////////// 
+    //////////////////////////////////////
     private boolean isSrvcbound = false;
     private BackgroundSrvc boundService;
     private ServiceConnection srvcConnection = new ServiceConnection() {
@@ -448,9 +456,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
         bindService(new Intent(this, 
         		BackgroundSrvc.class), srvcConnection, Context.BIND_AUTO_CREATE);
         isSrvcbound = true;
-    	
-    	//startService(new Intent(this, BackgroundSrvc.class));
-    	
     }
     
     
@@ -472,8 +477,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
             unbindService(srvcConnection);
             isSrvcbound = false;
         }
-    	
-    	//stopService(new Intent(this, BackgroundSrvc.class));
     }
     
     
