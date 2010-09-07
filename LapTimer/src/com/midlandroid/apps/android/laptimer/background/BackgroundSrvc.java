@@ -42,6 +42,8 @@ public class BackgroundSrvc extends Service {
 	private long timerStartTime;
 	private long timerPausedAt;
 	private long timerStartOffset;
+	
+	private String timerHistory;
 
 
     /**
@@ -68,7 +70,7 @@ public class BackgroundSrvc extends Service {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		Log.d(LOG_TAG, "onCreate called");
+		Log.d(LOG_TAG, "onCreate");
 
 		// Get the handle to the notification service
         mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
@@ -95,13 +97,16 @@ public class BackgroundSrvc extends Service {
 
 		// Initialize other variables
 		delayTimerAlreadyUsed = false;
+		
+		//
+		timerHistory = "";
 	}
 	
 	
 	@Override
 	public void onStart(Intent intent, int startId) {
 		super.onStart(intent, startId);
-		Log.d(LOG_TAG, "onStart called");
+		Log.d(LOG_TAG, "onStart");
 	}
 	
 	
@@ -145,8 +150,11 @@ public class BackgroundSrvc extends Service {
             	break;
             	
             case ServiceCommand.CMD_TIMER_FINISHED:
-            	_doFinishCurrTimer();
+            	_currTimerFinished();
             	break;
+            	
+            case ServiceCommand.CMD_SAVE_TIMER_HISTORY:
+            	timerHistory = (String)msg.obj;
             	
 	        default:
 	            super.handleMessage(msg);
@@ -193,7 +201,7 @@ public class BackgroundSrvc extends Service {
 	public String getTimerModeName() {
 		TimerMode mode = timerModes.peek();
 		if (mode != null)
-			return mode.getTimerModeName();
+			return mode.getTimerName();
 		else
 			return "No Timer Selected";
 	}
@@ -261,7 +269,11 @@ public class BackgroundSrvc extends Service {
 					break;
 					
 				case ServiceCommand.CMD_REFRESH_MAIN_UI:
+					timerCommand = timerCommandToRestore;
 					mode.procRefreshUI();
+					if (uiUpdateListener!=null) {
+						uiUpdateListener.setTimerHistory(timerHistory);
+					}
 					break;
 					
 				case ServiceCommand.CMD_PROC_TIMER_UPDATES:
@@ -336,8 +348,14 @@ public class BackgroundSrvc extends Service {
 		// Should a delay timer be used in addition to the normal timer
 		if (appPrefs.getUseDelayTimer() && 
 				(!delayTimerAlreadyUsed || appPrefs.getUseDelayTimerOnRestarts())) {
+
 			// Create a special count down timer to be used as a delayed timer
-			timerModes.push(new SimpleCountDown(myMessenger, appPrefs.getTimerStartDelay()));
+			TimerMode mode = new SimpleCountDown(myMessenger, appPrefs.getTimerStartDelay());
+			mode.setTimerName("Delay Count Down");
+			
+			// Add the timer mode to the list
+			timerModes.push(mode);
+			
 			delayTimerAlreadyUsed = true;
 		}
 		
@@ -424,16 +442,18 @@ public class BackgroundSrvc extends Service {
 	 */
 	private void _doRefreshMainUI() {
 		Log.d(LOG_TAG, "doRefreshMainUI");
-
+		
 		// Tell the timer to refresh the UI
+		timerCommandToRestore = timerCommand;
 		timerCommand = ServiceCommand.CMD_REFRESH_MAIN_UI;
 	}
 	
     
     /**
-     * Finish the current timer
+     * The current timer has finished and the next timer in the 
+     * stack needs to be activated.
      */
-    private void _doFinishCurrTimer() {
+    private void _currTimerFinished() {
     	TimerUpdateUIListener uiUpdate = uiUpdateListener;
     	
     	TimerMode finMode = timerModes.pop();
@@ -441,15 +461,28 @@ public class BackgroundSrvc extends Service {
     	// notify the user that the current timer has finished
     	if (uiUpdate != null) {
     		if (finMode != null)
-    			uiUpdate.addTextLineToTimerHistory(finMode.getTimerModeName()+" Finished");
+    			uiUpdate.addTextLineToTimerHistory(finMode.getTimerName()+" Finished");
     		
     		if (nexMode != null)
-    			uiUpdate.addTextLineToTimerHistory(nexMode.getTimerModeName()+" Started");
+    			uiUpdate.addTextLineToTimerHistory(nexMode.getTimerName()+" Started");
     		
     		// Reset the lap data since they are timer specific
     		uiUpdate.resetLaps();
     	}
+    	
+    	// Notify the user that the timer has finished
+    	if (appPrefs.getUseAudioAlerts())
+    		_soundAudioAlert();
 	}
+    
+    
+    /**
+     * Create an audible alert notifying the user that the current timer has
+     * been completed.
+     */
+    private void _soundAudioAlert() {
+    	// TODO create audio alert
+    }
 	
 	
 	/**

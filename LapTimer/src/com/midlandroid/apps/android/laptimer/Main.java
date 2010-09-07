@@ -32,7 +32,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnLongClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -58,7 +57,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
 	private Messenger myMessenger;
 	
 	private String timerHistory;
-	private String revTimerHistory;
 	
 	
     @Override
@@ -77,7 +75,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
         
         myMessenger = new Messenger(myHandler);
 
-    	timerHistory = revTimerHistory = "";
+    	timerHistory = "";
         currTime = lapTime = 0;
         lapCount = 1;
 
@@ -128,20 +126,20 @@ public class Main extends Activity implements TimerUpdateUIListener {
 					_addViewTextToClipBoard(v);
 			}
     	});
-    	timerHistoryTxt.setOnLongClickListener(new OnLongClickListener() {
-    		boolean useRevTimerHistory = false;
-			@Override
-			public boolean onLongClick(View v) {
-				if (useRevTimerHistory) {
-					timerHistoryTxt.setText(revTimerHistory);
-					useRevTimerHistory = false;
-				} else {
-					timerHistoryTxt.setText(timerHistory);
-					useRevTimerHistory = true;
-				}
-				return true;
-			}
-    	});
+//    	timerHistoryTxt.setOnLongClickListener(new OnLongClickListener() {
+//    		boolean useRevTimerHistory = false;
+//			@Override
+//			public boolean onLongClick(View v) {
+//				if (useRevTimerHistory) {
+//					timerHistoryTxt.setText(revTimerHistory);
+//					useRevTimerHistory = false;
+//				} else {
+//					timerHistoryTxt.setText(timerHistory);
+//					useRevTimerHistory = true;
+//				}
+//				return true;
+//			}
+//    	});
     }
     
     
@@ -162,6 +160,9 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	RunningState currState = RunningState.RESETTED;
     	if (boundService != null)
     		currState = boundService.getTimerState();
+    	
+    	// Send the current timer history to the service for storage
+    	_msgTimerService(ServiceCommand.CMD_SAVE_TIMER_HISTORY, timerHistory);
     	
     	// Disconnect from the service
     	_doUnbindService();
@@ -393,7 +394,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
 				"Total Time: " + currTimeTxt.getText() + "\n" +
 				"Number of Laps: " + (lapCount-1) + "\n" + 
 				"**** TIMER HISTORY ****\n" +
-				revTimerHistory;
+				timerHistory;
 		
 		// Using the Simple file access util class output the text to a file
 		// while also prompting the user for the path and any confirmations
@@ -481,7 +482,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	public void handleMessage(Message msg) {
     		switch(msg.what) {
     		case ServiceCommand.CMD_CLEAR_TIMER_HISTORY:
-    			timerHistory = revTimerHistory = "";
+    			timerHistory = "";
     			timerHistoryTxt.setText(timerHistory);
     			break;
     		}
@@ -529,11 +530,23 @@ public class Main extends Activity implements TimerUpdateUIListener {
 				
 				// Add the item to the timer history strings
 				timerHistory = item + timerHistory;
-				revTimerHistory += item;
 				timerHistoryTxt.setText(timerHistory);
 				
 				// Increment the lap count, and update the lap button
 				lapCount++;
+				lapNumBtn.setText("Lap "+ Integer.toString(lapCount));
+//			}
+//		});
+	}
+
+	
+	@Override
+	public void updateLapCount(final int count) {
+//		this.runOnUiThread(new Runnable() {
+//			@Override
+//			public void run() {
+				// Using the provided lap count update the ui
+				lapCount=count+1;
 				lapNumBtn.setText("Lap "+ Integer.toString(lapCount));
 //			}
 //		});
@@ -566,7 +579,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
 				lapTimeTxt.setText(TextUtil.formatDateToString(lapTime, numFormat));
 		
 				// Reset the timer history and update UI
-				timerHistory = revTimerHistory = "";
+				timerHistory = "";
 				timerHistoryTxt.setText(timerHistory);
 			
 				// Reset the lap count, and update the lap button
@@ -583,7 +596,19 @@ public class Main extends Activity implements TimerUpdateUIListener {
 //			@Override
 //			public void run() {
 				timerHistory = text+"\n" + timerHistory;
-				revTimerHistory += "\n"+text;
+				timerHistoryTxt.setText(timerHistory);
+//			}
+//		});
+	}
+	
+	
+	@Override
+	public void setTimerHistory(final String history) {
+//		this.runOnUiThread(new Runnable() {
+//			@Override
+//			public void run() {
+				// Reset the timer history and update UI
+				timerHistory = history;
 				timerHistoryTxt.setText(timerHistory);
 //			}
 //		});

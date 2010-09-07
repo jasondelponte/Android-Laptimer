@@ -25,6 +25,7 @@ public class SimpleCountUp extends TimerMode {
 	private boolean useMaxTime;
 	private long currTime;
 	private long lapTime;
+	private int lapCount;
 	
 	/**
 	 * Creates a new instance of this timer with the messenger provided,
@@ -36,9 +37,8 @@ public class SimpleCountUp extends TimerMode {
 		this.messenger = messenger;
 		this.maxTime = 0;
 		
-		
-		
 		currTime = 0;
+		lapCount = 0;
 		alreadyNotified = false;
 	}
 	
@@ -83,6 +83,9 @@ public class SimpleCountUp extends TimerMode {
 	
 	@Override
 	public void procLapEvent() {
+		// Internal count of lap timer
+		lapCount++;
+		
 		// Lap increment
 		if (updateUI != null) {
 			updateUI.updateLapIncrement(currTime, lapTime);
@@ -98,6 +101,7 @@ public class SimpleCountUp extends TimerMode {
 		if (updateUI != null) {
 			updateUI.updateCurrentTime(currTime);
 			updateUI.updateLapTime(lapTime);
+			updateUI.updateLapCount(lapCount);
 		}
 	}
 	
