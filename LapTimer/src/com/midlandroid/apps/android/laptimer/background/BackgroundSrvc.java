@@ -95,7 +95,7 @@ public class BackgroundSrvc extends Service {
 		timerModes = new Stack<TimerMode>();
 		
 		// Create a queue for commands 
-		timerCommand = timerCommandToRestore = ServiceCommand.CMD_NONE;
+		timerCommand = timerCommandToRestore = ServiceCommand.CMD_DONT_PROC_TIMER_UPDATES;
 		
 		// Set timer mode
 		// TODO replace this with user specified timer modes
@@ -108,6 +108,10 @@ public class BackgroundSrvc extends Service {
 		
 		//
 		timerHistory = "";
+        
+        // Create the background timer thread
+        timer = new Timer(false);
+        timer.schedule(timerTask, 0, TIMER_UPDATE_STEP_MILLS);
 	}
 	
 	
@@ -126,8 +130,10 @@ public class BackgroundSrvc extends Service {
 		_doStopTimer();
 		
 		// Stop timer and clear it
-		if (timer != null)
+		if (timer != null) {
 			timer.cancel();
+			timer = null;
+		}
 	}
 	
 	
@@ -269,7 +275,7 @@ public class BackgroundSrvc extends Service {
                 
                 // Process the timer commands if there are any
                 boolean doTimeUpdate = true;
-                boolean doScheduleNextUpdate = true;
+                //boolean doScheduleNextUpdate = true;
                 
                 switch(timerCommand) {
                 case ServiceCommand.CMD_LAP_INCREMENT:
@@ -287,7 +293,7 @@ public class BackgroundSrvc extends Service {
                     
                     // Don't update the timer while stopped if this is just
                     // a refresh of the screen.
-                    if (timerCommand == ServiceCommand.CMD_STOP_TIMER)
+                    if (timerCommand != ServiceCommand.CMD_PROC_TIMER_UPDATES)
                         doTimeUpdate = false;
                     break;
                     
@@ -295,14 +301,22 @@ public class BackgroundSrvc extends Service {
                     timerState = RunningState.RUNNING;
                     break;
                     
+                case ServiceCommand.CMD_DONT_PROC_TIMER_UPDATES:
+                    doTimeUpdate = false;
+                    break;
+                    
                 case ServiceCommand.CMD_STOP_TIMER:
                     doTimeUpdate = false;
+                    
+                    // prevent the timer from doing any updates
+                    timerCommand = ServiceCommand.CMD_DONT_PROC_TIMER_UPDATES;
+                    
+                    // Update the timer state
                     timerState = RunningState.STOPPED;
                     break;
                     
                 case ServiceCommand.CMD_RESET_TIMER:
                     doTimeUpdate = false;
-                    doScheduleNextUpdate = false;
                     mode.procResetTimer();
                     
                     // Reset the start timer offsets
@@ -311,7 +325,10 @@ public class BackgroundSrvc extends Service {
                     // Reset the UI
                     if (uiUpdateListener!=null) {
                         uiUpdateListener.resetUI();
-                    }                   
+                    }
+                    
+                    // prevent the timer from doing any updates
+                    timerCommand = ServiceCommand.CMD_DONT_PROC_TIMER_UPDATES;
     
                     // Update the timer state
                     timerState = RunningState.RESETTED;
@@ -320,6 +337,7 @@ public class BackgroundSrvc extends Service {
                 
                 // Update the timer with the new time.
                 if (doTimeUpdate) {
+                    Log.d("LOG_TAG timer update", "Doing timer update");
                     // get the time difference since last update
                     long currSysTime = System.currentTimeMillis();
                     
@@ -340,10 +358,6 @@ public class BackgroundSrvc extends Service {
                     // Save off the total run time
                     totalRunTime = newRunTime;
                 }
-    
-                // Stop the scheduled
-                if (!doScheduleNextUpdate)
-                    this.cancel();
             } else {
                 // Nothing to do, but stop the timer
                 _doStopTimer();
@@ -380,7 +394,7 @@ public class BackgroundSrvc extends Service {
 		}
 		
 		// Let the timer process know what we are doing.
-		timerCommand = ServiceCommand.CMD_PROC_TIMER_UPDATES;
+		//timerCommand = ServiceCommand.CMD_PROC_TIMER_UPDATES;
 		
 		// Find out what time we are starting the timers at and start them
 		if (timerStartTime == 0)
@@ -391,11 +405,11 @@ public class BackgroundSrvc extends Service {
         // Set the timer start mode
         timerCommand = ServiceCommand.CMD_PROC_TIMER_UPDATES;
         
-		// Create the timer if it hasn't already been created
-		if (timer == null) {
-    		timer = new Timer(false);
-    		timer.schedule(timerTask, 0, TIMER_UPDATE_STEP_MILLS);
-		}
+//		// Create the timer if it hasn't already been created
+//		if (timer == null) {
+//    		timer = new Timer(false);
+//    		timer.schedule(timerTask, 0, TIMER_UPDATE_STEP_MILLS);
+//		}
 
 		// Grab the power manager wake lock if it's enabled
 		if (appPrefs.getUseWakeLock()) {

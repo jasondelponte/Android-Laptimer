@@ -36,9 +36,8 @@ public class SimpleCountUp extends TimerMode {
 		useMaxTime = false;
 		this.messenger = messenger;
 		this.maxTime = 0;
-		
-		currTime = 0;
-		lapCount = 0;
+
+        currTime = lapTime = lapCount = 0;
 		alreadyNotified = false;
 	}
 	
@@ -54,7 +53,7 @@ public class SimpleCountUp extends TimerMode {
 		this.messenger = messenger;
 		this.maxTime = maxTime;
 		
-		currTime = lapTime = 0;
+		currTime = lapTime = lapCount = 0;
 		alreadyNotified = false;
 	}
 
@@ -107,7 +106,7 @@ public class SimpleCountUp extends TimerMode {
 	
 	@Override
 	public void procResetTimer() {
-		currTime = lapTime = 0;
+		currTime = lapTime = lapCount = 0;
 	}
 
 

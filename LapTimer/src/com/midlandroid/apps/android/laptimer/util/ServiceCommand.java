@@ -12,4 +12,5 @@ public final class ServiceCommand {
 	public static final int CMD_NONE = 8;
 	public static final int CMD_PROC_TIMER_UPDATES = 9;
 	public static final int CMD_SAVE_TIMER_HISTORY = 10;
+    public static final int CMD_DONT_PROC_TIMER_UPDATES = 11;
 }

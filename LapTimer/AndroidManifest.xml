@@ -9,7 +9,7 @@
     		
         <activity android:name=".Main"
                   android:label="@string/app_name"
-                  android:launchMode="singleInstance">
+                  android:launchMode="singleInstance" android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -18,9 +18,9 @@
         
         <activity android:name=".Preferences"
                 android:label="@string/preferences"
-                android:launchMode="singleInstance" />
+                android:launchMode="singleInstance" android:excludeFromRecents="true"/>
         
-        <service android:name=".background.BackgroundSrvc"/>
+        <service android:name=".background.BackgroundSrvc" android:enabled="true" android:exported="false"/>
     </application>
     
     <uses-sdk android:minSdkVersion="4" />
