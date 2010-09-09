@@ -1,6 +1,8 @@
 package com.midlandroid.apps.android.laptimer.background;
 
 import java.util.Stack;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountDown;
 import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountUp;
@@ -25,6 +27,8 @@ import android.util.Log;
 
 public class BackgroundSrvc extends Service {
 	private static final String LOG_TAG = BackgroundSrvc.class.getSimpleName();
+
+	private static int TIMER_UPDATE_STEP_MILLS = 100;
 	
     // Background service controls
 	private TaskQueue bckgrndTasks;
@@ -42,8 +46,10 @@ public class BackgroundSrvc extends Service {
 	private long timerStartTime;
 	private long timerPausedAt;
 	private long timerStartOffset;
-	
 	private String timerHistory;
+	
+	// Timer Task and its container
+	private Timer timer;
 
 
     /**
@@ -116,6 +122,10 @@ public class BackgroundSrvc extends Service {
 		
 		// Make sure to clean up and stop the timer on exit
 		_doStopTimer();
+		
+		// Stop timer and clear it
+		if (timer != null)
+			timer.cancel();
 	}
 	
 	
@@ -247,97 +257,6 @@ public class BackgroundSrvc extends Service {
 	///////////////////////////////////////////////////
 	// Private Methods
 	///////////////////////////////////////////////////
-	private static int TIMER_UPDATE_STEP_MILLS = 100;
-	// Runnable used to update the timer
-	private Runnable timerUpdateTask = new Runnable() {
-		private long totalRunTime = 0;
-		
-		@Override
-		public void run() {
-			// Run the timer modes time update process
-			TimerMode mode = timerModes.peek();
-			if (mode != null) {
-				
-				// Process the timer commands if there are any
-				boolean doTimeUpdate = true;
-				boolean doScheduleNextUpdate = true;
-				
-				switch(timerCommand) {
-				case ServiceCommand.CMD_LAP_INCREMENT:
-					timerCommand = timerCommandToRestore;
-					mode.procLapEvent();
-					break;
-					
-				case ServiceCommand.CMD_REFRESH_MAIN_UI:
-					timerCommand = timerCommandToRestore;
-					mode.procRefreshUI();
-					if (uiUpdateListener!=null) {
-						uiUpdateListener.setTimerHistory(timerHistory);
-					}
-					break;
-					
-				case ServiceCommand.CMD_PROC_TIMER_UPDATES:
-					timerState = RunningState.RUNNING;
-					break;
-					
-				case ServiceCommand.CMD_STOP_TIMER:
-					doTimeUpdate = false;
-					timerState = RunningState.STOPPED;
-					break;
-					
-				case ServiceCommand.CMD_RESET_TIMER:
-					doTimeUpdate = false;
-					doScheduleNextUpdate = false;
-					mode.procResetTimer();
-					
-					// Reset the start timer offsets
-					timerStartTime = timerPausedAt = totalRunTime = 0; 
-					
-					// Reset the UI
-					if (uiUpdateListener!=null) {
-						uiUpdateListener.resetUI();
-					}					
-
-					// Update the timer state
-					timerState = RunningState.RESETTED;
-					break;
-				}
-				
-				// Update the timer with the new time.
-				if (doTimeUpdate) {
-					// get the time difference since last update
-					long currSysTime = System.currentTimeMillis();
-					
-					// Update the total runtime in case we were paused.
-					if (timerStartOffset!=0) {
-						// the total time should only be offset once per restart
-						totalRunTime += timerStartOffset;
-						timerStartOffset = 0;
-					}
-					
-					// Calculate the new run time and current slice
-					long newRunTime = currSysTime - timerStartTime;
-					long currTimeSlice = newRunTime - totalRunTime;
-					
-					// Do the time slice
-					mode.procTimerUpdate(currTimeSlice);
-					
-					// Save off the total run time
-					totalRunTime = newRunTime;
-				}
-
-				// Schedule the next update
-				if (doScheduleNextUpdate)
-					inHandler.postDelayed(this, TIMER_UPDATE_STEP_MILLS);
-				
-			} else {
-				// Nothing to do, but stop the timer
-				_doStopTimer();
-			}
-		}
-	};
-	
-	
 	/**
 	 * Creates the background timer using the Android 
 	 * system message Handler
@@ -373,12 +292,100 @@ public class BackgroundSrvc extends Service {
 			timerStartTime = System.currentTimeMillis();
 		else
 			timerStartOffset = System.currentTimeMillis() - timerPausedAt;
-
-		// Remove the old call backs
-		inHandler.removeCallbacks(timerUpdateTask);
 		
-		// Schedule the first update
-		inHandler.postDelayed(timerUpdateTask, TIMER_UPDATE_STEP_MILLS);
+		// Remove the old call backs if there were any.
+		if (timer != null)
+			timer.cancel();
+		
+		// Schedule the the events
+		timer = new Timer(false);
+		timer.schedule(new TimerTask() {
+			private long totalRunTime = 0;
+			@Override
+			public void run() {
+				// Run the timer modes time update process
+				TimerMode mode = timerModes.peek();
+				if (mode != null) {
+					
+					// Process the timer commands if there are any
+					boolean doTimeUpdate = true;
+					boolean doScheduleNextUpdate = true;
+					
+					switch(timerCommand) {
+					case ServiceCommand.CMD_LAP_INCREMENT:
+						timerCommand = timerCommandToRestore;
+						mode.procLapEvent();
+						break;
+						
+					case ServiceCommand.CMD_REFRESH_MAIN_UI:
+						timerCommand = timerCommandToRestore;
+						mode.procRefreshUI();
+						if (uiUpdateListener!=null) {
+							uiUpdateListener.setTimerHistory(timerHistory);
+						}
+						break;
+						
+					case ServiceCommand.CMD_PROC_TIMER_UPDATES:
+						timerState = RunningState.RUNNING;
+						break;
+						
+					case ServiceCommand.CMD_STOP_TIMER:
+						doTimeUpdate = false;
+						timerState = RunningState.STOPPED;
+						break;
+						
+					case ServiceCommand.CMD_RESET_TIMER:
+						doTimeUpdate = false;
+						doScheduleNextUpdate = false;
+						mode.procResetTimer();
+						
+						// Reset the start timer offsets
+						timerStartTime = timerPausedAt = totalRunTime = 0; 
+						
+						// Reset the UI
+						if (uiUpdateListener!=null) {
+							uiUpdateListener.resetUI();
+						}					
+		
+						// Update the timer state
+						timerState = RunningState.RESETTED;
+						break;
+					}
+					
+					// Update the timer with the new time.
+					if (doTimeUpdate) {
+						// get the time difference since last update
+						long currSysTime = System.currentTimeMillis();
+						
+						// Update the total runtime in case we were paused.
+						if (timerStartOffset!=0) {
+							// the total time should only be offset once per restart
+							totalRunTime += timerStartOffset;
+							timerStartOffset = 0;
+						}
+						
+						// Calculate the new run time and current slice
+						long newRunTime = currSysTime - timerStartTime;
+						long currTimeSlice = newRunTime - totalRunTime;
+						
+						// Do the time slice
+						mode.procTimerUpdate(currTimeSlice);
+						
+						// Save off the total run time
+						totalRunTime = newRunTime;
+					}
+		
+					// Stop the scheduled
+					if (!doScheduleNextUpdate)
+						this.cancel();
+		//				inHandler.postDelayed(this, TIMER_UPDATE_STEP_MILLS);
+					
+				} else {
+					// Nothing to do, but stop the timer
+					_doStopTimer();
+				}
+			}
+		}, 0, TIMER_UPDATE_STEP_MILLS);
 
 		// Grab the power manager wake lock if it's enabled
 		if (appPrefs.getUseWakeLock()) {

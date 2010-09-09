@@ -495,33 +495,33 @@ public class Main extends Activity implements TimerUpdateUIListener {
     ////////////////////////////////////
 	@Override
 	public void updateCurrentTime(final long currTime) {
-//		this.runOnUiThread(new Runnable() {
-//			@Override
-//			public void run() {
+		this.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
 				currTimeTxt.setText(TextUtil.formatDateToString(currTime, numFormat));
 				Main.this.currTime = currTime;
-//			}
-//		});
+			}
+		});
 	}
 
 
 	@Override
 	public void updateLapTime(final long lapTime) {
-//		this.runOnUiThread(new Runnable() {
-//			@Override
-//			public void run() {
+		this.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
 				lapTimeTxt.setText(TextUtil.formatDateToString(lapTime, numFormat));
 				Main.this.lapTime = lapTime;
-//			}
-//		});
+			}
+		});
 	}
 
 
 	@Override
 	public void updateLapIncrement(final long currTime, final long lapTime) {
-//		this.runOnUiThread(new Runnable() {
-//			@Override
-//			public void run() {
+		this.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
 				// Create a line of text recording the lap increment
 				String item = "Lap " + Integer.toString(lapCount) + ": " +
 						TextUtil.formatDateToString(lapTime, numFormat) + " - " +
@@ -535,42 +535,42 @@ public class Main extends Activity implements TimerUpdateUIListener {
 				// Increment the lap count, and update the lap button
 				lapCount++;
 				lapNumBtn.setText("Lap "+ Integer.toString(lapCount));
-//			}
-//		});
+			}
+		});
 	}
 
 	
 	@Override
 	public void updateLapCount(final int count) {
-//		this.runOnUiThread(new Runnable() {
-//			@Override
-//			public void run() {
+		this.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
 				// Using the provided lap count update the ui
 				lapCount=count+1;
 				lapNumBtn.setText("Lap "+ Integer.toString(lapCount));
-//			}
-//		});
+			}
+		});
 	}
 	
 	
 	@Override
 	public void resetLaps() {
-//		this.runOnUiThread(new Runnable() {
-//			@Override
-//			public void run() {
+		this.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
 				// Reset the lap count, and update the lap button
 				lapCount=1;
 				lapNumBtn.setText("Lap "+ Integer.toString(lapCount));
-//			}
-//		});
+			}
+		});
 	}
 	
 	
 	@Override
 	public void resetUI() {
-//		this.runOnUiThread(new Runnable() {
-//			@Override
-//			public void run() {
+		this.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
 				// Reset current timer and update text
 				currTime = 0;
 				currTimeTxt.setText(TextUtil.formatDateToString(currTime, numFormat));
@@ -585,32 +585,32 @@ public class Main extends Activity implements TimerUpdateUIListener {
 				// Reset the lap count, and update the lap button
 				lapCount=1;
 				lapNumBtn.setText("Lap "+ Integer.toString(lapCount));
-//			}
-//		});
+			}
+		});
 	}
 	
 	
 	@Override
 	public void addTextLineToTimerHistory(final String text) {
-//		this.runOnUiThread(new Runnable() {
-//			@Override
-//			public void run() {
+		this.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
 				timerHistory = text+"\n" + timerHistory;
 				timerHistoryTxt.setText(timerHistory);
-//			}
-//		});
+			}
+		});
 	}
 	
 	
 	@Override
 	public void setTimerHistory(final String history) {
-//		this.runOnUiThread(new Runnable() {
-//			@Override
-//			public void run() {
+		this.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
 				// Reset the timer history and update UI
 				timerHistory = history;
 				timerHistoryTxt.setText(timerHistory);
-//			}
-//		});
+			}
+		});
 	}
 }
