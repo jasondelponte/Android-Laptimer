@@ -44,4 +44,7 @@
     <string name="pref_use_wakelock">Prevent screen timeout</string>
     <string name="pref_use_wakelock_key">useWakeLock</string>
     <string name="pref_use_wakelock_desc">Sets where while the timer is running should the screen be prevented from shutting off.</string>
+    <string name="pref_volume_button_for_timer">Use Volume Buttons</string>
+    <string name="pref_volume_button_for_timer_key">useVolumeButtonsForTimer</string>
+    <string name="pref_volume_button_for_timer_desc">Allows the up volume button to start/stop the timer, and the down volume button to increment the lap count.  It is recommended to also select to prevet screen timeout when using this feature.</string>
 </resources>

@@ -27,6 +27,7 @@ public class AppPreferences {
 	private boolean useOneClickTextCopy;
 	private String outfileRootPath;
 	private boolean useSecondChanceReset;
+	private boolean useVolumeButtonsForTimer;
 	
 	/**
 	 * Creates a new instance of the application preference accessors.
@@ -80,6 +81,9 @@ public class AppPreferences {
 		// Should the user be given a second chance when the reset menu item is selected.
 		useSecondChanceReset = prefs.getBoolean(res.getString(R.string.pref_second_chance_reset_key), true);
 		
+		// Should the app override the default volume buttons to act as start/stop and lap increment buttons.
+		useVolumeButtonsForTimer = prefs.getBoolean(res.getString(R.string.pref_volume_button_for_timer_key), false);
+		
 		// Debug write out the known values.
 		Log.d(LOG_TAG, "timerStartDelay: "+Long.toString(timerStartDelay) + 
 				", useDelayTimer: "+Boolean.toString(useDelayTimer)+
@@ -88,7 +92,8 @@ public class AppPreferences {
 				", useAudioAlerts: "+Boolean.toString(useAudioAlerts)+
 				", useOneClickTextCopy: "+Boolean.toString(useOneClickTextCopy)+
 				", outfileRootPath: "+outfileRootPath+
-				", useSecondChanceReset: "+useSecondChanceReset);
+				", useSecondChanceReset: "+Boolean.toString(useSecondChanceReset) +
+				", useVolumeButtonsForTimer: "+Boolean.toString(useVolumeButtonsForTimer));
 	}
 	
 	public long getTimerStartDelay() {return timerStartDelay;}
@@ -99,4 +104,5 @@ public class AppPreferences {
 	public boolean getUseOneClickTextCopy() {return useOneClickTextCopy;}
 	public String getOutfileRootPath() {return outfileRootPath;}
 	public boolean getUseSecondChanceReset() {return useSecondChanceReset;}
+	public boolean getUseVolumeButtonsForTimer() {return useVolumeButtonsForTimer;}
 }

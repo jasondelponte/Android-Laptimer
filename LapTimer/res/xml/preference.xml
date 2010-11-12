@@ -13,22 +13,28 @@
 		android:key="@string/pref_timer_start_delay_on_restarts_key"
 		android:defaultValue="false"
 	/>
-	<CheckBoxPreference
-		android:title="@string/pref_one_click_txt_cpy"
-		android:summary="@string/pref_one_click_txt_cpy_desc"
-		android:key="@string/pref_one_click_txt_cpy_key"
-		android:defaultValue="true"
-	/>
-	<CheckBoxPreference
-		android:title="@string/pref_second_chance_reset"
-		android:summary="@string/pref_second_chance_reset_desc"
-		android:key="@string/pref_second_chance_reset_key"
-		android:defaultValue="true"
-	/>
+    <CheckBoxPreference
+        android:title="@string/pref_volume_button_for_timer"
+        android:summary="@string/pref_volume_button_for_timer_desc"
+        android:key="@string/pref_volume_button_for_timer_key"
+        android:defaultValue="false"
+    />
 	<CheckBoxPreference
         android:title="@string/pref_use_wakelock"
         android:summary="@string/pref_use_wakelock_desc"
         android:key="@string/pref_use_wakelock_key"
+        android:defaultValue="true"
+    />
+    <CheckBoxPreference
+        android:title="@string/pref_second_chance_reset"
+        android:summary="@string/pref_second_chance_reset_desc"
+        android:key="@string/pref_second_chance_reset_key"
+        android:defaultValue="true"
+    />
+    <CheckBoxPreference
+        android:title="@string/pref_one_click_txt_cpy"
+        android:summary="@string/pref_one_click_txt_cpy_desc"
+        android:key="@string/pref_one_click_txt_cpy_key"
         android:defaultValue="true"
     />
 	<!--

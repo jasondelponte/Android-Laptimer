@@ -181,6 +181,14 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	if (keyCode == KeyEvent.KEYCODE_MENU && event.getRepeatCount() == 0) {
     		_setMenuItemEnabledBasedOnRunState();
     	}
+    	else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP && boundService != null && boundService.getAppPreferences().getUseVolumeButtonsForTimer()) {
+    		_startStopTimer();
+    		return true;
+    	}
+    	else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN && boundService != null && boundService.getAppPreferences().getUseVolumeButtonsForTimer()) {
+    		_lapIncrement();
+    		return true;
+    	}
     	
     	return super.onKeyDown(keyCode, event);
     }
@@ -249,7 +257,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
      * reseting the timer prompt them instead.
      */
     private void _resetTimer() {
-    	if (boundService.getAppPreferences().getUseSecondChanceReset()) {
+    	if (boundService != null && boundService.getAppPreferences().getUseSecondChanceReset()) {
     		_showPromptToResetTimer();
     	} else {
     		_doResetTimer();
