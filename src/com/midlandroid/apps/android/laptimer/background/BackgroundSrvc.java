@@ -1,5 +1,12 @@
 package com.midlandroid.apps.android.laptimer.background;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.StreamCorruptedException;
 import java.util.Stack;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -8,12 +15,12 @@ import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountDown;
 import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountUp;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerMode;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerMode.RunningState;
+import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateServiceListener;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateUIListener;
 import com.midlandroid.apps.android.laptimer.util.AppPreferences;
 import com.midlandroid.apps.android.laptimer.util.ServiceCommand;
 
 
-import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -27,14 +34,15 @@ import android.util.Log;
 
 public class BackgroundSrvc extends Service {
 	private static final String LOG_TAG = BackgroundSrvc.class.getSimpleName();
+	private static final String TIMER_STATE_FILENAME = "SavedTimerState.javaobject";
 
-	private static int TIMER_UPDATE_STEP_MILLS = 100;
+	private static final int TIMER_UPDATE_STEP_MILLS = 100;
 	
     // Background service controls
 	private TaskQueue bckgrndTasks;
 	private AppPreferences appPrefs;
 	private PowerManager.WakeLock wakeLock;
-	private NotificationManager mNM;
+	//private NotificationManager mNM;
 	private TimerUpdateUIListener uiUpdateListener;
 	
 	// Timer controls
@@ -46,7 +54,9 @@ public class BackgroundSrvc extends Service {
 	private long timerStartTime;
 	private long timerPausedAt;
 	private long timerStartOffset;
-	private String timerHistory;
+	//private String timerHistory;
+	
+	private TimerState state;
 	
 	// Timer Task and its container
 	private Timer timer;
@@ -79,7 +89,10 @@ public class BackgroundSrvc extends Service {
 		Log.d(LOG_TAG, "onCreate");
 
 		// Get the handle to the notification service
-        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        //mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+		
+		// Restore's the timer state from the app's local storage.
+		_restoreState();
 		
         // Create the background task queue
 		bckgrndTasks = new TaskQueue();
@@ -100,14 +113,16 @@ public class BackgroundSrvc extends Service {
 		// Set timer mode
 		// TODO replace this with user specified timer modes
 		TimerMode mode = new SimpleCountUp(myMessenger);
+		mode.setUpdateServiceListener(serviceListener);
 		mode.setTimerName("");
+		
 		timerModes.push(mode);
 
 		// Initialize other variables
 		delayTimerAlreadyUsed = false;
 		
 		//
-		timerHistory = "";
+		//timerHistory = "";
         
         // Create the background timer thread
         timer = new Timer(false);
@@ -125,6 +140,9 @@ public class BackgroundSrvc extends Service {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+		
+		// Save off the timer state.
+		_saveState();
 		
 		// Make sure to clean up and stop the timer on exit
 		_doStopTimer();
@@ -170,9 +188,6 @@ public class BackgroundSrvc extends Service {
             case ServiceCommand.CMD_TIMER_FINISHED:
             	_currTimerFinished();
             	break;
-            	
-            case ServiceCommand.CMD_SAVE_TIMER_HISTORY:
-            	timerHistory = (String)msg.obj;
             	
 	        default:
 	            super.handleMessage(msg);
@@ -239,13 +254,8 @@ public class BackgroundSrvc extends Service {
 	 * timer mode
 	 * @param uiListener
 	 */
-	public void setUpdateUIListener(final TimerUpdateUIListener uiListener) {
-		uiUpdateListener = uiListener;
-		
-		// Set the timer mode's ui update listeners
-		for (TimerMode mode : timerModes) {
-			mode.setUpdateUIListener(uiListener);
-		}
+	public void setUpdateUIListener(final TimerUpdateUIListener listener) {
+		uiUpdateListener = listener;
 	}
 	
 	
@@ -254,11 +264,6 @@ public class BackgroundSrvc extends Service {
 	 */
 	public void clearUpdateUIListener() {
 		uiUpdateListener = null;
-		
-		// Clear the timer mode's ui update listeners
-		for (TimerMode mode : timerModes) {
-			mode.setUpdateUIListener(null);
-		}
 	}
 	
 	
@@ -287,9 +292,6 @@ public class BackgroundSrvc extends Service {
                     timerCommand = timerCommandToRestore;
                     
                     mode.procRefreshUI();
-                    if (uiUpdateListener!=null) {
-                        uiUpdateListener.setTimerHistory(timerHistory);
-                    }
                     
                     // Don't update the timer while stopped if this is just
                     // a refresh of the screen.
@@ -337,7 +339,7 @@ public class BackgroundSrvc extends Service {
                 
                 // Update the timer with the new time.
                 if (doTimeUpdate) {
-                    Log.d("LOG_TAG timer update", "Doing timer update");
+                    //Log.d("LOG_TAG timer update", "Doing timer update");
                     // get the time difference since last update
                     long currSysTime = System.currentTimeMillis();
                     
@@ -379,6 +381,7 @@ public class BackgroundSrvc extends Service {
 
 			// Create a special count down timer to be used as a delayed timer
 			TimerMode mode = new SimpleCountDown(myMessenger, appPrefs.getTimerStartDelay());
+			mode.setUpdateServiceListener(serviceListener);
 			mode.setTimerName("Delay Count Down");
 			
 			// Add the timer mode to the list
@@ -388,13 +391,10 @@ public class BackgroundSrvc extends Service {
 		}
 		
 		// Update the timer mode's UI update listeners
-		TimerUpdateUIListener uiListener = uiUpdateListener;
+		TimerUpdateServiceListener listener = serviceListener;
 		for (TimerMode mode : timerModes) {
-			mode.setUpdateUIListener(uiListener);
+			mode.setUpdateServiceListener(listener);
 		}
-		
-		// Let the timer process know what we are doing.
-		//timerCommand = ServiceCommand.CMD_PROC_TIMER_UPDATES;
 		
 		// Find out what time we are starting the timers at and start them
 		if (timerStartTime == 0)
@@ -404,12 +404,6 @@ public class BackgroundSrvc extends Service {
 		
         // Set the timer start mode
         timerCommand = ServiceCommand.CMD_PROC_TIMER_UPDATES;
-        
-//		// Create the timer if it hasn't already been created
-//		if (timer == null) {
-//    		timer = new Timer(false);
-//    		timer.schedule(timerTask, 0, TIMER_UPDATE_STEP_MILLS);
-//		}
 
 		// Grab the power manager wake lock if it's enabled
 		if (appPrefs.getUseWakeLock()) {
@@ -461,6 +455,9 @@ public class BackgroundSrvc extends Service {
 		// Reset the values
 		delayTimerAlreadyUsed = false;
 		
+		// Remove the saved timer state file
+		_destroySavedState();
+		
 		// Release the power manager wake lock if it was enabled
 		if (appPrefs.getUseWakeLock()) {
 			_releaseWakeLock();
@@ -489,21 +486,72 @@ public class BackgroundSrvc extends Service {
     	
     	TimerMode finMode = timerModes.pop();
     	TimerMode nexMode = timerModes.peek();
-    	// notify the user that the current timer has finished
-    	if (uiUpdate != null) {
-    		if (finMode != null)
-    			uiUpdate.addTextLineToTimerHistory(finMode.getTimerName()+" Finished");
-    		
-    		if (nexMode != null)
-    			uiUpdate.addTextLineToTimerHistory(nexMode.getTimerName()+" Started");
-    		
-    		// Reset the lap data since they are timer specific
-    		uiUpdate.resetLaps();
-    	}
-    	
+    	// TODO Move the finished and start times to the local timer history store.
+//    	// notify the user that the current timer has finished
+//    	if (uiUpdate != null) {
+//    		if (finMode != null)
+//    			uiUpdate.addTextLineToTimerHistory("Finished at: ");
+//    		
+//    		if (nexMode != null)
+//    			uiUpdate.addTextLineToTimerHistory("Started at:");
+//    		
+//    		// Reset the lap data since they are timer specific
+//    		uiUpdate.resetLaps();
+//    	}
+//    	
     	// Notify the user that the timer has finished
     	if (appPrefs.getUseAudioAlerts())
     		_soundAudioAlert();
+	}
+    
+
+	/**
+	 * Saves the current timer state to the app's local storage
+	 */
+	private void _saveState() {
+		try {
+			FileOutputStream fOS = openFileOutput(TIMER_STATE_FILENAME, Context.MODE_PRIVATE);
+			ObjectOutputStream oOS = new ObjectOutputStream(fOS);
+			oOS.writeObject(state);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Reads the save timer state from local storage
+	 * and sets the timer's state values from it
+	 */
+	private void _restoreState() {
+		try {
+			FileInputStream fIS = openFileInput(TIMER_STATE_FILENAME);
+			ObjectInputStream oIS = new ObjectInputStream(fIS);
+			state = (TimerState)oIS.readObject();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (StreamCorruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Delete's the saved timer state information
+	 * stored in the app's private storage.
+	 */
+	private void _destroySavedState() {
+		deleteFile(TIMER_STATE_FILENAME);
 	}
     
     
@@ -539,4 +587,44 @@ public class BackgroundSrvc extends Service {
 			wakeLock.release();
 		}
 	}
+	
+	private
+	TimerUpdateServiceListener serviceListener = new TimerUpdateServiceListener() {
+		@Override
+		public void setCurrentTime(final long currTime) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void setLapTime(final long lapTime) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void setLapCount(final int count) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void doLapCountIncrement(final long currTime, final long lapTime, final int lapCount) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void setTimerHistory(final String history) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void resetUI() {
+			// TODO Auto-generated method stub
+			
+		}
+	};
+	
 }

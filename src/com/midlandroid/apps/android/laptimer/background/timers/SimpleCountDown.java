@@ -14,7 +14,8 @@ import android.util.Log;
 public class SimpleCountDown extends TimerMode {
 	private static final String LOG_TAG = SimpleCountDown.class.getSimpleName();
 
-	private TimerUpdateUIListener updateUI;
+	//private TimerUpdateUIListener updateUI;
+	private TimerUpdateServiceListener updateService;
 	
 	private Messenger messenger;
 	private boolean alreadyNotified;
@@ -51,8 +52,8 @@ public class SimpleCountDown extends TimerMode {
 		}
 		
 		// Update the UI
-		if (updateUI!=null)
-			updateUI.updateCurrentTime(currTime);
+		if (updateService!=null)
+			updateService.setCurrentTime(currTime);
 	}
 
 
@@ -70,9 +71,9 @@ public class SimpleCountDown extends TimerMode {
 
 	@Override
 	public void procRefreshUI() {
-		if (updateUI!=null) {
-			updateUI.updateCurrentTime(currTime);
-			updateUI.updateLapTime(0);
+		if (updateService!=null) {
+			updateService.setCurrentTime(currTime);
+			updateService.setLapTime(0);
 		}
 	}
 	
@@ -100,15 +101,14 @@ public class SimpleCountDown extends TimerMode {
 		}
 	}
 
-
 	@Override
-	public void setUpdateUIListener(TimerUpdateUIListener updateUIListener) {
-		updateUI = updateUIListener;
+	public void setUpdateServiceListener(TimerUpdateServiceListener updateServiceListener) {
+		updateService = updateServiceListener;		
 	}
 
 
 	@Override
-	public TimerUpdateUIListener getUpdateUIListener() {
-		return updateUI;
+	public TimerUpdateServiceListener getUpdateServiceListener() {
+		return updateService;
 	}
 }

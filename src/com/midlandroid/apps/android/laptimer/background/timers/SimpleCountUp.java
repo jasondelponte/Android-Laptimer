@@ -17,7 +17,7 @@ import com.midlandroid.apps.android.laptimer.util.ServiceCommand;
 public class SimpleCountUp extends TimerMode {
 	private static final String LOG_TAG = SimpleCountUp.class.getSimpleName();
 	
-	private TimerUpdateUIListener updateUI;
+	private TimerUpdateServiceListener updateService;
 
 	private Messenger messenger;
 	private boolean alreadyNotified;
@@ -73,9 +73,9 @@ public class SimpleCountUp extends TimerMode {
 		}
 		
 		// Update the UI
-		if (updateUI != null) {
-			updateUI.updateCurrentTime(currTime);
-			updateUI.updateLapTime(lapTime);
+		if (updateService != null) {
+			updateService.setCurrentTime(currTime);
+			updateService.setLapTime(lapTime);
 		}
 	}
 
@@ -86,8 +86,8 @@ public class SimpleCountUp extends TimerMode {
 		lapCount++;
 		
 		// Lap increment
-		if (updateUI != null) {
-			updateUI.updateLapIncrement(currTime, lapTime);
+		if (updateService != null) {
+			updateService.doLapCountIncrement(currTime, lapTime, lapCount);
 		}
 		
 		// Reset the lap time
@@ -97,10 +97,10 @@ public class SimpleCountUp extends TimerMode {
 
 	@Override
 	public void procRefreshUI() {
-		if (updateUI != null) {
-			updateUI.updateCurrentTime(currTime);
-			updateUI.updateLapTime(lapTime);
-			updateUI.updateLapCount(lapCount);
+		if (updateService != null) {
+			updateService.setCurrentTime(currTime);
+			updateService.setLapTime(lapTime);
+			updateService.setLapCount(lapCount);
 		}
 	}
 	
@@ -130,15 +130,14 @@ public class SimpleCountUp extends TimerMode {
 		}
 	}
 
-
 	@Override
-	public void setUpdateUIListener(TimerUpdateUIListener updateUIListener) {
-		updateUI = updateUIListener;
+	public void setUpdateServiceListener(TimerUpdateServiceListener updateServiceListener) {
+		updateService = updateServiceListener;
 	}
 
 
 	@Override
-	public TimerUpdateUIListener getUpdateUIListener() {
-		return updateUI;
+	public TimerUpdateServiceListener getUpdateServiceListener() {
+		return updateService;
 	}
 }

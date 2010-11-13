@@ -11,12 +11,10 @@ public abstract class TimerMode {
 	public abstract void procResetTimer();
 	public abstract void procRefreshUI();
 	
-	public abstract void setUpdateUIListener(TimerUpdateUIListener updateUIListener);
-	public abstract TimerUpdateUIListener getUpdateUIListener();
-	
-	
+	public abstract void setUpdateServiceListener(TimerUpdateServiceListener updateServiceListener);
+	public abstract TimerUpdateServiceListener getUpdateServiceListener();
+
 	protected abstract String getTimerModeName();
-	
 	
 	private String timerName;
 	/**

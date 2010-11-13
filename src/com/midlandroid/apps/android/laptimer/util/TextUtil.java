@@ -1,6 +1,7 @@
 package com.midlandroid.apps.android.laptimer.util;
 
 import java.text.NumberFormat;
+import java.util.List;
 
 public final class TextUtil {
 	public static String formatDateToString(final long time, final NumberFormat numFormat) {
@@ -14,4 +15,12 @@ public final class TextUtil {
     			numFormat.format(seconds)+"."+
     			Integer.valueOf(milSec));
     }
+	
+	public static String stringListToMultiLineString(List<String> array) {
+		String outStr = "";
+		for (String line : array) {
+			outStr += line + "\n";
+		}
+		return outStr.substring(0, outStr.length()-1);
+	}
 }

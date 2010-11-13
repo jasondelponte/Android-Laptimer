@@ -51,12 +51,11 @@ public class Main extends Activity implements TimerUpdateUIListener {
 	// members
 	private long currTime;
 	private long lapTime;
-	private int lapCount;
 	
 	private NumberFormat numFormat;
 	private Messenger myMessenger;
 	
-	private String timerHistory;
+	//private List<String> timerHistory;
 	
 	
     @Override
@@ -74,10 +73,8 @@ public class Main extends Activity implements TimerUpdateUIListener {
         numFormat.setParseIntegerOnly(true);
         
         myMessenger = new Messenger(myHandler);
-
-    	timerHistory = "";
+    	
         currTime = lapTime = 0;
-        lapCount = 1;
 
     	// Lap time text view
     	lapTimeTxt = (TextView)findViewById(R.id.lap_timer_txt);
@@ -122,7 +119,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	timerHistoryTxt.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if (boundService.getAppPreferences().getUseOneClickTextCopy())
+				if (boundService != null && boundService.getAppPreferences().getUseOneClickTextCopy())
 					_addViewTextToClipBoard(v);
 			}
     	});
@@ -160,9 +157,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	RunningState currState = RunningState.RESETTED;
     	if (boundService != null)
     		currState = boundService.getTimerState();
-    	
-    	// Send the current timer history to the service for storage
-    	_msgTimerService(ServiceCommand.CMD_SAVE_TIMER_HISTORY, timerHistory);
     	
     	// Disconnect from the service
     	_doUnbindService();
@@ -230,6 +224,26 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	return false;
     }
     
+    /**
+     * Save of the current activities state, so when it is 
+     * restored this data will be returned.
+     * 
+     * @param state  The package container holder the activities state.
+     */
+    @Override
+    public void onSaveInstanceState(Bundle state) {
+    }
+    
+    
+    /**
+     * Restores a previously saved activity state.
+     * 
+     * @param state The package containing a previously saved activity state.
+     */
+    @Override
+    public void onRestoreInstanceState(Bundle state) {
+    }
+    
     
     ////////////////////////////////////
     // User Action Handler Methods
@@ -278,7 +292,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
      * Notifies the background service that this UI needs to be updated.
      */
     private void _refreshUI() {
-    	timerHistoryTxt.setText("");
     	_msgTimerService(ServiceCommand.CMD_REFRESH_MAIN_UI);
     }
     
@@ -393,22 +406,23 @@ public class Main extends Activity implements TimerUpdateUIListener {
      * when writing the contents of the current timer event to.
      */
     private void _writeOutLapHistory() {
-		// Get the values needed for the output file.
-		Date timerStartedAt = new Date(boundService.getTimerStartTime());
-		
-		// Build the output string
-		final String out = "" +
-				"Started on: " + ((timerStartedAt!=null)?DateFormat.format("yyyy MM dd kk:mm:ss", timerStartedAt):"Unknown") + "\n" +
-				"Total Time: " + currTimeTxt.getText() + "\n" +
-				"Number of Laps: " + (lapCount-1) + "\n" + 
-				"**** TIMER HISTORY ****\n" +
-				timerHistory;
-		
-		// Using the Simple file access util class output the text to a file
-		// while also prompting the user for the path and any confirmations
-		// needed.
-		new SimpleFileAccess().showOutFileAlertPromptAndWriteTo(this,
-				boundService.getAppPreferences().getOutfileRootPath(), out);
+//		// TODO move this to the background service.
+//		// Get the values needed for the output file.
+//		Date timerStartedAt = new Date(boundService.getTimerStartTime());
+//		
+//		// Build the output string
+//		final String out = "" +
+//				"Started on: " + ((timerStartedAt!=null)?DateFormat.format("yyyy MM dd kk:mm:ss", timerStartedAt):"Unknown") + "\n" +
+//				"Total Time: " + currTimeTxt.getText() + "\n" +
+//				"Number of Laps: " + (lapCount-1) + "\n" + 
+//				"**** TIMER HISTORY ****\n" +
+//				"timerHistory";
+//		
+//		// Using the Simple file access util class output the text to a file
+//		// while also prompting the user for the path and any confirmations
+//		// needed.
+//		new SimpleFileAccess().showOutFileAlertPromptAndWriteTo(this,
+//				boundService.getAppPreferences().getOutfileRootPath(), out);
     }
 
     
@@ -488,12 +502,13 @@ public class Main extends Activity implements TimerUpdateUIListener {
     private Handler myHandler = new Handler() {
     	@Override
     	public void handleMessage(Message msg) {
-    		switch(msg.what) {
-    		case ServiceCommand.CMD_CLEAR_TIMER_HISTORY:
-    			timerHistory = "";
-    			timerHistoryTxt.setText(timerHistory);
-    			break;
-    		}
+    		// TODO is this needed.
+//    		switch(msg.what) {
+//			case ServiceCommand.CMD_CLEAR_TIMER_HISTORY:
+//    			timerHistory.clear();
+//    			timerHistoryTxt.setText("");
+//    			break;
+//    		}
     	}
     };
     
@@ -502,7 +517,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
     // Timer Service UI Update Listeners
     ////////////////////////////////////
 	@Override
-	public void updateCurrentTime(final long currTime) {
+	public void setCurrentTime(final long currTime) {
 		this.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
@@ -514,7 +529,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
 
 
 	@Override
-	public void updateLapTime(final long lapTime) {
+	public void setLapTime(final long lapTime) {
 		this.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
@@ -524,51 +539,14 @@ public class Main extends Activity implements TimerUpdateUIListener {
 		});
 	}
 
-
-	@Override
-	public void updateLapIncrement(final long currTime, final long lapTime) {
-		this.runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				// Create a line of text recording the lap increment
-				String item = "Lap " + Integer.toString(lapCount) + ": " +
-						TextUtil.formatDateToString(lapTime, numFormat) + " - " +
-						"Total: "+TextUtil.formatDateToString(currTime, numFormat) +
-						"\n";
-				
-				// Add the item to the timer history strings
-				timerHistory = item + timerHistory;
-				timerHistoryTxt.setText(timerHistory);
-				
-				// Increment the lap count, and update the lap button
-				lapCount++;
-				lapNumBtn.setText("Lap "+ Integer.toString(lapCount));
-			}
-		});
-	}
-
 	
 	@Override
-	public void updateLapCount(final int count) {
+	public void setLapCount(final int count) {
 		this.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
 				// Using the provided lap count update the ui
-				lapCount=count+1;
-				lapNumBtn.setText("Lap "+ Integer.toString(lapCount));
-			}
-		});
-	}
-	
-	
-	@Override
-	public void resetLaps() {
-		this.runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				// Reset the lap count, and update the lap button
-				lapCount=1;
-				lapNumBtn.setText("Lap "+ Integer.toString(lapCount));
+				lapNumBtn.setText("Lap "+ Integer.toString(count));
 			}
 		});
 	}
@@ -582,33 +560,20 @@ public class Main extends Activity implements TimerUpdateUIListener {
 				// Reset current timer and update text
 				currTime = 0;
 				currTimeTxt.setText(TextUtil.formatDateToString(currTime, numFormat));
+				
 				// Reset lap timer and update text
 				lapTime = 0;
 				lapTimeTxt.setText(TextUtil.formatDateToString(lapTime, numFormat));
 		
 				// Reset the timer history and update UI
-				timerHistory = "";
-				timerHistoryTxt.setText(timerHistory);
+				timerHistoryTxt.setText("");
 			
 				// Reset the lap count, and update the lap button
-				lapCount=1;
-				lapNumBtn.setText("Lap "+ Integer.toString(lapCount));
+				lapNumBtn.setText("Lap "+ Integer.toString(1));
 			}
 		});
 	}
-	
-	
-	@Override
-	public void addTextLineToTimerHistory(final String text) {
-		this.runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				timerHistory = text+"\n" + timerHistory;
-				timerHistoryTxt.setText(timerHistory);
-			}
-		});
-	}
-	
+
 	
 	@Override
 	public void setTimerHistory(final String history) {
@@ -616,8 +581,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
 			@Override
 			public void run() {
 				// Reset the timer history and update UI
-				timerHistory = history;
-				timerHistoryTxt.setText(timerHistory);
+				timerHistoryTxt.setText(history);
 			}
 		});
 	}
