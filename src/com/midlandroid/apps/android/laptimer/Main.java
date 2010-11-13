@@ -1,13 +1,11 @@
 package com.midlandroid.apps.android.laptimer;
 
 import java.text.NumberFormat;
-import java.util.Date;
 
 import com.midlandroid.apps.android.laptimer.background.BackgroundSrvc;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateUIListener;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerMode.RunningState;
 import com.midlandroid.apps.android.laptimer.util.ServiceCommand;
-import com.midlandroid.apps.android.laptimer.util.SimpleFileAccess;
 import com.midlandroid.apps.android.laptimer.util.TextUtil;
 import com.midlandroid.apps.android.laptimer.R;
 
@@ -25,7 +23,6 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.text.ClipboardManager;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -51,6 +48,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
 	// members
 	private long currTime;
 	private long lapTime;
+	private int lapCount;
 	
 	private NumberFormat numFormat;
 	private Messenger myMessenger;
@@ -75,6 +73,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
         myMessenger = new Messenger(myHandler);
     	
         currTime = lapTime = 0;
+        lapCount = 1;
 
     	// Lap time text view
     	lapTimeTxt = (TextView)findViewById(R.id.lap_timer_txt);
@@ -123,20 +122,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
 					_addViewTextToClipBoard(v);
 			}
     	});
-//    	timerHistoryTxt.setOnLongClickListener(new OnLongClickListener() {
-//    		boolean useRevTimerHistory = false;
-//			@Override
-//			public boolean onLongClick(View v) {
-//				if (useRevTimerHistory) {
-//					timerHistoryTxt.setText(revTimerHistory);
-//					useRevTimerHistory = false;
-//				} else {
-//					timerHistoryTxt.setText(timerHistory);
-//					useRevTimerHistory = true;
-//				}
-//				return true;
-//			}
-//    	});
     }
     
     
@@ -301,8 +286,8 @@ public class Main extends Activity implements TimerUpdateUIListener {
     ////////////////////////////////////
     /**
      * Adds the text of the provided view to the android system's
-     * clipboard buffer.
-     * @param v View with text to be added to the clipboard
+     * clip board buffer.
+     * @param v View with text to be added to the clip board
      */
     private void _addViewTextToClipBoard(View v) {
 		 ClipboardManager clipboard = 
@@ -337,7 +322,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
     
     /**
      * Creates and sends a message to the background service with
-     * the provided payload
+     * the provided pay load
      * @param cmd Message id
      * @param payload Data to be send to background service
      */
@@ -545,8 +530,12 @@ public class Main extends Activity implements TimerUpdateUIListener {
 		this.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				// Using the provided lap count update the ui
-				lapNumBtn.setText("Lap "+ Integer.toString(count));
+				// The lap count is 0 based and needs to be offset for 
+				// the user.
+				lapCount = count+1;
+				
+				// Update the UI from the value provided.
+				lapNumBtn.setText("Lap "+ Integer.toString(lapCount));
 			}
 		});
 	}
@@ -569,7 +558,8 @@ public class Main extends Activity implements TimerUpdateUIListener {
 				timerHistoryTxt.setText("");
 			
 				// Reset the lap count, and update the lap button
-				lapNumBtn.setText("Lap "+ Integer.toString(1));
+				lapCount = 1;
+				lapNumBtn.setText("Lap "+ Integer.toString(lapCount));
 			}
 		});
 	}

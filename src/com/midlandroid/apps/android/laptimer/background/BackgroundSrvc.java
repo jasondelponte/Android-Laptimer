@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.StreamCorruptedException;
+import java.text.NumberFormat;
 import java.util.Stack;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -19,7 +20,7 @@ import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateServic
 import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateUIListener;
 import com.midlandroid.apps.android.laptimer.util.AppPreferences;
 import com.midlandroid.apps.android.laptimer.util.ServiceCommand;
-
+import com.midlandroid.apps.android.laptimer.util.TextUtil;
 
 import android.app.Service;
 import android.content.Context;
@@ -37,6 +38,8 @@ public class BackgroundSrvc extends Service {
 	private static final String TIMER_STATE_FILENAME = "SavedTimerState.javaobject";
 
 	private static final int TIMER_UPDATE_STEP_MILLS = 100;
+
+	private NumberFormat numFormat;
 	
     // Background service controls
 	private TaskQueue bckgrndTasks;
@@ -54,7 +57,6 @@ public class BackgroundSrvc extends Service {
 	private long timerStartTime;
 	private long timerPausedAt;
 	private long timerStartOffset;
-	//private String timerHistory;
 	
 	private TimerState state;
 	
@@ -90,6 +92,12 @@ public class BackgroundSrvc extends Service {
 
 		// Get the handle to the notification service
         //mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+		
+		// Initialize the number formatter
+        numFormat = NumberFormat.getInstance();
+        numFormat.setMinimumIntegerDigits(2);
+        numFormat.setMaximumIntegerDigits(2);
+        numFormat.setParseIntegerOnly(true);
 		
 		// Restore's the timer state from the app's local storage.
 		_restoreState();
@@ -451,6 +459,8 @@ public class BackgroundSrvc extends Service {
 	
 		// Tell the timer to reset and stop
 		timerCommand = ServiceCommand.CMD_RESET_TIMER;
+
+		state.resetState();
 		
 		// Reset the values
 		delayTimerAlreadyUsed = false;
@@ -471,6 +481,9 @@ public class BackgroundSrvc extends Service {
 	private void _doRefreshMainUI() {
 		Log.d(LOG_TAG, "doRefreshMainUI");
 		
+		// Using the current saved state refresh the UI
+		serviceListener.setTimerHistory(state.getHistoryAsMultiLineString());
+				
 		// Tell the timer to refresh the UI
 		timerCommandToRestore = timerCommand;
 		timerCommand = ServiceCommand.CMD_REFRESH_MAIN_UI;
@@ -486,19 +499,20 @@ public class BackgroundSrvc extends Service {
     	
     	TimerMode finMode = timerModes.pop();
     	TimerMode nexMode = timerModes.peek();
-    	// TODO Move the finished and start times to the local timer history store.
-//    	// notify the user that the current timer has finished
-//    	if (uiUpdate != null) {
-//    		if (finMode != null)
-//    			uiUpdate.addTextLineToTimerHistory("Finished at: ");
-//    		
-//    		if (nexMode != null)
-//    			uiUpdate.addTextLineToTimerHistory("Started at:");
-//    		
-//    		// Reset the lap data since they are timer specific
-//    		uiUpdate.resetLaps();
-//    	}
-//    	
+    	// notify the user that the current timer has finished
+    	if (uiUpdate != null) {
+    		if (finMode != null)
+    	    	state.addItemToTopOfHistory("Finished at: ");
+    		
+    		if (nexMode != null)
+    	    	state.addItemToTopOfHistory("Started at: ");
+    		
+    		// Reset the lap data since they are timer specific
+    		//uiUpdate.resetLaps();
+
+    		serviceListener.setTimerHistory(state.getHistoryAsMultiLineString());
+    	}
+    	
     	// Notify the user that the timer has finished
     	if (appPrefs.getUseAudioAlerts())
     		_soundAudioAlert();
@@ -532,19 +546,32 @@ public class BackgroundSrvc extends Service {
 			ObjectInputStream oIS = new ObjectInputStream(fIS);
 			state = (TimerState)oIS.readObject();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.i(LOG_TAG, "No saved state found", e);
+			
+			// Create new instance of state since a saved
+			// version does not exist.
+			state = new TimerState();
+			
 		} catch (StreamCorruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.e(LOG_TAG, "Failed to restore saved state", e);
+
+			// Failed to load saved state
+			state = new TimerState();
+			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.e(LOG_TAG, "Failed to restore saved state", e);
+
+			// Failed to load saved state
+			state = new TimerState();
+			
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.e(LOG_TAG, "Failed to restore saved state", e);
+
+			// Failed to load saved state
+			state = new TimerState();
 		}
 	}
+	
 	
 	/**
 	 * Delete's the saved timer state information
@@ -592,38 +619,42 @@ public class BackgroundSrvc extends Service {
 	TimerUpdateServiceListener serviceListener = new TimerUpdateServiceListener() {
 		@Override
 		public void setCurrentTime(final long currTime) {
-			// TODO Auto-generated method stub
-			
+			if (uiListener != null)
+				uiListener.setCurrentTime(currTime);
 		}
 
 		@Override
 		public void setLapTime(final long lapTime) {
-			// TODO Auto-generated method stub
-			
+			if (uiListener != null)
+				uiListener.setLapTime(lapTime);
 		}
 
 		@Override
 		public void setLapCount(final int count) {
-			// TODO Auto-generated method stub
-			
+			if (uiListener != null)
+				uiListener.setLapCount(count);
 		}
 
 		@Override
 		public void doLapCountIncrement(final long currTime, final long lapTime, final int lapCount) {
-			// TODO Auto-generated method stub
+			setLapCount(lapCount);
 			
+			state.addItemToTopOfHistory(new String("Lap "+lapCount+": "+TextUtil.formatDateToString(lapTime, numFormat)+
+					" - "+TextUtil.formatDateToString(currTime, numFormat)));
+			
+			setTimerHistory(state.getHistoryAsMultiLineString());
 		}
 
 		@Override
 		public void setTimerHistory(final String history) {
-			// TODO Auto-generated method stub
-			
+			if (uiListener != null)
+				uiListener.setTimerHistory(history);
 		}
 
 		@Override
 		public void resetUI() {
-			// TODO Auto-generated method stub
-			
+			if (uiListener != null)
+				uiListener.resetUI();
 		}
 	};
 	
