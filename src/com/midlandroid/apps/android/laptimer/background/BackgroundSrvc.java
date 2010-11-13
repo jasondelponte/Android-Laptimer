@@ -43,7 +43,7 @@ public class BackgroundSrvc extends Service {
 	private AppPreferences appPrefs;
 	private PowerManager.WakeLock wakeLock;
 	//private NotificationManager mNM;
-	private TimerUpdateUIListener uiUpdateListener;
+	private TimerUpdateUIListener uiListener;
 	
 	// Timer controls
 	private Stack<TimerMode> timerModes;
@@ -255,7 +255,7 @@ public class BackgroundSrvc extends Service {
 	 * @param uiListener
 	 */
 	public void setUpdateUIListener(final TimerUpdateUIListener listener) {
-		uiUpdateListener = listener;
+		uiListener = listener;
 	}
 	
 	
@@ -263,7 +263,7 @@ public class BackgroundSrvc extends Service {
 	 * Clears all timer modes' UI update listeners
 	 */
 	public void clearUpdateUIListener() {
-		uiUpdateListener = null;
+		uiListener = null;
 	}
 	
 	
@@ -325,8 +325,8 @@ public class BackgroundSrvc extends Service {
                     timerStartTime = timerPausedAt = totalRunTime = 0; 
                     
                     // Reset the UI
-                    if (uiUpdateListener!=null) {
-                        uiUpdateListener.resetUI();
+                    if (uiListener!=null) {
+                        uiListener.resetUI();
                     }
                     
                     // prevent the timer from doing any updates
@@ -482,7 +482,7 @@ public class BackgroundSrvc extends Service {
      * stack needs to be activated.
      */
     private void _currTimerFinished() {
-    	TimerUpdateUIListener uiUpdate = uiUpdateListener;
+    	TimerUpdateUIListener uiUpdate = uiListener;
     	
     	TimerMode finMode = timerModes.pop();
     	TimerMode nexMode = timerModes.peek();
