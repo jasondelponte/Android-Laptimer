@@ -51,6 +51,7 @@ public class BackgroundSrvc extends Service {
 	
 	// Timer Task and its container
 	private Timer timer;
+	private long timerCreatedAt;
 
 
     /**
@@ -109,6 +110,7 @@ public class BackgroundSrvc extends Service {
         // Create the background timer thread
         timer = new Timer(false);
         timer.schedule(timerTask, 0, TIMER_UPDATE_STEP_MILLS);
+        timerCreatedAt = System.currentTimeMillis();
 	}
 	
 	
@@ -378,11 +380,12 @@ public class BackgroundSrvc extends Service {
 		}
 		
 		// Find out what time we are starting the timers at and start them
+		long startOffset = System.currentTimeMillis() - timerCreatedAt;
 		if (curState.getTimerStartedAt() == 0) {
 			curState.setTimerStartedAt(new Date().getTime());
-			curState.setTimerStartOffset(0);
+			curState.setTimerStartOffset(startOffset);
 		} else {
-			curState.setTimerStartOffset((curState.getTimerPausedAt() - curState.getTimerStartedAt()));
+			curState.setTimerStartOffset((curState.getTimerPausedAt() - curState.getTimerStartedAt()) - startOffset);
 		}
 		
         // Set the timer start mode
@@ -509,6 +512,7 @@ public class BackgroundSrvc extends Service {
 			FileOutputStream fOS = openFileOutput(TIMER_STATE_FILENAME, Context.MODE_PRIVATE);
 			ObjectOutputStream oOS = new ObjectOutputStream(fOS);
 			oOS.writeObject(state);
+			oOS.close();
 		} catch (FileNotFoundException e) {
 			Log.e(LOG_TAG, "Failed to save timer state", e);
 		} catch (IOException e) {
@@ -526,6 +530,7 @@ public class BackgroundSrvc extends Service {
 			FileInputStream fIS = openFileInput(TIMER_STATE_FILENAME);
 			ObjectInputStream oIS = new ObjectInputStream(fIS);
 			state = (TimerState)oIS.readObject();
+			oIS.close();
 			
 			// Update the state values so things make since on a restore
 			TimerState curState = state;
