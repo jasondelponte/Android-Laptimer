@@ -95,7 +95,7 @@ public class BackgroundSrvc extends Service {
 		_restoreState();
 		
 		if (state.getWasSaved()) {
-			state.restoreTimerModesFromData(myMessenger);
+			state.restoreTimerModesFromData(myMessenger, serviceListener);
 		} else {
 			// Add the scripted timer modes to the stack.
 			// TODO replace this with user specified timer modes

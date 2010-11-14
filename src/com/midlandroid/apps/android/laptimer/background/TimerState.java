@@ -14,6 +14,7 @@ import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountUpData
 import com.midlandroid.apps.android.laptimer.background.timers.TimerMode;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerMode.RunningState;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerModeData;
+import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateServiceListener;
 import com.midlandroid.apps.android.laptimer.util.ServiceCommand;
 import com.midlandroid.apps.android.laptimer.util.TextUtil;
 
@@ -235,8 +236,9 @@ public final class TimerState implements Serializable {
 	 * Rebuilds the timer mode stack using the
 	 * data values previously stored.
 	 * @param messenger
+	 * @param serviceListener 
 	 */
-	public void restoreTimerModesFromData(Messenger messenger) {
+	public void restoreTimerModesFromData(Messenger messenger, TimerUpdateServiceListener serviceListener) {
 		// Make sure the timre modes are valid before restoring them
 		if (timerModes == null)
 			timerModes = new Stack<TimerMode>();
@@ -245,11 +247,17 @@ public final class TimerState implements Serializable {
 		
 		// Looping over the modes restore the timers
 		for (TimerModeData data : timerModesData) {
-			if (data instanceof SimpleCountUpData)
-				timerModes.push(new SimpleCountUp(messenger, (SimpleCountUpData)data));
+			if (data instanceof SimpleCountUpData) {
+				TimerMode mode = new SimpleCountUp(messenger, (SimpleCountUpData)data);
+				mode.setUpdateServiceListener(serviceListener);
+				timerModes.push(mode);
+			}
 			
-			else if (data instanceof SimpleCountDownData)
-				timerModes.push(new SimpleCountDown(messenger, (SimpleCountDownData)data));
+			else if (data instanceof SimpleCountDownData) {
+				TimerMode mode = new SimpleCountDown(messenger, (SimpleCountDownData)data);
+				mode.setUpdateServiceListener(serviceListener);
+				timerModes.push(mode);
+			}
 		}
 	}
 }
