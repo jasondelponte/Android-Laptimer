@@ -1,6 +1,9 @@
 package com.midlandroid.apps.android.laptimer.background.timers;
 
 
+import java.io.Serializable;
+
+import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountUp.Data;
 import com.midlandroid.apps.android.laptimer.util.ServiceCommand;
 
 import android.os.Message;
@@ -15,13 +18,17 @@ import android.util.Log;
 public class SimpleCountDown extends TimerMode {
 	private static final String LOG_TAG = SimpleCountDown.class.getSimpleName();
 
-	//private TimerUpdateUIListener updateUI;
 	private TimerUpdateServiceListener updateService;
-	
 	private Messenger messenger;
-	private boolean alreadyNotified;
-	private long currTime;
-	private long startTime;
+	
+	public class Data implements TimerModeData, Serializable {
+		private static final long serialVersionUID = -7201523372621637071L;
+		
+		private boolean alreadyNotified;
+		private long currTime;
+		private long startTime;
+	}
+	private Data data;
 	
 	/**
 	 * Create a new instance of the class 
@@ -31,9 +38,11 @@ public class SimpleCountDown extends TimerMode {
 	public SimpleCountDown(final Messenger messenger, final long startFrom) {
 		this.messenger = messenger;
 		
+		Data curData = data;
+		
 		// Initialize the timer values
-		currTime = startTime = startFrom;
-		alreadyNotified = false;
+		curData.currTime = curData.startTime = startFrom;
+		curData.alreadyNotified = false;
 	}
 	
 	
@@ -42,19 +51,21 @@ public class SimpleCountDown extends TimerMode {
 	 * @param timeUpdate
 	 */
 	public void procTimerUpdate(final long timeUpdate) {
+		Data curData = data;
+		
 		// Decrement the counter
-		currTime -= timeUpdate;
+		curData.currTime -= timeUpdate;
 		
 		// Check if it is time to finish, and don't spam the messenger
-		if (currTime <= 0 && !alreadyNotified) {
+		if (curData.currTime <= 0 && !curData.alreadyNotified) {
 			_notifyMessenger(ServiceCommand.CMD_SOUND_ALARM);
 			_notifyMessenger(ServiceCommand.CMD_TIMER_FINISHED);
-			alreadyNotified = true;
+			curData.alreadyNotified = true;
 		}
 		
 		// Update the UI
 		if (updateService!=null)
-			updateService.setCurrentTime(currTime);
+			updateService.setCurrentTime(curData.currTime);
 	}
 
 
@@ -66,14 +77,18 @@ public class SimpleCountDown extends TimerMode {
 
 	@Override
 	public void procResetTimer() {
-		currTime = startTime;
+		Data curData = data;
+		
+		curData.currTime = curData.startTime;
 	}
 
 
 	@Override
 	public void procRefreshUI() {
+		Data curData = data;
+		
 		if (updateService!=null) {
-			updateService.setCurrentTime(currTime);
+			updateService.setCurrentTime(curData.currTime);
 			updateService.setLapTime(0);
 		}
 	}
@@ -111,5 +126,21 @@ public class SimpleCountDown extends TimerMode {
 	@Override
 	public TimerUpdateServiceListener getUpdateServiceListener() {
 		return updateService;
+	}
+
+	/**
+	 * Sets the data storage object
+	 */
+	@Override
+	public void setData(TimerModeData modeData) {
+		data = (Data)modeData;
+	}
+	
+	/**
+	 * Returns the data storage object
+	 */
+	@Override
+	public TimerModeData getData() {
+		return data;
 	}
 }

@@ -13,6 +13,9 @@ public abstract class TimerMode {
 	
 	public abstract void setUpdateServiceListener(TimerUpdateServiceListener updateServiceListener);
 	public abstract TimerUpdateServiceListener getUpdateServiceListener();
+	
+	public abstract void setData(TimerModeData modeData);
+	public abstract TimerModeData getData();
 
 	protected abstract String getTimerModeName();
 	
