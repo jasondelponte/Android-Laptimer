@@ -21,21 +21,31 @@ import com.midlandroid.apps.android.laptimer.util.TextUtil;
 public final class TimerState implements Serializable {
 	private static final long serialVersionUID = 3445902777734654981L;
 
+	// State flags
 	private int timerCommand;
     private int timerCommandToRestore;
     private RunningState runningState;
 	private boolean wasDelayTimerAlreadyUsed;
+	
+    // Real world time in milliseconds
 	private long timerStartTime;
 	private long timerPausedAt;
+	// System time in milliseconds
 	private long timerStartOffset;
+	
 	private List<String> timerHistory;
 	
 	// The modes them selves do not need to be stored only their data
 	transient private Stack<TimerMode> timerModes;
 	
+	// Stack of mode data to be stored
 	private Stack<TimerModeData> timerModesData;
 	
+	// State time saved/restored at
+	private long timeStateSavaedAt;
+	private long timeStateRestoredAt;
 	private boolean wasSaved;
+	
 	
 	/**
 	 * Default constructor for the timer state object
@@ -163,12 +173,12 @@ public final class TimerState implements Serializable {
 	 * Sets the Timer's original start time in milliseconds.
 	 * @param timerStartTime
 	 */
-	public void setTimerStartTime(long timerStartTime) { this.timerStartTime = timerStartTime; }
+	public void setTimerStartedAt(long timerStartTime) { this.timerStartTime = timerStartTime; }
 	/**
 	 * Returns the time the timer was original set at in milliseconds.
 	 * @return
 	 */
-	public long getTimerStartTime() { return timerStartTime; }
+	public long getTimerStartedAt() { return timerStartTime; }
 	
 	
 	/**
@@ -193,6 +203,30 @@ public final class TimerState implements Serializable {
 	 * @return
 	 */
 	public long getTimerStartOffset() { return timerStartOffset; }
+
+
+	/**
+	 * Sets the real world time the timer state was saved to storage.
+	 * @param timeStateSavaedAt
+	 */
+	public void setTimeStateSavaedAt(long timeStateSavaedAt) { this.timeStateSavaedAt = timeStateSavaedAt; }
+	/**
+	 * Returns the real world time the timer state was saved to storage.
+	 * @return
+	 */
+	public long getTimeStateSavaedAt() { return timeStateSavaedAt; }
+	
+
+	/**
+	 * Sets the real world time the timer state was restored from storage.
+	 * @param timeStateRestoredAt
+	 */
+	public void setTimeStateRestoredAt(long timeStateRestoredAt) { this.timeStateRestoredAt = timeStateRestoredAt; }
+	/**
+	 * Returns the real world time the timer state was restored from storage.
+	 * @return
+	 */
+	public long getTimeStateRestoredAt() { return timeStateRestoredAt; }
 	
 	
 	/**
@@ -202,7 +236,7 @@ public final class TimerState implements Serializable {
 		timerCommand = timerCommandToRestore = ServiceCommand.CMD_DONT_PROC_TIMER_UPDATES;
 		runningState = RunningState.RESETTED;
 		
-		timerStartTime = timerPausedAt = timerStartOffset = 0;
+		timerStartTime = timerPausedAt = timerStartOffset = timeStateSavaedAt = timeStateRestoredAt = 0;
 		wasSaved = wasDelayTimerAlreadyUsed = false;
 		
 		timerHistory.clear();
@@ -239,7 +273,7 @@ public final class TimerState implements Serializable {
 	 * @param serviceListener 
 	 */
 	public void restoreTimerModesFromData(Messenger messenger, TimerUpdateServiceListener serviceListener) {
-		// Make sure the timre modes are valid before restoring them
+		// Make sure the timer modes are valid before restoring them
 		if (timerModes == null)
 			timerModes = new Stack<TimerMode>();
 		else

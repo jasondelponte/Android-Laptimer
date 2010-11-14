@@ -8,6 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.StreamCorruptedException;
 import java.text.NumberFormat;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -157,9 +158,6 @@ public class BackgroundSrvc extends Service {
             	// ignore the lap increment if the timers not running.
             	if (state.getRunningState() == RunningState.RUNNING)
             		_doLapIncrement();
-            	
-            	//TODO Debug!
-            	stopSelf();
             	break;
             	
             case ServiceCommand.CMD_RESET_TIMER:
@@ -230,7 +228,7 @@ public class BackgroundSrvc extends Service {
 	 * @return start time of the timer
 	 */
 	public long getTimerStartTime() {
-		return state.getTimerStartTime();
+		return state.getTimerStartedAt();
 	}
 	
 	
@@ -256,10 +254,16 @@ public class BackgroundSrvc extends Service {
 	// Private Methods
 	///////////////////////////////////////////////////
 	private TimerTask timerTask = new TimerTask() {
-        private long totalRunTime = 0;
+        private long baselineSystemTime = 0;
+        private long runningTotalSystemTime = 0;
+        
         @Override
         public void run() {
         	TimerState curState = state;
+        	
+        	// If the timer was just started, get our baseline system time.
+        	if (baselineSystemTime == 0)
+        		baselineSystemTime = System.currentTimeMillis();
         	
             // Run the timer modes time update process
             TimerMode mode = curState.peekAtTimerModeStack();
@@ -267,7 +271,6 @@ public class BackgroundSrvc extends Service {
                 
                 // Process the timer commands if there are any
                 boolean doTimeUpdate = true;
-                //boolean doScheduleNextUpdate = true;
                 
                 switch(curState.getTimerCommand()) {
                 case ServiceCommand.CMD_LAP_INCREMENT:
@@ -308,7 +311,8 @@ public class BackgroundSrvc extends Service {
                     doTimeUpdate = false;
                     
                     mode.procResetTimer();
-                    totalRunTime = 0; 
+                    baselineSystemTime = 0; 
+                    runningTotalSystemTime = 0;
                     
                     // Reset the start timer offsets
                     curState.resetState();
@@ -322,26 +326,24 @@ public class BackgroundSrvc extends Service {
                 
                 // Update the timer with the new time.
                 if (doTimeUpdate) {
-                    //Log.d("LOG_TAG timer update", "Doing timer update");
                     // get the time difference since last update
-                    long currSysTime = System.currentTimeMillis();
+                    long curSystemTime = System.currentTimeMillis();
                     
                     // Update the total runtime in case we were paused.
                     if (curState.getTimerStartOffset() != 0) {
-                        // the total time should only be offset once per restart
-                        totalRunTime += curState.getTimerStartOffset();
+                        // The baseline needs to be offset, to reflect the amount
+                    	// of time that passed prior to the timer being restarted.
+                    	baselineSystemTime -= curState.getTimerStartOffset();
+                        runningTotalSystemTime = (curSystemTime - baselineSystemTime);
                         curState.setTimerStartOffset(0);
                     }
                     
                     // Calculate the new run time and current slice
-                    long newRunTime = currSysTime - curState.getTimerStartTime();
-                    long currTimeSlice = newRunTime - totalRunTime;
+                    long timeSlice = (curSystemTime - baselineSystemTime) - runningTotalSystemTime;
+                    runningTotalSystemTime += timeSlice;
                     
                     // Do the time slice
-                    mode.procTimerUpdate(currTimeSlice);
-                    
-                    // Save off the total run time
-                    totalRunTime = newRunTime;
+                    mode.procTimerUpdate(timeSlice);
                 }
             } else {
                 // Nothing to do, but stop the timer
@@ -376,10 +378,12 @@ public class BackgroundSrvc extends Service {
 		}
 		
 		// Find out what time we are starting the timers at and start them
-		if (curState.getTimerStartTime() == 0)
-			curState.setTimerStartTime(System.currentTimeMillis());
-		else
-			curState.setTimerStartOffset(System.currentTimeMillis() - curState.getTimerPausedAt());
+		if (curState.getTimerStartedAt() == 0) {
+			curState.setTimerStartedAt(new Date().getTime());
+			curState.setTimerStartOffset(0);
+		} else {
+			curState.setTimerStartOffset((curState.getTimerPausedAt() - curState.getTimerStartedAt()));
+		}
 		
         // Set the timer start mode
 		curState.setTimerCommand(ServiceCommand.CMD_PROC_TIMER_UPDATES);
@@ -414,7 +418,7 @@ public class BackgroundSrvc extends Service {
 		TimerState curState = state;
 		
 		// Save off the time the timer was stopped in case it is restarted
-		curState.setTimerPausedAt(System.currentTimeMillis());
+		curState.setTimerPausedAt(new Date().getTime());
 		
 		// Tell the timer to stop processing updates.
 		curState.setTimerCommand(ServiceCommand.CMD_STOP_TIMER);
@@ -499,6 +503,7 @@ public class BackgroundSrvc extends Service {
 	private void _saveState() {
 		state.setWasSaved(true);
 		state.saveTimerModesData();
+		state.setTimeStateSavaedAt(new Date().getTime());
 		
 		try {
 			FileOutputStream fOS = openFileOutput(TIMER_STATE_FILENAME, Context.MODE_PRIVATE);
@@ -521,6 +526,13 @@ public class BackgroundSrvc extends Service {
 			FileInputStream fIS = openFileInput(TIMER_STATE_FILENAME);
 			ObjectInputStream oIS = new ObjectInputStream(fIS);
 			state = (TimerState)oIS.readObject();
+			
+			// Update the state values so things make since on a restore
+			TimerState curState = state;
+			curState.setTimeStateRestoredAt(new Date().getTime());		
+			if (curState.getRunningState() == RunningState.RUNNING)
+				curState.setTimerStartOffset((curState.getTimeStateRestoredAt() - curState.getTimerStartedAt()));
+			
 		} catch (FileNotFoundException e) {
 			Log.i(LOG_TAG, "No saved state found", e);
 			
