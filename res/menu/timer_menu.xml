@@ -4,15 +4,18 @@
 		android:icon="@android:drawable/ic_menu_close_clear_cancel"
 		android:id="@+id/mi_reset_timer"
 	/>
-	<item android:title="@string/timer_mode_lbl"
-		android:icon="@android:drawable/ic_menu_more"
-		android:enabled="false"
-		android:visible="false"
-		android:id="@+id/mi_timer_mode"
-	/>
-	<item android:title="@string/save_lap_list"
+	<item android:title="@string/timer_mode"
 		android:icon="@android:drawable/ic_menu_save"
-		android:id="@+id/mi_save_lap_list"
+		android:id="@+id/mi_timer_mode"
+		android:visible="false"
+	/>
+	<item android:title="@string/save_timer_history"
+		android:icon="@android:drawable/ic_menu_save"
+		android:id="@+id/mi_save_timer_history"
+	/>
+	<item android:title="@string/timer_history"
+		android:icon="@android:drawable/ic_input_get"
+		android:id="@+id/mi_timer_history"
 	/>
 	<item android:title="@string/preferences"
 		android:icon="@android:drawable/ic_menu_preferences"

@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.midlandroid.apps.android.laptimer.R;
 import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountDown;
 import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountUp;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerMode;
@@ -19,6 +20,7 @@ import com.midlandroid.apps.android.laptimer.background.timers.TimerMode.Running
 import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateServiceListener;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateUIListener;
 import com.midlandroid.apps.android.laptimer.util.AppPreferences;
+import com.midlandroid.apps.android.laptimer.util.OpenDatabaseHelper;
 import com.midlandroid.apps.android.laptimer.util.ServiceCommand;
 import com.midlandroid.apps.android.laptimer.util.TextUtil;
 
@@ -32,6 +34,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.PowerManager;
 import android.util.Log;
+import android.widget.Toast;
 
 public class BackgroundSrvc extends Service {
 	private static final String LOG_TAG = BackgroundSrvc.class.getSimpleName();
@@ -172,6 +175,10 @@ public class BackgroundSrvc extends Service {
             	
             case ServiceCommand.CMD_TIMER_FINISHED:
             	_currTimerFinished();
+            	break;
+            	
+            case ServiceCommand.SAVE_TIMER_HISTORY:
+            	_saveTimerHistory();
             	break;
             	
 	        default:
@@ -320,9 +327,7 @@ public class BackgroundSrvc extends Service {
                     curState.resetState();
                     
                     // Reset the UI
-                    if (uiListener!=null) {
-                        uiListener.resetUI();
-                    }
+                    serviceListener.resetUI();
                     break;
                 }
                 
@@ -388,6 +393,10 @@ public class BackgroundSrvc extends Service {
 			curState.setTimerStartOffset((curState.getTimerPausedAt() - curState.getTimerStartedAt()) - startOffset);
 		}
 		
+		// Notify the user the timer was started
+		curState.addItemToTopOfHistory("Started at: ");
+		serviceListener.setTimerHistory(curState.getHistoryAsMultiLineString());
+		
         // Set the timer start mode
 		curState.setTimerCommand(ServiceCommand.CMD_PROC_TIMER_UPDATES);
 
@@ -421,10 +430,16 @@ public class BackgroundSrvc extends Service {
 		TimerState curState = state;
 		
 		// Save off the time the timer was stopped in case it is restarted
-		curState.setTimerPausedAt(new Date().getTime());
+		Date date = new Date();
+		curState.setTimerPausedAt(date.getTime());
 		
 		// Tell the timer to stop processing updates.
 		curState.setTimerCommand(ServiceCommand.CMD_STOP_TIMER);
+
+		// Notify the user the timer was started
+		// TODO format the date
+		curState.addItemToTopOfHistory("Stopped at: ");
+		serviceListener.setTimerHistory(curState.getHistoryAsMultiLineString());
 		
 		// Release the power manager wake lock if it was enabled
 		if (appPrefs.getUseWakeLock()) {
@@ -474,25 +489,12 @@ public class BackgroundSrvc extends Service {
      * stack needs to be activated.
      */
     private void _currTimerFinished() {
-    	TimerUpdateUIListener uiUpdate = uiListener;
-    	
     	TimerState curState = state;
     	
     	TimerMode finMode = curState.popFromTimerModeStack();
     	TimerMode nexMode = curState.peekAtTimerModeStack();
-    	// notify the user that the current timer has finished
-    	if (uiUpdate != null) {
-    		if (finMode != null)
-    	    	curState.addItemToTopOfHistory("Finished at: ");
-    		
-    		if (nexMode != null)
-    			curState.addItemToTopOfHistory("Started at: ");
-    		
-    		// Reset the lap data since they are timer specific
-    		//uiUpdate.resetLaps();
-
-    		serviceListener.setTimerHistory(curState.getHistoryAsMultiLineString());
-    	}
+    	
+    	// TODO do I really need to do this?
     	
     	// Notify the user that the timer has finished
     	if (appPrefs.getUseAudioAlerts())
@@ -581,6 +583,17 @@ public class BackgroundSrvc extends Service {
      */
     private void _soundAudioAlert() {
     	// TODO create audio alert
+    }
+    
+    
+    /**
+     * 
+     */
+    private void _saveTimerHistory() {
+    	OpenDatabaseHelper dbHelper = new OpenDatabaseHelper(this);
+    	
+
+    	Toast.makeText(this, R.string.timer_history_saved_toast, Toast.LENGTH_SHORT).show();
     }
 	
 	

@@ -16,12 +16,16 @@
             </intent-filter>
         </activity>
         
+    	<activity android:name="TimerHistory"
+    			android:label="@string/timer_history"
+    			android:excludeFromRecents="true" />
+        
         <activity android:name=".Preferences"
                 android:label="@string/preferences"
                 android:launchMode="singleInstance" android:excludeFromRecents="true"/>
         
         <service android:name=".background.BackgroundSrvc" android:enabled="true" android:exported="false"/>
-    </application>
+</application>
     
     <uses-sdk android:minSdkVersion="4" />
 

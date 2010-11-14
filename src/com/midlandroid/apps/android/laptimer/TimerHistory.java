@@ -3,7 +3,7 @@ import android.app.Activity;
 import android.os.Bundle;
 
 
-public class SavedTimerHistory extends Activity {
+public class TimerHistory extends Activity {
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {

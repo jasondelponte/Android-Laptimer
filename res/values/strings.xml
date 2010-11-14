@@ -7,7 +7,6 @@
 	<string name="timer_delay_countdown_label">Timer Delay Count Down</string>
 	<string name="timer_delay_countdown">0</string>
 	
-	<string name="timer_mode_lbl">Timer Mode</string>
 	<string name="timer_counter_lbl">Total</string>
 	<string name="lap_counter_lbl">Lap</string>
 	<string name="lap_list_lbl">Laps</string>
@@ -18,32 +17,39 @@
 	<string name="lap_increment_btn_txt">Lap 1</string>
 	
 	<string name="timer_reset">Reset</string>
-	<string name="timer_count_down">Count Down</string>
-    <string name="save_lap_list">Save Lap List</string>
+	<string name="timer_mode">Timer Mode</string>
+	<string name="save_timer_history">Save</string>
+    <string name="timer_history">Timer History</string>
     <string name="preferences">Preferences</string>
     
     <string name="timer_mode_default_desc">No description provided</string>
-    
-    <string name="text_copied_to_clipboard">Text copied to clipboard.</string>
+    <string name="timer_history_saved_toast">Timer History Saved</string>
+    <string name="text_copied_to_clipboard_toast">Text copied to the clipboard.</string>
     
     <string name="pref_timer_start_delay">Timer Start Delay</string>
     <string name="pref_timer_start_delay_key">timerStartDelayPref</string>
     <string name="pref_timer_start_delay_desc">The number of seconds the timer is delayed when starting.</string>
+    
     <string name="pref_timer_start_delay_on_restarts">Used Timer Delay On Restarts</string>
     <string name="pref_timer_start_delay_on_restarts_key">timerStartDelayOnRestartsPref</string>
     <string name="pref_timer_start_delay_on_restarts_desc">Should the delay timer be used after a stop then start.</string>
+    
     <string name="pref_one_click_txt_cpy">One Click Text Copy</string>
     <string name="pref_one_click_txt_cpy_key">oneClickTextCopyPref</string>
     <string name="pref_one_click_txt_cpy_desc">Allows the user to add the text in the timer, lap, and lap list text boxes to the clipboard.</string>
+    
     <string name="pref_outfile_root">Outfile Root Path</string>
     <string name="pref_outfile_root_desc">The root directory all output files will be saved at by default.</string>
     <string name="pref_outfile_root_key">outfileRoot</string>
+    
     <string name="pref_second_chance_reset">Confirm Timer Reset</string>
     <string name="pref_second_chance_reset_key">secondChanceReset</string>
     <string name="pref_second_chance_reset_desc">Prompts the user to confirm when resetting the timer.</string>
+    
     <string name="pref_use_wakelock">Prevent screen timeout</string>
     <string name="pref_use_wakelock_key">useWakeLock</string>
     <string name="pref_use_wakelock_desc">Sets where while the timer is running should the screen be prevented from shutting off.</string>
+    
     <string name="pref_volume_button_for_timer">Use Volume Buttons</string>
     <string name="pref_volume_button_for_timer_key">useVolumeButtonsForTimer</string>
     <string name="pref_volume_button_for_timer_desc">Allows the up volume button to start/stop the timer, and the down volume button to increment the lap count.  It is recommended to also select to prevet screen timeout when using this feature.</string>

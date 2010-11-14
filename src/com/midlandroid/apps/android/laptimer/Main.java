@@ -42,8 +42,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
 	private TextView lapTimeTxt;
 	private TextView currTimeTxt;
 	private TextView timerHistoryTxt;
-	//private MenuItem timerModeMI;
-	private MenuItem saveHistoryMI;
 	
 	// members
 	private long currTime;
@@ -182,8 +180,8 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	super.onCreateOptionsMenu(menu);
     	getMenuInflater().inflate(R.menu.timer_menu, menu);
     	
-    	//timerModeMI = menu.findItem(R.id.mi_timer_mode);
-    	saveHistoryMI = menu.findItem(R.id.mi_save_lap_list);
+    	// Get the references to the items that will be mode
+    	// based on the app's run state.
     	
     	_setMenuItemEnabledBasedOnRunState();
     	
@@ -197,14 +195,14 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	case R.id.mi_reset_timer:
     		_resetTimer();
     		return true;
-    	case R.id.mi_save_lap_list:
-    		_writeOutLapHistory();
+    	case R.id.mi_save_timer_history:
+    		_saveTimerHistory();
+    		return true;
+    	case R.id.mi_timer_history:
+    		_showTimerHistory();
     		return true;
     	case R.id.mi_preferences:
     		_showPreferences();
-    		return true;
-    	case R.id.mi_timer_mode:
-    		_showTimerModeSelection();
     		return true;
     	}
     	return false;
@@ -295,7 +293,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
 		      (ClipboardManager) getSystemService(CLIPBOARD_SERVICE); 
 
 		 clipboard.setText(((TextView)v).getText());
-		 Toast t = Toast.makeText(this, R.string.text_copied_to_clipboard, Toast.LENGTH_SHORT);
+		 Toast t = Toast.makeText(this, R.string.text_copied_to_clipboard_toast, Toast.LENGTH_SHORT);
 		 t.show();
     }
     
@@ -305,9 +303,9 @@ public class Main extends Activity implements TimerUpdateUIListener {
      * enabled or disabled.
      */
     private void _setMenuItemEnabledBasedOnRunState() {
-    	if (boundService != null && saveHistoryMI != null /*&& timerModeMI != null*/) {
+    	if (boundService != null /*&& viewHistoryMI != null*/ /*&& timerModeMI != null*/) {
 			//timerModeMI.setEnabled(boundService.getTimerState() != RunningState.RUNNING);
-			saveHistoryMI.setEnabled(boundService.getTimerState() != RunningState.RUNNING);
+			//viewHistoryMI.setEnabled(boundService.getTimerState() != RunningState.RUNNING);
     	}
     }
     
@@ -343,23 +341,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
     
     
     /**
-     * Displays the Android Preferences UI to the user.
-     */
-    private void _showPreferences() {
-    	Intent i = new Intent(this, Preferences.class);
-    	startActivity(i);
-    }
-    
-    
-    /**
-     * Displays the timer mode selection UI 
-     */
-    private void _showTimerModeSelection() {
-    	// TODO Add functionality
-    }
-    
-    
-    /**
      * Prompts the user if they are sure they really want to 
      * reset the current timer.
      */
@@ -386,29 +367,26 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	alert.show();
     }
     
-
+    private void _saveTimerHistory() {
+    	_msgTimerService(ServiceCommand.SAVE_TIMER_HISTORY);
+    }
+    
+    
     /**
-     * Prompts the user to provide a filename that will be used
-     * when writing the contents of the current timer event to.
+     * Displays the timer history UI to the user.
      */
-    private void _writeOutLapHistory() {
-//		// TODO move this to the background service.
-//		// Get the values needed for the output file.
-//		Date timerStartedAt = new Date(boundService.getTimerStartTime());
-//		
-//		// Build the output string
-//		final String out = "" +
-//				"Started on: " + ((timerStartedAt!=null)?DateFormat.format("yyyy MM dd kk:mm:ss", timerStartedAt):"Unknown") + "\n" +
-//				"Total Time: " + currTimeTxt.getText() + "\n" +
-//				"Number of Laps: " + (lapCount-1) + "\n" + 
-//				"**** TIMER HISTORY ****\n" +
-//				"timerHistory";
-//		
-//		// Using the Simple file access util class output the text to a file
-//		// while also prompting the user for the path and any confirmations
-//		// needed.
-//		new SimpleFileAccess().showOutFileAlertPromptAndWriteTo(this,
-//				boundService.getAppPreferences().getOutfileRootPath(), out);
+    private void _showTimerHistory() {
+    	Intent i = new Intent(this, TimerHistory.class);
+    	startActivity(i);
+    }
+    
+    
+    /**
+     * Displays the Android Preferences UI to the user.
+     */
+    private void _showPreferences() {
+    	Intent i = new Intent(this, Preferences.class);
+    	startActivity(i);
     }
 
     
