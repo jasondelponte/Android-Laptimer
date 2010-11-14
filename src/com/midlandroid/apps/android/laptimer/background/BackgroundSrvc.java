@@ -8,7 +8,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.StreamCorruptedException;
 import java.text.NumberFormat;
-import java.util.Stack;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -36,7 +35,6 @@ import android.util.Log;
 public class BackgroundSrvc extends Service {
 	private static final String LOG_TAG = BackgroundSrvc.class.getSimpleName();
 	private static final String TIMER_STATE_FILENAME = "SavedTimerState.javaobject";
-
 	private static final int TIMER_UPDATE_STEP_MILLS = 100;
 
 	private NumberFormat numFormat;
@@ -47,8 +45,7 @@ public class BackgroundSrvc extends Service {
 	private PowerManager.WakeLock wakeLock;
 	private TimerUpdateUIListener uiListener;
 	
-	// Timer controls
-	
+	// Timer controls	
 	private TimerState state;
 	
 	// Timer Task and its container
@@ -86,10 +83,7 @@ public class BackgroundSrvc extends Service {
         numFormat.setMinimumIntegerDigits(2);
         numFormat.setMaximumIntegerDigits(2);
         numFormat.setParseIntegerOnly(true);
-		
-		// Restore's the timer state from the app's local storage.
-		_restoreState();
-		
+        
         // Create the background task queue
 		bckgrndTasks = new TaskQueue();
 		bckgrndTasks.start();
@@ -97,12 +91,19 @@ public class BackgroundSrvc extends Service {
 		// Create the app preferences handler
 		appPrefs = new AppPreferences(this.getBaseContext());
 		
-		// Set timer mode
-		// TODO replace this with user specified timer modes
-		TimerMode mode = new SimpleCountUp(myMessenger);
-		mode.setUpdateServiceListener(serviceListener);
-		mode.setTimerName("");		
-		state.pushToTimerModeStack(mode);
+		// Restore's the timer state from the app's local storage.
+		_restoreState();
+		
+		if (state.getWasSaved()) {
+			state.restoreTimerModesFromData(myMessenger);
+		} else {
+			// Add the scripted timer modes to the stack.
+			// TODO replace this with user specified timer modes
+			TimerMode mode = new SimpleCountUp(myMessenger);
+			mode.setUpdateServiceListener(serviceListener);
+			mode.setTimerName("Timer");
+			state.pushToTimerModeStack(mode);
+		}
         
         // Create the background timer thread
         timer = new Timer(false);
@@ -156,6 +157,9 @@ public class BackgroundSrvc extends Service {
             	// ignore the lap increment if the timers not running.
             	if (state.getRunningState() == RunningState.RUNNING)
             		_doLapIncrement();
+            	
+            	//TODO Debug!
+            	stopSelf();
             	break;
             	
             case ServiceCommand.CMD_RESET_TIMER:
@@ -493,6 +497,9 @@ public class BackgroundSrvc extends Service {
 	 * Saves the current timer state to the app's local storage
 	 */
 	private void _saveState() {
+		state.setWasSaved(true);
+		state.saveTimerModesData();
+		
 		try {
 			FileOutputStream fOS = openFileOutput(TIMER_STATE_FILENAME, Context.MODE_PRIVATE);
 			ObjectOutputStream oOS = new ObjectOutputStream(fOS);

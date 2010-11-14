@@ -1,9 +1,5 @@
 package com.midlandroid.apps.android.laptimer.background.timers;
 
-
-
-import java.io.Serializable;
-
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -22,18 +18,7 @@ public class SimpleCountUp extends TimerMode {
 	
 	private TimerUpdateServiceListener updateService;
 	private Messenger messenger;
-	
-	public class Data implements TimerModeData, Serializable {
-		private static final long serialVersionUID = -92500719128719502L;
-		
-		private boolean alreadyNotified;
-		private long maxTime;
-		private boolean useMaxTime;
-		private long currTime;
-		private long lapTime;
-		private int lapCount;
-	}
-	private Data data;
+	private SimpleCountUpData data;
 	
 	
 	/**
@@ -42,9 +27,11 @@ public class SimpleCountUp extends TimerMode {
 	 * @param messenger
 	 */
 	public SimpleCountUp(Messenger messenger) {
-		Data curData = data;
-		
 		this.messenger = messenger;
+		
+		data = new SimpleCountUpData();
+		SimpleCountUpData curData = data;
+		
 
 		curData.useMaxTime = false;
 		curData.maxTime = 0;
@@ -61,20 +48,34 @@ public class SimpleCountUp extends TimerMode {
 	 * @param maxTime
 	 */
 	public SimpleCountUp(Messenger messenger, int maxTime) {
-		Data curData = data;
-		
 		this.messenger = messenger;
+		
+		data = new SimpleCountUpData();
+		SimpleCountUpData curData = data;
+		
 		curData.useMaxTime = true;
 		curData.maxTime = maxTime;
 		
 		curData.currTime = curData.lapTime = curData.lapCount = 0;
 		curData.alreadyNotified = false;
 	}
+	
+	
+	/**
+	 * Creates a new instance of this timer with perviously saved data.
+	 * @param messenger
+	 * @param savedData
+	 */
+	public SimpleCountUp(Messenger messenger, SimpleCountUpData savedData) {
+		this.messenger = messenger;
+		
+		data = savedData;
+	}
 
 
 	@Override
 	public void procTimerUpdate(long updateTime) {
-		Data curData = data;
+		SimpleCountUpData curData = data;
 		
 		// Increment the counter
 		curData.currTime += updateTime;
@@ -98,7 +99,7 @@ public class SimpleCountUp extends TimerMode {
 	
 	@Override
 	public void procLapEvent() {
-		Data curData = data;
+		SimpleCountUpData curData = data;
 		// Internal count of lap timer
 		curData.lapCount++;
 		
@@ -114,7 +115,7 @@ public class SimpleCountUp extends TimerMode {
 
 	@Override
 	public void procRefreshUI() {
-		Data curData = data;
+		SimpleCountUpData curData = data;
 		
 		if (updateService != null) {
 			updateService.setCurrentTime(curData.currTime);
@@ -125,7 +126,7 @@ public class SimpleCountUp extends TimerMode {
 	
 	@Override
 	public void procResetTimer() {
-		Data curData = data;
+		SimpleCountUpData curData = data;
 		
 		curData.currTime = curData.lapTime = curData.lapCount = 0;
 	}
@@ -141,7 +142,7 @@ public class SimpleCountUp extends TimerMode {
 	 */
 	@Override
 	public void setData(TimerModeData modeData) {
-		data = (Data)modeData;
+		data = (SimpleCountUpData)modeData;
 	}
 	
 	/**

@@ -5,8 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
+import android.os.Messenger;
+
+import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountDown;
+import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountDownData;
+import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountUp;
+import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountUpData;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerMode;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerMode.RunningState;
+import com.midlandroid.apps.android.laptimer.background.timers.TimerModeData;
 import com.midlandroid.apps.android.laptimer.util.ServiceCommand;
 import com.midlandroid.apps.android.laptimer.util.TextUtil;
 
@@ -20,9 +27,14 @@ public final class TimerState implements Serializable {
 	private long timerStartTime;
 	private long timerPausedAt;
 	private long timerStartOffset;
-
 	private List<String> timerHistory;
-	private Stack<TimerMode> timerModes;
+	
+	// The modes them selves do not need to be stored only their data
+	transient private Stack<TimerMode> timerModes;
+	
+	private Stack<TimerModeData> timerModesData;
+	
+	private boolean wasSaved;
 	
 	/**
 	 * Default constructor for the timer state object
@@ -30,6 +42,8 @@ public final class TimerState implements Serializable {
 	public TimerState() {
 		timerHistory = new ArrayList<String>();
 		timerModes = new Stack<TimerMode>();
+		timerModesData = new Stack<TimerModeData>();
+		wasSaved = false;
 
 		resetState();
 	}
@@ -75,6 +89,25 @@ public final class TimerState implements Serializable {
 	 * @return
 	 */
 	public TimerMode popFromTimerModeStack() { return timerModes.pop(); }
+	
+	
+	/**
+	 * Adds a timer mode data object to the stack.
+	 * @param data
+	 */
+	public void pushToTimerModeDataStack(TimerModeData data) { timerModesData.push(data); }
+	/**
+	 * Returns the timer mode data currently at the top of the mode stack.
+	 * The data will be left on the stack.
+	 * @return
+	 */
+	public TimerModeData peekAtTimerModeDataStack() { return timerModesData.peek(); }
+	/**
+	 * Returns the timer mode data current at the top of the mode stack.
+	 * the data will be removed from the stack.
+	 * @return
+	 */
+	public TimerModeData popFromTimeModeStack() {return timerModesData.pop(); }
 	
 	
 	/**
@@ -169,8 +202,54 @@ public final class TimerState implements Serializable {
 		runningState = RunningState.RESETTED;
 		
 		timerStartTime = timerPausedAt = timerStartOffset = 0;
-		wasDelayTimerAlreadyUsed = false;
+		wasSaved = wasDelayTimerAlreadyUsed = false;
 		
 		timerHistory.clear();
+	}
+	
+	
+	/**
+	 * Sets if the previous timer state was saved.
+	 * @param flag
+	 */
+	public void setWasSaved(boolean flag) { wasSaved = flag; }
+	/**
+	 * Returns whether or not the timer state was previously saved.
+	 * @return
+	 */
+	public boolean getWasSaved() { return wasSaved; }
+
+
+	/**
+	 * Saves off the timer mode's data to an internal 
+	 * stack of data objects.
+	 */
+	public void saveTimerModesData() {
+		for (TimerMode mode : timerModes) {
+			timerModesData.push(mode.getData());
+		}
+	}
+
+
+	/**
+	 * Rebuilds the timer mode stack using the
+	 * data values previously stored.
+	 * @param messenger
+	 */
+	public void restoreTimerModesFromData(Messenger messenger) {
+		// Make sure the timre modes are valid before restoring them
+		if (timerModes == null)
+			timerModes = new Stack<TimerMode>();
+		else
+			timerModes.clear();
+		
+		// Looping over the modes restore the timers
+		for (TimerModeData data : timerModesData) {
+			if (data instanceof SimpleCountUpData)
+				timerModes.push(new SimpleCountUp(messenger, (SimpleCountUpData)data));
+			
+			else if (data instanceof SimpleCountDownData)
+				timerModes.push(new SimpleCountDown(messenger, (SimpleCountDownData)data));
+		}
 	}
 }

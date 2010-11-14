@@ -1,9 +1,5 @@
 package com.midlandroid.apps.android.laptimer.background.timers;
 
-
-import java.io.Serializable;
-
-import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountUp.Data;
 import com.midlandroid.apps.android.laptimer.util.ServiceCommand;
 
 import android.os.Message;
@@ -20,15 +16,7 @@ public class SimpleCountDown extends TimerMode {
 
 	private TimerUpdateServiceListener updateService;
 	private Messenger messenger;
-	
-	public class Data implements TimerModeData, Serializable {
-		private static final long serialVersionUID = -7201523372621637071L;
-		
-		private boolean alreadyNotified;
-		private long currTime;
-		private long startTime;
-	}
-	private Data data;
+	private SimpleCountDownData data;
 	
 	/**
 	 * Create a new instance of the class 
@@ -37,8 +25,9 @@ public class SimpleCountDown extends TimerMode {
 	 */
 	public SimpleCountDown(final Messenger messenger, final long startFrom) {
 		this.messenger = messenger;
-		
-		Data curData = data;
+
+		data = new SimpleCountDownData();
+		SimpleCountDownData curData = data;
 		
 		// Initialize the timer values
 		curData.currTime = curData.startTime = startFrom;
@@ -47,11 +36,23 @@ public class SimpleCountDown extends TimerMode {
 	
 	
 	/**
+	 * Creates a new instance of the class with previously saved data.
+	 * @param messenger
+	 * @param savedData
+	 */
+	public SimpleCountDown(final Messenger messenger, SimpleCountDownData savedData) {
+		this.messenger = messenger;
+		
+		data = savedData;
+	}
+	
+	
+	/**
 	 * Called from the timer processing each time step.
 	 * @param timeUpdate
 	 */
 	public void procTimerUpdate(final long timeUpdate) {
-		Data curData = data;
+		SimpleCountDownData curData = data;
 		
 		// Decrement the counter
 		curData.currTime -= timeUpdate;
@@ -77,7 +78,7 @@ public class SimpleCountDown extends TimerMode {
 
 	@Override
 	public void procResetTimer() {
-		Data curData = data;
+		SimpleCountDownData curData = data;
 		
 		curData.currTime = curData.startTime;
 	}
@@ -85,7 +86,7 @@ public class SimpleCountDown extends TimerMode {
 
 	@Override
 	public void procRefreshUI() {
-		Data curData = data;
+		SimpleCountDownData curData = data;
 		
 		if (updateService!=null) {
 			updateService.setCurrentTime(curData.currTime);
@@ -133,7 +134,7 @@ public class SimpleCountDown extends TimerMode {
 	 */
 	@Override
 	public void setData(TimerModeData modeData) {
-		data = (Data)modeData;
+		data = (SimpleCountDownData)modeData;
 	}
 	
 	/**
