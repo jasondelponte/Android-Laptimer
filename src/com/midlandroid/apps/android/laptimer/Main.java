@@ -42,6 +42,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
 	private TextView lapTimeTxt;
 	private TextView currTimeTxt;
 	private TextView timerHistoryTxt;
+	private MenuItem saveHistoryMI;
 	
 	// members
 	private long currTime;
@@ -182,6 +183,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	
     	// Get the references to the items that will be mode
     	// based on the app's run state.
+    	saveHistoryMI = menu.findItem(R.id.mi_save_timer_history);
     	
     	_setMenuItemEnabledBasedOnRunState();
     	
@@ -303,9 +305,9 @@ public class Main extends Activity implements TimerUpdateUIListener {
      * enabled or disabled.
      */
     private void _setMenuItemEnabledBasedOnRunState() {
-    	if (boundService != null /*&& viewHistoryMI != null*/ /*&& timerModeMI != null*/) {
+    	if (boundService != null && saveHistoryMI != null /*&& timerModeMI != null*/) {
 			//timerModeMI.setEnabled(boundService.getTimerState() != RunningState.RUNNING);
-			//viewHistoryMI.setEnabled(boundService.getTimerState() != RunningState.RUNNING);
+    		saveHistoryMI.setEnabled(boundService.getTimerState() != RunningState.RUNNING);
     	}
     }
     

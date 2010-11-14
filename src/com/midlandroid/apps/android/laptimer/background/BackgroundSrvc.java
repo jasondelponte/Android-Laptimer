@@ -590,7 +590,13 @@ public class BackgroundSrvc extends Service {
      * 
      */
     private void _saveTimerHistory() {
+    	TimerState curState = state;
     	OpenDatabaseHelper dbHelper = new OpenDatabaseHelper(this);
+    	
+    	// Insert the value into the database
+    	dbHelper.insert(curState.getTimerStartedAt(), curState.getTimerPausedAt(),
+    			(curState.getTimerPausedAt() - curState.getTimerStartedAt()),
+    			curState.getHistoryAsMultiLineString());
     	
 
     	Toast.makeText(this, R.string.timer_history_saved_toast, Toast.LENGTH_SHORT).show();
