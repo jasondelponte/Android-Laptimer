@@ -487,7 +487,7 @@ public class Main extends Activity implements TimerUpdateUIListener {
     private Handler myHandler = new Handler() {
     	@Override
     	public void handleMessage(Message msg) {
-    		// TODO is this needed.
+    		// TODO is this needed?
 //    		switch(msg.what) {
 //			case ServiceCommand.CMD_CLEAR_TIMER_HISTORY:
 //    			timerHistory.clear();

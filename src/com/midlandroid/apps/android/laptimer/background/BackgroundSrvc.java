@@ -528,13 +528,12 @@ public class BackgroundSrvc extends Service {
 			ObjectOutputStream oOS = new ObjectOutputStream(fOS);
 			oOS.writeObject(state);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.e(LOG_TAG, "Failed to save timer state", e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.e(LOG_TAG, "Failed to save timer state", e);
 		}
 	}
+	
 	
 	/**
 	 * Reads the save timer state from local storage
