@@ -53,8 +53,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
 	private NumberFormat numFormat;
 	private Messenger myMessenger;
 	
-	//private List<String> timerHistory;
-	
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
