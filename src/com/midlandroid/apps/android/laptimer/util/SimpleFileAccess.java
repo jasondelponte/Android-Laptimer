@@ -3,13 +3,11 @@ package com.midlandroid.apps.android.laptimer.util;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Date;
 
 
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -22,16 +20,17 @@ public class SimpleFileAccess {
 	private String outText;
 	
 	
-	public void showOutFileAlertPromptAndWriteTo(Context context, final String rootPath, final String outText) {	
+	public void showOutFileAlertPromptAndWriteTo(Context context, final String fileName, final String outText) {	
 		Log.d(LOG_TAG, "showOutFileAlertPromptAndWriteTo");
     	
     	// Save off the output text
+    	this.context = context;
     	this.outText = outText;
+		this.outFilePath = fileName;
     	
     	// Build the full path
     	final  EditText input = new EditText(context);   
-    	outFilePath = "/sdcard/" + rootPath + "laptimer_" + DateFormat.format("yyyyMMdd-kkmmss", new Date().getTime()) + ".txt";
-    	
+    	    	
     	// Create the alert that will prompt the user
     	final AlertDialog.Builder alert = new AlertDialog.Builder(context);
     	alert.setTitle("File Selection");

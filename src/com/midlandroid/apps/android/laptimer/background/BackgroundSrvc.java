@@ -602,6 +602,7 @@ public class BackgroundSrvc extends Service {
     	dbHelper.insert(curState.getTimerStartedAt(), curState.getTimerPausedAt(),
     			curState.peekAtTimerModeStack().getCurTime(),
     			curState.getHistoryAsMultiLineStringReversed());
+    	dbHelper.close();
     	
 
     	Toast.makeText(this, R.string.timer_history_saved_toast, Toast.LENGTH_SHORT).show();

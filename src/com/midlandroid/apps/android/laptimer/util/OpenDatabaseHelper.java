@@ -1,7 +1,6 @@
 package com.midlandroid.apps.android.laptimer.util;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import android.content.Context;
@@ -88,7 +87,14 @@ public class OpenDatabaseHelper {
     
     
     public void update() {
-    	
+    }
+    
+    
+    /**
+     * Closes the connection to the database.
+     */
+    public void close() {
+    	db.close();
     }
     
     
