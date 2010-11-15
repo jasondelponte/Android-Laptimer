@@ -1,14 +1,10 @@
 package com.midlandroid.apps.android.laptimer.background;
 
-import java.io.FileOutputStream;
-import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
-import android.content.Context;
 import android.os.Messenger;
 
 import com.midlandroid.apps.android.laptimer.background.timers.SimpleCountDown;
@@ -36,6 +32,7 @@ public final class TimerState implements Serializable {
 	private long timerPausedAt;
 	// System time in milliseconds
 	private long timerStartOffset;
+	private long prevDuration;
 	
 	private List<String> timerHistory;
 	
@@ -84,6 +81,13 @@ public final class TimerState implements Serializable {
 	 */
 	public String getHistoryAsMultiLineString() {
 		return TextUtil.stringListToMultiLineString(timerHistory);
+	}
+	/**
+	 * Returns the timer history reversed order
+	 * @return
+	 */
+	public String getHistoryAsMultiLineStringReversed() {
+		return TextUtil.stringListToMultiLineStringReversed(timerHistory);
 	}
 
 	
@@ -232,6 +236,17 @@ public final class TimerState implements Serializable {
 	 */
 	public long getTimeStateRestoredAt() { return timeStateRestoredAt; }
 	
+	/**
+	 * Sets the previous timer duration for later access
+	 * @param prevDuration
+	 */
+	public void setPrevDuration(long prevDuration) { this.prevDuration = prevDuration; }
+	/**
+	 * Restores the previous timer duration for later access
+	 * @return
+	 */
+	public long getPrevDuration() { return prevDuration; }
+	
 	
 	/**
 	 * Resets the state, and all of its associated values.
@@ -241,6 +256,7 @@ public final class TimerState implements Serializable {
 		runningState = RunningState.RESETTED;
 		
 		timerStartTime = timerPausedAt = timerStartOffset = timeStateSavaedAt = timeStateRestoredAt = 0;
+		prevDuration = 0;
 		wasSaved = wasDelayTimerAlreadyUsed = false;
 		
 		timerHistory.clear();

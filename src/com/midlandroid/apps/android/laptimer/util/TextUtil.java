@@ -1,9 +1,32 @@
 package com.midlandroid.apps.android.laptimer.util;
 
+import java.text.DateFormat;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.TimeZone;
 
 public final class TextUtil {
+	
+	/**
+	 * Using the provided date object the function will 
+	 * create a string formated to provided date.
+	 * @param date
+	 * @return
+	 */
+	public static String formatDateToString(final long date) {
+		Calendar cal = Calendar.getInstance();
+		TimeZone tz = cal.getTimeZone();
+		
+		DateFormat dfm = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		dfm.setTimeZone(tz);
+		
+		return dfm.format(date);
+	}
 	
 	/**
 	 * Converts a long time to a number format
@@ -38,5 +61,20 @@ public final class TextUtil {
 			outStr = outStr.substring(0, outStr.length()-1);
 		
 		return outStr;
+	}
+	
+	/**
+	 * Builds a multi line array 
+	 * @param array
+	 * @return
+	 */
+	public static String stringListToMultiLineStringReversed(List<String> array) {
+		List<String> reversed = new ArrayList<String>();
+		// Reverse the list
+		for (String line : array) {
+			reversed.add(0, line);
+		}
+		
+		return stringListToMultiLineString(reversed);
 	}
 }

@@ -17,6 +17,8 @@ public abstract class TimerMode {
 	public abstract void setData(TimerModeData modeData);
 	public abstract TimerModeData getData();
 
+	public abstract long getCurTime();
+
 	protected abstract String getTimerModeName();
 	
 	private String timerName;
@@ -38,5 +40,5 @@ public abstract class TimerMode {
 	 */
 	public void setTimerName(String name) {
 		timerName = name;
-	}
+	}	
 }

@@ -131,6 +131,7 @@ public class SimpleCountDown extends TimerMode {
 
 	/**
 	 * Sets the data storage object
+	 * @param modeData
 	 */
 	@Override
 	public void setData(TimerModeData modeData) {
@@ -139,9 +140,19 @@ public class SimpleCountDown extends TimerMode {
 	
 	/**
 	 * Returns the data storage object
+	 * @return
 	 */
 	@Override
 	public TimerModeData getData() {
 		return data;
+	}
+	
+	/**
+	 * Return's the timer's current time.
+	 * @return
+	 */
+	@Override
+	public long getCurTime() {
+		return data.currTime;
 	}
 }

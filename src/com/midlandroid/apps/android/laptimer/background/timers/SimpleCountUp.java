@@ -172,10 +172,18 @@ public class SimpleCountUp extends TimerMode {
 	public void setUpdateServiceListener(TimerUpdateServiceListener updateServiceListener) {
 		updateService = updateServiceListener;
 	}
-
-
+	
 	@Override
 	public TimerUpdateServiceListener getUpdateServiceListener() {
 		return updateService;
+	}
+	
+	/**
+	 * Return's the timer's current time.
+	 * @return
+	 */
+	@Override
+	public long getCurTime() {
+		return data.currTime;
 	}
 }

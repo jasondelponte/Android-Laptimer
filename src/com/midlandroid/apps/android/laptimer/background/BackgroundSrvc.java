@@ -394,7 +394,7 @@ public class BackgroundSrvc extends Service {
 		}
 		
 		// Notify the user the timer was started
-		curState.addItemToTopOfHistory("Started at: ");
+		curState.addItemToTopOfHistory("Started at: " + TextUtil.formatDateToString(curState.getTimerStartedAt()));
 		serviceListener.setTimerHistory(curState.getHistoryAsMultiLineString());
 		
         // Set the timer start mode
@@ -435,10 +435,12 @@ public class BackgroundSrvc extends Service {
 		
 		// Tell the timer to stop processing updates.
 		curState.setTimerCommand(ServiceCommand.CMD_STOP_TIMER);
-
+		
 		// Notify the user the timer was started
-		// TODO format the date
-		curState.addItemToTopOfHistory("Stopped at: ");
+		long duration = curState.peekAtTimerModeStack().getCurTime() - curState.getPrevDuration();
+		curState.setPrevDuration(duration);
+		
+		curState.addItemToTopOfHistory("Duration: " + TextUtil.formatDateToString(duration,numFormat));
 		serviceListener.setTimerHistory(curState.getHistoryAsMultiLineString());
 		
 		// Release the power manager wake lock if it was enabled
@@ -595,8 +597,8 @@ public class BackgroundSrvc extends Service {
     	
     	// Insert the value into the database
     	dbHelper.insert(curState.getTimerStartedAt(), curState.getTimerPausedAt(),
-    			(curState.getTimerPausedAt() - curState.getTimerStartedAt()),
-    			curState.getHistoryAsMultiLineString());
+    			curState.peekAtTimerModeStack().getCurTime(),
+    			curState.getHistoryAsMultiLineStringReversed());
     	
 
     	Toast.makeText(this, R.string.timer_history_saved_toast, Toast.LENGTH_SHORT).show();
@@ -649,10 +651,13 @@ public class BackgroundSrvc extends Service {
 
 		@Override
 		public void doLapCountIncrement(final long currTime, final long lapTime, final int lapCount) {
+			TimerState curState = state;
+			
 			setLapCount(lapCount);
 			
-			state.addItemToTopOfHistory(new String("Lap "+lapCount+": "+TextUtil.formatDateToString(lapTime, numFormat)+
-					" - "+TextUtil.formatDateToString(currTime, numFormat)));
+			long duration = currTime-curState.getPrevDuration();
+			curState.addItemToTopOfHistory(new String("Lap "+lapCount+": "+TextUtil.formatDateToString(lapTime, numFormat)+
+					" - "+TextUtil.formatDateToString(duration, numFormat)));
 			
 			setTimerHistory(state.getHistoryAsMultiLineString());
 		}
