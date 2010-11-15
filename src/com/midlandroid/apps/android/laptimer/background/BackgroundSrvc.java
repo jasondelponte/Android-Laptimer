@@ -389,13 +389,17 @@ public class BackgroundSrvc extends Service {
 		if (curState.getTimerStartedAt() == 0) {
 			curState.setTimerStartedAt(new Date().getTime());
 			curState.setTimerStartOffset(startOffset);
+
+			// Notify the user the timer was started
+			curState.addItemToTopOfHistory("Started on: " + TextUtil.formatDateToString(curState.getTimerStartedAt()));
+			serviceListener.setTimerHistory(curState.getHistoryAsMultiLineString());
 		} else {
 			curState.setTimerStartOffset((curState.getTimerPausedAt() - curState.getTimerStartedAt()) - startOffset);
+			
+			curState.addItemToTopOfHistory("Restarted on: " + TextUtil.formatDateToString(curState.getTimerStartedAt()));
+			serviceListener.setTimerHistory(curState.getHistoryAsMultiLineString());
 		}
 		
-		// Notify the user the timer was started
-		curState.addItemToTopOfHistory("Started at: " + TextUtil.formatDateToString(curState.getTimerStartedAt()));
-		serviceListener.setTimerHistory(curState.getHistoryAsMultiLineString());
 		
         // Set the timer start mode
 		curState.setTimerCommand(ServiceCommand.CMD_PROC_TIMER_UPDATES);
@@ -437,10 +441,8 @@ public class BackgroundSrvc extends Service {
 		curState.setTimerCommand(ServiceCommand.CMD_STOP_TIMER);
 		
 		// Notify the user the timer was started
-		long duration = curState.peekAtTimerModeStack().getCurTime() - curState.getPrevDuration();
-		curState.setPrevDuration(duration);
-		
-		curState.addItemToTopOfHistory("Duration: " + TextUtil.formatDateToString(duration,numFormat));
+		long curTime = curState.peekAtTimerModeStack().getCurTime();
+		curState.addItemToTopOfHistory("Stopped at: " + TextUtil.formatDateToString(curTime,numFormat));
 		serviceListener.setTimerHistory(curState.getHistoryAsMultiLineString());
 		
 		// Release the power manager wake lock if it was enabled
@@ -655,9 +657,8 @@ public class BackgroundSrvc extends Service {
 			
 			setLapCount(lapCount);
 			
-			long duration = currTime-curState.getPrevDuration();
 			curState.addItemToTopOfHistory(new String("Lap "+lapCount+": "+TextUtil.formatDateToString(lapTime, numFormat)+
-					" - "+TextUtil.formatDateToString(duration, numFormat)));
+					" - "+TextUtil.formatDateToString(currTime, numFormat)));
 			
 			setTimerHistory(state.getHistoryAsMultiLineString());
 		}

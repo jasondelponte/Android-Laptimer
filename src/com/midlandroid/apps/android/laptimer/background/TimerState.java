@@ -32,7 +32,6 @@ public final class TimerState implements Serializable {
 	private long timerPausedAt;
 	// System time in milliseconds
 	private long timerStartOffset;
-	private long prevDuration;
 	
 	private List<String> timerHistory;
 	
@@ -235,18 +234,7 @@ public final class TimerState implements Serializable {
 	 * @return
 	 */
 	public long getTimeStateRestoredAt() { return timeStateRestoredAt; }
-	
-	/**
-	 * Sets the previous timer duration for later access
-	 * @param prevDuration
-	 */
-	public void setPrevDuration(long prevDuration) { this.prevDuration = prevDuration; }
-	/**
-	 * Restores the previous timer duration for later access
-	 * @return
-	 */
-	public long getPrevDuration() { return prevDuration; }
-	
+		
 	
 	/**
 	 * Resets the state, and all of its associated values.
@@ -256,7 +244,6 @@ public final class TimerState implements Serializable {
 		runningState = RunningState.RESETTED;
 		
 		timerStartTime = timerPausedAt = timerStartOffset = timeStateSavaedAt = timeStateRestoredAt = 0;
-		prevDuration = 0;
 		wasSaved = wasDelayTimerAlreadyUsed = false;
 		
 		timerHistory.clear();
