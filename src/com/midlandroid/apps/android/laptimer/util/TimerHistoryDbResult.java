@@ -1,21 +1,20 @@
 package com.midlandroid.apps.android.laptimer.util;
 
-import java.util.Date;
 
 public class TimerHistoryDbResult {
-	private Date startedAt;
-	private Date finishedAt;
+	private long startedAt;
+	private long finishedAt;
 	private long duration;
 	private String history;
 	
 	public TimerHistoryDbResult() {
-		this.startedAt = new Date();
-		this.finishedAt = new Date();
+		this.startedAt = 0;
+		this.finishedAt = 0;
 		this.duration = 0;
 		this.history = "";	
 	}
 	
-	public TimerHistoryDbResult(Date startedAt, Date finishedAt, long duration, String history) {
+	public TimerHistoryDbResult(long startedAt, long finishedAt, long duration, String history) {
 		this.startedAt = startedAt;
 		this.finishedAt = finishedAt;
 		this.duration = duration;
@@ -24,18 +23,18 @@ public class TimerHistoryDbResult {
 	
 	
 	
-	public void setStartedAt(Date startedAt) {
+	public void setStartedAt(long startedAt) {
 		this.startedAt = startedAt;
 	}
-	public Date getStartedAt() {
+	public long getStartedAt() {
 		return startedAt;
 	}
 	
 	
-	public void setFinishedAt(Date finishedAt) {
+	public void setFinishedAt(long finishedAt) {
 		this.finishedAt = finishedAt;
 	}
-	public Date getFinishedAt() {
+	public long getFinishedAt() {
 		return finishedAt;
 	}
 	

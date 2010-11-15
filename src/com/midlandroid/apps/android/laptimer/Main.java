@@ -305,9 +305,17 @@ public class Main extends Activity implements TimerUpdateUIListener {
      * enabled or disabled.
      */
     private void _setMenuItemEnabledBasedOnRunState() {
-    	if (boundService != null && saveHistoryMI != null /*&& timerModeMI != null*/) {
+    	BackgroundSrvc srvc = boundService;
+    	
+    	if (srvc != null && saveHistoryMI != null /*&& timerModeMI != null*/) {
 			//timerModeMI.setEnabled(boundService.getTimerState() != RunningState.RUNNING);
-    		saveHistoryMI.setEnabled(boundService.getTimerState() != RunningState.RUNNING);
+    		
+    		RunningState state = srvc.getTimerState();
+    		if (state == RunningState.RUNNING || state == RunningState.RESETTED)
+    			saveHistoryMI.setEnabled(false);
+    		else
+    			saveHistoryMI.setEnabled(true);
+    			
     	}
     }
     

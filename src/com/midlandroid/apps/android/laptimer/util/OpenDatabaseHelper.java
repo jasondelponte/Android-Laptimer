@@ -110,8 +110,8 @@ public class OpenDatabaseHelper {
     			// Get the value from the database and add it to the
     			// result list.
     			TimerHistoryDbResult result = new TimerHistoryDbResult(
-    					new Date(cursor.getLong(TIMER_HISTORY_COL_STARTED_AT_IDX)),
-    					new Date(cursor.getLong(TIMER_HISTORY_COL_FINISHED_AT_IDX)),
+    					cursor.getLong(TIMER_HISTORY_COL_STARTED_AT_IDX),
+    					cursor.getLong(TIMER_HISTORY_COL_FINISHED_AT_IDX),
     					cursor.getLong(TIMER_HISTORY_COL_DURATION_IDX),
     					cursor.getString(TIMER_HISTORY_COL_HISTORY_IDX));
     			results.add(result);

@@ -384,10 +384,11 @@ public class BackgroundSrvc extends Service {
 			curState.setWasDelayTimerAlreadyUsed(true);
 		}
 		
+		Date curDate = new Date();
 		// Find out what time we are starting the timers at and start them
 		long startOffset = System.currentTimeMillis() - timerCreatedAt;
 		if (curState.getTimerStartedAt() == 0) {
-			curState.setTimerStartedAt(new Date().getTime());
+			curState.setTimerStartedAt(curDate.getTime());
 			curState.setTimerStartOffset(startOffset);
 
 			// Notify the user the timer was started
@@ -396,7 +397,7 @@ public class BackgroundSrvc extends Service {
 		} else {
 			curState.setTimerStartOffset((curState.getTimerPausedAt() - curState.getTimerStartedAt()) - startOffset);
 			
-			curState.addItemToTopOfHistory("Restarted on: " + TextUtil.formatDateToString(curState.getTimerStartedAt()));
+			curState.addItemToTopOfHistory("Restarted on: " + TextUtil.formatDateToString(curDate.getTime()));
 			serviceListener.setTimerHistory(curState.getHistoryAsMultiLineString());
 		}
 		
