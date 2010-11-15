@@ -9,7 +9,10 @@ import com.midlandroid.apps.android.laptimer.util.TextUtil;
 import com.midlandroid.apps.android.laptimer.util.TimerHistoryDbResult;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.format.DateFormat;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -98,15 +101,34 @@ public class TimerHistory extends Activity {
         
         // Local reference to the timer history list
         List<TimerHistoryDbResult> tmpHistory = timerHistory;
+        
+        // Detect whether or not the application will be able to write to the storage device.
+        String storageState = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(storageState)) {
+			for (TimerHistoryDbResult result : tmpHistory) {
+				new SimpleFileAccess().showOutFileAlertPromptAndWriteTo(this,
+						//"/sdcard/laptimer/"+DateFormat.format("yyyyMMdd-kkmmss",new Date().getTime())+"/laptimer_"+DateFormat.format("yyyyMMdd-kkmmss",result.getStartedAt()) + ".txt",
+						"/sdcard/laptimer_"+DateFormat.format("yyyyMMdd-kkmmss",result.getStartedAt()) + ".txt",
+						"Started on: "+TextUtil.formatDateToString(result.getStartedAt())             + "\n" +
+							"Duration: "+TextUtil.formatDateToString(result.getDuration(), numFormat) + "\n\n" +
+							"History:\n" + result.getHistory());
+			}
+        } else {
+        	// Create the alert that will prompt the user
+        	final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        	alert.setTitle("File Selection");
+        	alert.setMessage("SD card is not mounted, unable to save timer history.");
 
-		for (TimerHistoryDbResult result : tmpHistory) {
-			new SimpleFileAccess().showOutFileAlertPromptAndWriteTo(this,
-					//"/sdcard/laptimer/"+DateFormat.format("yyyyMMdd-kkmmss",new Date().getTime())+"/laptimer_"+DateFormat.format("yyyyMMdd-kkmmss",result.getStartedAt()) + ".txt",
-					"/sdcard/laptimer_"+DateFormat.format("yyyyMMdd-kkmmss",result.getStartedAt()) + ".txt",
-					"Started on: "+TextUtil.formatDateToString(result.getStartedAt())             + "\n" +
-						"Duration: "+TextUtil.formatDateToString(result.getDuration(), numFormat) + "\n\n" +
-						"History:\n" + result.getHistory());
-		}
+        	// Create the click listeners for user response
+        	alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+    			@Override
+    			public void onClick(DialogInterface dialog, int which) {
+    			}
+    		});
+
+        	// Display the alert
+        	alert.show();
+        }
 	}
 
 	/**
