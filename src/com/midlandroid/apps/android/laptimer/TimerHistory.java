@@ -37,7 +37,7 @@ public class TimerHistory extends Activity {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
 				// TODO replace this with a pop-up window displaying the contents of the history
-				Toast.makeText(getApplicationContext(), "View item coming soon.", Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), "View item coming soon.", Toast.LENGTH_SHORT).show();
 			}
 		});
 		
@@ -45,7 +45,7 @@ public class TimerHistory extends Activity {
 			@Override
 			public boolean onItemLongClick(AdapterView<?> arg0, View view, int pos, long id) {
 				// TODO replace this with a pop-up window displaying the contents of the history
-				Toast.makeText(getApplicationContext(), "Manage item coming soon.", Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), "Manage item coming soon.", Toast.LENGTH_SHORT).show();
 				
 				// long click was handled
 				return true;
