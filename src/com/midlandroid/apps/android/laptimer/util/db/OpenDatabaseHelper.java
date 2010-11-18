@@ -1,7 +1,9 @@
-package com.midlandroid.apps.android.laptimer.util;
+package com.midlandroid.apps.android.laptimer.util.db;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.midlandroid.apps.android.laptimer.util.TimerHistoryDbResult;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -11,23 +13,29 @@ import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
 public class OpenDatabaseHelper {
-    private static final int DATABASE_VERSION = 1;
+	private static final String LOG_TAG = OpenDatabaseHelper.class.getSimpleName();
+	
+    private static final int DATABASE_VERSION = 2;
     private static final String DATABASE_NAME = "laptimer.db";
     
     // Timer History Table
+    private static final int   TIMER_HISTORY_COL_ID_IDX          = 0;
+    private static final int   TIMER_HISTORY_COL_STARTED_AT_IDX  = 1;
+    private static final int   TIMER_HISTORY_COL_FINISHED_AT_IDX = 2;
+    private static final int   TIMER_HISTORY_COL_DURATION_IDX    = 3;
+    private static final int   TIMER_HISTORY_COL_HISTORY_IDX     = 4;
+
+    private static final String TIMER_HISTORY_COL_ID           = "id";
     private static final String TIMER_HISTORY_COL_STARTED_AT   = "started_at";
-    private static final int TIMER_HISTORY_COL_STARTED_AT_IDX  = 0;
     private static final String TIMER_HISTORY_COL_FINISHED_AT  = "finished_at";
-    private static final int TIMER_HISTORY_COL_FINISHED_AT_IDX = 1;
     private static final String TIMER_HISTORY_COL_DURATION     = "duration";
-    private static final int TIMER_HISTORY_COL_DURATION_IDX    = 2;
     private static final String TIMER_HISTORY_COL_HISTORY      = "history";
-    private static final int TIMER_HISTORY_COL_HISTORY_IDX     = 3;
     
     private static final String TIMER_HISTORY_TABLE_NAME   = "timer_history";
     private static final String TIMER_HISTORY_TABLE_CREATE =
             "CREATE TABLE " + TIMER_HISTORY_TABLE_NAME + 
 	            " (" +
+	                TIMER_HISTORY_COL_ID          + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
 		            TIMER_HISTORY_COL_STARTED_AT  + " INTEGER, " + 
 		            TIMER_HISTORY_COL_FINISHED_AT + " INTEGER, " +
 		            TIMER_HISTORY_COL_DURATION    + " INTEGER, " +
@@ -100,9 +108,9 @@ public class OpenDatabaseHelper {
     
     public List<TimerHistoryDbResult> selectAll() {
     	List<TimerHistoryDbResult> results = new ArrayList<TimerHistoryDbResult>();
-    	//Cursor cursor = db.query(table, columns, selection, selectionArgs, groupBy, having, orderBy);
     	Cursor cursor = db.query(TIMER_HISTORY_TABLE_NAME,
     			new String[] {
+    			    TIMER_HISTORY_COL_ID,
 		            TIMER_HISTORY_COL_STARTED_AT,
 		            TIMER_HISTORY_COL_FINISHED_AT,
 		            TIMER_HISTORY_COL_DURATION,
@@ -116,6 +124,7 @@ public class OpenDatabaseHelper {
     			// Get the value from the database and add it to the
     			// result list.
     			TimerHistoryDbResult result = new TimerHistoryDbResult(
+    					cursor.getInt(TIMER_HISTORY_COL_ID_IDX),
     					cursor.getLong(TIMER_HISTORY_COL_STARTED_AT_IDX),
     					cursor.getLong(TIMER_HISTORY_COL_FINISHED_AT_IDX),
     					cursor.getLong(TIMER_HISTORY_COL_DURATION_IDX),
@@ -135,6 +144,8 @@ public class OpenDatabaseHelper {
     
 	
 	private static class OpenHelper extends SQLiteOpenHelper {
+		private static final String LOG_TAG = OpenHelper.class.getSimpleName();
+		
 		OpenHelper(Context context) {
 			super(context, DATABASE_NAME, null, DATABASE_VERSION);
 		}
@@ -146,7 +157,17 @@ public class OpenDatabaseHelper {
 	
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-			Log.w("Example", "Upgrading database, this will drop tables and recreate.");
+			Log.w(LOG_TAG, "Upgrading database, this will drop tables and recreate.");
+			
+			
+			
+			// Changing from version 1 to 2
+			if (oldVersion == 1 && newVersion == 2) {
+				// Add the id column to the timer history table.
+				V1toV2 v1tov2 = new V1toV2(db);
+				v1tov2.doMigrate();
+			}
+			
 			
 			db.execSQL(TIMER_HISTORY_TABLE_DROP);
 			onCreate(db);

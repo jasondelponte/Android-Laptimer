@@ -3,10 +3,10 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.midlandroid.apps.android.laptimer.util.OpenDatabaseHelper;
 import com.midlandroid.apps.android.laptimer.util.SimpleFileAccess;
 import com.midlandroid.apps.android.laptimer.util.TextUtil;
 import com.midlandroid.apps.android.laptimer.util.TimerHistoryDbResult;
+import com.midlandroid.apps.android.laptimer.util.db.OpenDatabaseHelper;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -109,9 +109,7 @@ public class TimerHistory extends Activity {
 				new SimpleFileAccess().showOutFileAlertPromptAndWriteTo(this,
 						//"/sdcard/laptimer/"+DateFormat.format("yyyyMMdd-kkmmss",new Date().getTime())+"/laptimer_"+DateFormat.format("yyyyMMdd-kkmmss",result.getStartedAt()) + ".txt",
 						"/sdcard/laptimer_"+DateFormat.format("yyyyMMdd-kkmmss",result.getStartedAt()) + ".txt",
-						"Started on: "+TextUtil.formatDateToString(result.getStartedAt())             + "\n" +
-							"Duration: "+TextUtil.formatDateToString(result.getDuration(), numFormat) + "\n\n" +
-							"History:\n" + result.getHistory());
+						result.getHistory());
 			}
         } else {
         	// Create the alert that will prompt the user

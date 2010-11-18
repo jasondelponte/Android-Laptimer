@@ -20,9 +20,9 @@ import com.midlandroid.apps.android.laptimer.background.timers.TimerMode.Running
 import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateServiceListener;
 import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateUIListener;
 import com.midlandroid.apps.android.laptimer.util.AppPreferences;
-import com.midlandroid.apps.android.laptimer.util.OpenDatabaseHelper;
 import com.midlandroid.apps.android.laptimer.util.ServiceCommand;
 import com.midlandroid.apps.android.laptimer.util.TextUtil;
+import com.midlandroid.apps.android.laptimer.util.db.OpenDatabaseHelper;
 
 import android.app.Service;
 import android.content.Context;
