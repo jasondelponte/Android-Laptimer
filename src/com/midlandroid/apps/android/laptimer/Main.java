@@ -138,16 +138,16 @@ public class Main extends Activity implements TimerUpdateUIListener {
     public void onPause() {
     	super.onPause();
     	
-    	// Get the current running state
-    	RunningState currState = RunningState.RESETTED;
-    	if (boundService != null)
-    		currState = boundService.getTimerState();
+//    	// Get the current running state
+//    	RunningState currState = RunningState.RESETTED;
+//    	if (boundService != null)
+//    		currState = boundService.getTimerState();
     	
     	// Disconnect from the service
     	_doUnbindService();
     	
-    	// Shutdown the service if its not running
-    	if (currState == RunningState.RESETTED)
+//    	// Shutdown the service if its not running
+//    	if (currState == RunningState.RESETTED)
     		stopService(new Intent(this, BackgroundSrvc.class));
     }
     
