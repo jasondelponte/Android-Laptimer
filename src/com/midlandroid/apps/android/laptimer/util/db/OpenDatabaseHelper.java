@@ -41,8 +41,6 @@ public class OpenDatabaseHelper {
 		            TIMER_HISTORY_COL_DURATION    + " INTEGER, " +
 		            TIMER_HISTORY_COL_HISTORY     + " TEXT"      +
 	            ");";
-    private static final String TIMER_HISTORY_TABLE_DROP = 
-		"DROP TABLE IF EXISTS "+TIMER_HISTORY_TABLE_NAME+";";
     
     private SQLiteStatement insertStmt;
     private static final String TIMER_HISTORY_INSERT = 
