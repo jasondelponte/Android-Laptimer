@@ -157,20 +157,37 @@ public class OpenDatabaseHelper {
 	
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-			Log.w(LOG_TAG, "Upgrading database, this will drop tables and recreate.");
+			Log.w(LOG_TAG, "Database table mismatch.  "+
+					"Upgrading from version "+Integer.toString(oldVersion)+
+					" to version + "+Integer.toString(newVersion));
 			
+			// Get the list of migrations to be used
+			List<Migration> migrations = buildMigrationList(db, oldVersion, newVersion);
 			
+			// Loop over each migration updating the database
+			for (Migration migration : migrations) {
+				migration.doMigrate();
+			}
+		}
+		
+		/**
+		 * Build the list of migrations that will be used to update the database to the target
+		 * version
+		 * @param db
+		 * @param oldVer
+		 * @param newVer
+		 * @return
+		 */
+		private List<Migration> buildMigrationList(SQLiteDatabase db, int oldVer, int newVer) {
+			List<Migration> migrations = new ArrayList<Migration>();
 			
-			// Changing from version 1 to 2
-			if (oldVersion == 1 && newVersion == 2) {
-				// Add the id column to the timer history table.
-				V1toV2 v1tov2 = new V1toV2(db);
-				v1tov2.doMigrate();
+			switch (oldVer) {
+			case 1:
+				migrations.add(new MigrateVer1ToVer2(db));
+				break;
 			}
 			
-			
-			db.execSQL(TIMER_HISTORY_TABLE_DROP);
-			onCreate(db);
+			return migrations;
 		}
 	}
 }

@@ -8,9 +8,10 @@ import com.midlandroid.apps.android.laptimer.util.TimerHistoryDbResult;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.util.Log;
 
-public class V1toV2 {
-	private static final String LOG_TAG = V1toV2.class.getSimpleName();
+public class MigrateVer1ToVer2 extends Migration {
+	private static final String LOG_TAG = MigrateVer1ToVer2.class.getSimpleName();
 	
     // Timer History Table
     private static final int   OLD_TIMER_HISTORY_COL_STARTED_AT_IDX  = 0;
@@ -56,9 +57,8 @@ public class V1toV2 {
 			") values (?,?,?,?)";
     
     
-    private SQLiteDatabase db;
-    public V1toV2(SQLiteDatabase db) {
-    	this.db = db;
+    public MigrateVer1ToVer2(SQLiteDatabase db)  {
+    	super(db);
 
     	// precompile SQL statements
     	insertStmt = db.compileStatement(TIMER_HISTORY_INSERT);
@@ -66,6 +66,8 @@ public class V1toV2 {
 	
 	
 	public void doMigrate() {
+		Log.i(LOG_TAG, "Migrating database from Version 1 to Version 2");
+		
 		List<TimerHistoryDbResult> results = _selectAll();
 		
 		// Drop and recreate the timer history table
