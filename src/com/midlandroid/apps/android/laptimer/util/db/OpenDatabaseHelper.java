@@ -3,7 +3,7 @@ package com.midlandroid.apps.android.laptimer.util.db;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.midlandroid.apps.android.laptimer.util.TimerHistoryDbResult;
+import com.midlandroid.apps.android.laptimer.util.TimerHistoryDbRecord;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -44,13 +44,18 @@ public class OpenDatabaseHelper {
     
     private SQLiteStatement insertStmt;
     private static final String TIMER_HISTORY_INSERT = 
-    	"insert into " + TIMER_HISTORY_TABLE_NAME +
+    	"INSERT INTO " + TIMER_HISTORY_TABLE_NAME +
 	    	"(" +
 	    		TIMER_HISTORY_COL_STARTED_AT  +"," +
 	    		TIMER_HISTORY_COL_FINISHED_AT +"," +
 	    		TIMER_HISTORY_COL_DURATION    +"," +
 	    		TIMER_HISTORY_COL_HISTORY     +
 			") values (?,?,?,?)";
+    
+    private SQLiteStatement deleteStmt;
+    private static final String TIMER_HISTORY_DELETE = 
+    	"DELETE FROM " +  TIMER_HISTORY_TABLE_NAME +
+    		" WHERE id = ?;";
     
     
     // instance variables
@@ -69,6 +74,7 @@ public class OpenDatabaseHelper {
 		
 		// precompile SQL statements
 		insertStmt = db.compileStatement(TIMER_HISTORY_INSERT);
+		deleteStmt = db.compileStatement(TIMER_HISTORY_DELETE);
 	}
     
     
@@ -80,32 +86,41 @@ public class OpenDatabaseHelper {
      * @param history
      * @return
      */
-    public long insert(final long startedAt, final long finishedAt,
+    public long insertTimerHistory(final long startedAt, final long finishedAt,
     		final long duration, final String history) {
-    	// the bind uses a 1 based index not 0
-    	insertStmt.bindLong(TIMER_HISTORY_COL_STARTED_AT_IDX+1, startedAt);
-    	insertStmt.bindLong(TIMER_HISTORY_COL_FINISHED_AT_IDX+1, finishedAt);
-    	insertStmt.bindLong(TIMER_HISTORY_COL_DURATION_IDX+1, duration);
-    	insertStmt.bindString(TIMER_HISTORY_COL_HISTORY_IDX+1, history);
+    	insertStmt.bindLong   (1, startedAt);
+    	insertStmt.bindLong   (2, finishedAt);
+    	insertStmt.bindLong   (3, duration);
+    	insertStmt.bindString (4, history);
     	
         return insertStmt.executeInsert();
     }
     
     
-    public void update() {
+    /**
+     * Updates a pre-existing timer history record with new information
+     * @param record
+     */
+    public void updateTimerHistory(TimerHistoryDbRecord record) {
     }
     
     
     /**
-     * Closes the connection to the database.
+     * Deletes a specific record from the timer history table
+     * @param id
      */
-    public void close() {
-    	db.close();
+    public void deleteTimerHistoryById(final int id) {
+    	deleteStmt.bindLong(1, id);
+    	deleteStmt.execute();
     }
     
     
-    public List<TimerHistoryDbResult> selectAll() {
-    	List<TimerHistoryDbResult> results = new ArrayList<TimerHistoryDbResult>();
+    /**
+     * Queries and returns from the database for all timer history records
+     * @return
+     */
+    public List<TimerHistoryDbRecord> selectAllTimerHistories() {
+    	List<TimerHistoryDbRecord> results = new ArrayList<TimerHistoryDbRecord>();
     	Cursor cursor = db.query(TIMER_HISTORY_TABLE_NAME,
     			new String[] {
     			    TIMER_HISTORY_COL_ID,
@@ -121,7 +136,7 @@ public class OpenDatabaseHelper {
     		do {
     			// Get the value from the database and add it to the
     			// result list.
-    			TimerHistoryDbResult result = new TimerHistoryDbResult(
+    			TimerHistoryDbRecord result = new TimerHistoryDbRecord(
     					cursor.getInt(TIMER_HISTORY_COL_ID_IDX),
     					cursor.getLong(TIMER_HISTORY_COL_STARTED_AT_IDX),
     					cursor.getLong(TIMER_HISTORY_COL_FINISHED_AT_IDX),
@@ -138,6 +153,14 @@ public class OpenDatabaseHelper {
         }
     	
     	return results;
+    }
+    
+    
+    /**
+     * Closes the connection to the database.
+     */
+    public void close() {
+    	db.close();
     }
     
 	

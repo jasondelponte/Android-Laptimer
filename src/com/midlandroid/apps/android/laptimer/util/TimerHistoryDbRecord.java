@@ -1,14 +1,14 @@
 package com.midlandroid.apps.android.laptimer.util;
 
 
-public class TimerHistoryDbResult {
+public class TimerHistoryDbRecord {
 	private int id;
 	private long startedAt;
 	private long finishedAt;
 	private long duration;
 	private String history;
 	
-	public TimerHistoryDbResult() {
+	public TimerHistoryDbRecord() {
 		this.setId(0);
 		this.startedAt = 0;
 		this.finishedAt = 0;
@@ -16,7 +16,7 @@ public class TimerHistoryDbResult {
 		this.history = "";	
 	}
 	
-	public TimerHistoryDbResult(int id, long startedAt, long finishedAt, long duration, String history) {
+	public TimerHistoryDbRecord(int id, long startedAt, long finishedAt, long duration, String history) {
 		this.id = id;
 		this.startedAt = startedAt;
 		this.finishedAt = finishedAt;

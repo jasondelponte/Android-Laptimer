@@ -3,7 +3,7 @@ package com.midlandroid.apps.android.laptimer.util.db;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.midlandroid.apps.android.laptimer.util.TimerHistoryDbResult;
+import com.midlandroid.apps.android.laptimer.util.TimerHistoryDbRecord;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -68,14 +68,14 @@ public class MigrateVer1ToVer2 extends Migration {
 	public void doMigrate() {
 		Log.i(LOG_TAG, "Migrating database from Version 1 to Version 2");
 		
-		List<TimerHistoryDbResult> results = _selectAll();
+		List<TimerHistoryDbRecord> results = _selectAll();
 		
 		// Drop and recreate the timer history table
 		db.execSQL(TIMER_HISTORY_TABLE_DROP);
 		db.execSQL(TIMER_HISTORY_TABLE_CREATE);
 		
 		// Re-populate the table with our saved results
-		for (TimerHistoryDbResult result : results) {
+		for (TimerHistoryDbRecord result : results) {
 			insert(result.getStartedAt(), result.getFinishedAt(),
 					result.getDuration(), result.getHistory());
 		}
@@ -88,9 +88,9 @@ public class MigrateVer1ToVer2 extends Migration {
 	 * Query the database timer history table for all results.
 	 * @return
 	 */
-	private List<TimerHistoryDbResult> _selectAll() {
+	private List<TimerHistoryDbRecord> _selectAll() {
 		// Get the existing data
-		List<TimerHistoryDbResult> results = new ArrayList<TimerHistoryDbResult>();
+		List<TimerHistoryDbRecord> results = new ArrayList<TimerHistoryDbRecord>();
 		
     	Cursor cursor = db.query(TIMER_HISTORY_TABLE_NAME,
     			new String[] {
@@ -106,7 +106,7 @@ public class MigrateVer1ToVer2 extends Migration {
     		do {
     			// Get the value from the database and add it to the
     			// result list.
-    			TimerHistoryDbResult result = new TimerHistoryDbResult(
+    			TimerHistoryDbRecord result = new TimerHistoryDbRecord(
     					0,
     					cursor.getLong(OLD_TIMER_HISTORY_COL_STARTED_AT_IDX),
     					cursor.getLong(OLD_TIMER_HISTORY_COL_FINISHED_AT_IDX),
@@ -136,10 +136,10 @@ public class MigrateVer1ToVer2 extends Migration {
 	private void insert(final long startedAt, final long finishedAt,
 			final long duration, final String history) {
 		 // the bind uses a 1 based index not 0
-		insertStmt.bindLong(OLD_TIMER_HISTORY_COL_STARTED_AT_IDX+1, startedAt);
-		insertStmt.bindLong(OLD_TIMER_HISTORY_COL_FINISHED_AT_IDX+1, finishedAt);
-		insertStmt.bindLong(OLD_TIMER_HISTORY_COL_DURATION_IDX+1, duration);
-		insertStmt.bindString(OLD_TIMER_HISTORY_COL_HISTORY_IDX+1, history);
+		insertStmt.bindLong   (1, startedAt);
+		insertStmt.bindLong   (2, finishedAt);
+		insertStmt.bindLong   (3, duration);
+		insertStmt.bindString (4, history);
 		// perform the insert
 		insertStmt.executeInsert();
 	}

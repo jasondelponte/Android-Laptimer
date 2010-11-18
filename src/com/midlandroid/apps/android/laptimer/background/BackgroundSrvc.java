@@ -599,7 +599,7 @@ public class BackgroundSrvc extends Service {
     	OpenDatabaseHelper dbHelper = new OpenDatabaseHelper(this);
     	
     	// Insert the value into the database
-    	dbHelper.insert(curState.getTimerStartedAt(), curState.getTimerPausedAt(),
+    	dbHelper.insertTimerHistory(curState.getTimerStartedAt(), curState.getTimerPausedAt(),
     			curState.peekAtTimerModeStack().getCurTime(),
     			curState.getHistoryAsMultiLineStringReversed());
     	dbHelper.close();

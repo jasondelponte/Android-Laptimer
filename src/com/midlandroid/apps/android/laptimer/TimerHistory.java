@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.midlandroid.apps.android.laptimer.util.SimpleFileAccess;
 import com.midlandroid.apps.android.laptimer.util.TextUtil;
-import com.midlandroid.apps.android.laptimer.util.TimerHistoryDbResult;
+import com.midlandroid.apps.android.laptimer.util.TimerHistoryDbRecord;
 import com.midlandroid.apps.android.laptimer.util.db.OpenDatabaseHelper;
 
 import android.app.Activity;
@@ -28,7 +28,7 @@ import android.widget.Toast;
 public class TimerHistory extends Activity {
 	
 	private ListView historyList;
-	private List<TimerHistoryDbResult> timerHistory;
+	private List<TimerHistoryDbRecord> timerHistory;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -57,7 +57,7 @@ public class TimerHistory extends Activity {
 		
 
 		OpenDatabaseHelper dbHelper = new OpenDatabaseHelper(this);
-		timerHistory = dbHelper.selectAll();
+		timerHistory = dbHelper.selectAllTimerHistories();
     	dbHelper.close();
 		
 		_populateListWithTimerHistory();
@@ -100,12 +100,12 @@ public class TimerHistory extends Activity {
         numFormat.setParseIntegerOnly(true);
         
         // Local reference to the timer history list
-        List<TimerHistoryDbResult> tmpHistory = timerHistory;
+        List<TimerHistoryDbRecord> tmpHistory = timerHistory;
         
         // Detect whether or not the application will be able to write to the storage device.
         String storageState = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(storageState)) {
-			for (TimerHistoryDbResult result : tmpHistory) {
+			for (TimerHistoryDbRecord result : tmpHistory) {
 				new SimpleFileAccess().showOutFileAlertPromptAndWriteTo(this,
 						//"/sdcard/laptimer/"+DateFormat.format("yyyyMMdd-kkmmss",new Date().getTime())+"/laptimer_"+DateFormat.format("yyyyMMdd-kkmmss",result.getStartedAt()) + ".txt",
 						"/sdcard/laptimer_"+DateFormat.format("yyyyMMdd-kkmmss",result.getStartedAt()) + ".txt",
@@ -142,11 +142,11 @@ public class TimerHistory extends Activity {
         numFormat.setParseIntegerOnly(true);
         
         // Local reference to the timer history list
-        List<TimerHistoryDbResult> tmpHistory = timerHistory;
+        List<TimerHistoryDbRecord> tmpHistory = timerHistory;
 		
         // Get the values from each element in the results list
 		List<String> listItems = new ArrayList<String>();
-		for (TimerHistoryDbResult result : tmpHistory) {
+		for (TimerHistoryDbRecord result : tmpHistory) {
 			listItems.add(new String(
 					TextUtil.formatDateToString(result.getStartedAt()) + "\n" +
 					"Duration: " + TextUtil.formatDateToString(result.getDuration(), numFormat)));
