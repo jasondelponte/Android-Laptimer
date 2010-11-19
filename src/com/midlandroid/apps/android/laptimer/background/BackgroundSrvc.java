@@ -666,7 +666,7 @@ public class BackgroundSrvc extends Service {
 			curState.addItemToTopOfHistory(new String("Lap "+lapCount+": "+TextUtil.formatDateToString(lapTime, numFormat)+
 					" - "+TextUtil.formatDateToString(currTime, numFormat)));
 			
-			setTimerHistory(state.getHistoryAsMultiLineString());
+			setTimerHistory(state.getHistoryAsMultiLineStringReversed());
 		}
 
 		@Override
