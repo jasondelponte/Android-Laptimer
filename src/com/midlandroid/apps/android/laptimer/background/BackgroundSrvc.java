@@ -604,8 +604,7 @@ public class BackgroundSrvc extends Service {
     	// Insert the value into the database
     	dbHelper.insertTimerHistory(curState.getTimerStartedAt(), curState.getTimerPausedAt(),
     			curState.peekAtTimerModeStack().getCurTime(),
-    			//curState.getHistoryAsMultiLineStringReversed());
-    			curState.getHistoryAsMultiLineString());
+    			curState.getHistoryAsMultiLineStringReversed());
     	dbHelper.close();
     	
 
@@ -666,7 +665,7 @@ public class BackgroundSrvc extends Service {
 			curState.addItemToTopOfHistory(new String("Lap "+lapCount+": "+TextUtil.formatDateToString(lapTime, numFormat)+
 					" - "+TextUtil.formatDateToString(currTime, numFormat)));
 			
-			setTimerHistory(state.getHistoryAsMultiLineStringReversed());
+			setTimerHistory(state.getHistoryAsMultiLineString());
 		}
 
 		@Override
