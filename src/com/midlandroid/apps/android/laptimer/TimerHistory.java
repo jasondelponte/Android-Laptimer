@@ -138,8 +138,6 @@ public class TimerHistory extends Activity {
     }
     
 	private void _writeAllHistoryToSdCard() {
-		//SimpleFileAccess fileAccess = new SimpleFileAccess();
-
 		// Create the number formatter that will be used later
 		NumberFormat numFormat = NumberFormat.getInstance();
         numFormat.setMinimumIntegerDigits(2);
