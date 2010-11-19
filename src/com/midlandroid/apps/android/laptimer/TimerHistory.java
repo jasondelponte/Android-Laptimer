@@ -1,4 +1,5 @@
 package com.midlandroid.apps.android.laptimer;
+
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,53 +16,73 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.format.DateFormat;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnCreateContextMenuListener;
 import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 
 public class TimerHistory extends Activity {
 	
 	private ListView historyList;
 	private List<TimerHistoryDbRecord> timerHistory;
+	private ArrayAdapter<String> adapter;
+	private ArrayList<String> listItems;
+	
+	private OpenDatabaseHelper dbHelper;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.timer_history);
 		
+		// get a connection to the database
+		dbHelper = new OpenDatabaseHelper(this);
+		
+		// Create the adapter that will be used to populate the history list
+		listItems = new ArrayList<String>();
+		adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listItems);
+		
+		// timer history list
 		historyList = (ListView) findViewById(R.id.history_list);
+		historyList.setAdapter(adapter);
+		
 		historyList.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
 				_showHistoryDialog(timerHistory.get(pos));
 			}
 		});
-		
-		historyList.setOnItemLongClickListener(new OnItemLongClickListener() {
+		historyList.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
 			@Override
-			public boolean onItemLongClick(AdapterView<?> arg0, View view, int pos, long id) {
-				// TODO replace this with a pop-up window displaying the contents of the history
-				Toast.makeText(getApplicationContext(), "Manage item coming soon.", Toast.LENGTH_SHORT).show();
-				
-				// long click was handled
-				return true;
+			public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
+				MenuInflater inflater = getMenuInflater();
+				inflater.inflate(R.menu.history_item_menu, menu);
 			}
 		});
+	}
+	
+	@Override
+	public void onResume() {
+		super.onResume();
 		
+		_refreshHistoryList();
+	}
 
-		OpenDatabaseHelper dbHelper = new OpenDatabaseHelper(this);
-		timerHistory = dbHelper.selectAllTimerHistories();
-    	dbHelper.close();
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
 		
-		_populateListWithTimerHistory();
+    	dbHelper.close();
 	}
 	
     ////////////////////////////////////
@@ -83,6 +104,26 @@ public class TimerHistory extends Activity {
     		_writeAllHistoryToSdCard();
     		return true;
     	}
+    	
+    	return false;
+    }
+    
+    
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+        int index = info.position;
+
+    	switch(item.getItemId()) {
+    	case R.id.write_history_to_sdcard:
+    		_writeHistoryItemToSdCard(timerHistory.get(index));
+    		return true;
+    	case R.id.delete_saved_history:
+    		dbHelper.deleteTimerHistoryById(timerHistory.get(index).getId());
+    		_refreshHistoryList();
+    		return true;
+    	}
+    	
     	return false;
     }
 	
@@ -90,6 +131,11 @@ public class TimerHistory extends Activity {
     ////////////////////////////////////
     // Private Methods	
     ////////////////////////////////////
+    private void _writeHistoryItemToSdCard(TimerHistoryDbRecord record) {
+		new SimpleFileAccess().showOutFileAlertPromptAndWriteTo(this,
+				"/sdcard/laptimer_"+DateFormat.format("yyyyMMdd-kkmmss",record.getStartedAt()) + ".txt",
+				record.getHistory());
+    }
     
 	private void _writeAllHistoryToSdCard() {
 		//SimpleFileAccess fileAccess = new SimpleFileAccess();
@@ -106,11 +152,8 @@ public class TimerHistory extends Activity {
         // Detect whether or not the application will be able to write to the storage device.
         String storageState = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(storageState)) {
-			for (TimerHistoryDbRecord result : tmpHistory) {
-				new SimpleFileAccess().showOutFileAlertPromptAndWriteTo(this,
-						//"/sdcard/laptimer/"+DateFormat.format("yyyyMMdd-kkmmss",new Date().getTime())+"/laptimer_"+DateFormat.format("yyyyMMdd-kkmmss",result.getStartedAt()) + ".txt",
-						"/sdcard/laptimer_"+DateFormat.format("yyyyMMdd-kkmmss",result.getStartedAt()) + ".txt",
-						result.getHistory());
+			for (TimerHistoryDbRecord record : tmpHistory) {
+				_writeHistoryItemToSdCard(record);
 			}
         } else {
         	// Create the alert that will prompt the user
@@ -144,17 +187,18 @@ public class TimerHistory extends Activity {
         
         // Local reference to the timer history list
         List<TimerHistoryDbRecord> tmpHistory = timerHistory;
+        
+        // clear the existing contents of the list
+        listItems.clear();
 		
         // Get the values from each element in the results list
-		List<String> listItems = new ArrayList<String>();
 		for (TimerHistoryDbRecord result : tmpHistory) {
-			listItems.add(new String(
+			String str = new String(
 					TextUtil.formatDateToString(result.getStartedAt()) + "\n" +
-					"Duration: " + TextUtil.formatDateToString(result.getDuration(), numFormat)));
+					"Duration: " + TextUtil.formatDateToString(result.getDuration(), numFormat));
+			listItems.add(str);
 		}
-		
-		// Add the values to the list
-		historyList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listItems.toArray(new String[0])));
+		adapter.notifyDataSetChanged();
 	}
 	
 	
@@ -171,5 +215,15 @@ public class TimerHistory extends Activity {
 		text.setText(record.getHistory());
 		
 		dialog.show();
+	}
+
+	
+	/**
+	 * Clears the current timer history list and refreshes it with the
+	 * data from the database
+	 */
+	private void _refreshHistoryList() {
+		timerHistory = dbHelper.selectAllTimerHistories();
+		_populateListWithTimerHistory();
 	}
 }

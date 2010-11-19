@@ -24,6 +24,9 @@
     
     <string name="write_all_to_sdcard">Write all to SD card.</string>
     
+    <string name="write_history_to_sdcard">Export To SD card</string>
+    <string name="delete_saved_history">Delete Saved Item</string>
+    
     <string name="timer_mode_default_desc">No description provided</string>
     <string name="timer_history_saved_toast">Timer History Saved</string>
     <string name="text_copied_to_clipboard_toast">Text copied to the clipboard.</string>
