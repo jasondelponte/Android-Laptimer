@@ -300,5 +300,8 @@ public final class TimerState implements Serializable {
 				timerModes.push(mode);
 			}
 		}
+		
+		// Data nodes are no longer needed.
+		timerModesData.clear();
 	}
 }

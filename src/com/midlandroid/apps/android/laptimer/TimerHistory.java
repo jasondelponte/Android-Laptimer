@@ -10,6 +10,7 @@ import com.midlandroid.apps.android.laptimer.util.db.OpenDatabaseHelper;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Environment;
@@ -22,6 +23,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -39,8 +41,7 @@ public class TimerHistory extends Activity {
 		historyList.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
-				// TODO replace this with a pop-up window displaying the contents of the history
-				Toast.makeText(getApplicationContext(), "View item coming soon.", Toast.LENGTH_SHORT).show();
+				_showHistoryDialog(timerHistory.get(pos));
 			}
 		});
 		
@@ -154,5 +155,21 @@ public class TimerHistory extends Activity {
 		
 		// Add the values to the list
 		historyList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listItems.toArray(new String[0])));
+	}
+	
+	
+	/**
+	 * Displays a popup dialog displaying the selected timer history's history
+	 * @param record
+	 */
+	private void _showHistoryDialog(TimerHistoryDbRecord record) {
+		Dialog dialog = new Dialog(this);
+		dialog.setContentView(R.layout.history_dialog_layout);
+		dialog.setTitle("Recorded Event History");
+		
+		TextView text = (TextView) dialog.findViewById(R.id.history_dialog_text);
+		text.setText(record.getHistory());
+		
+		dialog.show();
 	}
 }

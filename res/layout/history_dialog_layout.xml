@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent" >
+  
+  <View
+  	android:layout_width="fill_parent"
+  	android:layout_height="2dip"
+  	android:background="#FFFFFFFF" />
+  
+  <ScrollView
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:background="@drawable/main_bg" >
+	  <TextView
+		android:id="@+id/history_dialog_text"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+	    android:textColor="@drawable/lap_list_fg" />
+  </ScrollView>
+  
+</RelativeLayout>

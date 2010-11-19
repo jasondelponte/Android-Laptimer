@@ -129,8 +129,9 @@ public class BackgroundSrvc extends Service {
 		super.onDestroy();
 		Log.d(LOG_TAG, "onDestroy");
 		
-		// Save off the timer state.
-		_saveState();
+		// Save off the timer state if we are not reseted
+		if (state.getRunningState() != RunningState.RESETTED)
+			_saveState();
 		
 		// Make sure to clean up and stop the timer on exit
 		_doStopTimer();
@@ -514,6 +515,8 @@ public class BackgroundSrvc extends Service {
 		state.setWasSaved(true);
 		state.saveTimerModesData();
 		state.setTimeStateSavaedAt(new Date().getTime());
+
+		deleteFile(TIMER_STATE_FILENAME);
 		
 		try {
 			FileOutputStream fOS = openFileOutput(TIMER_STATE_FILENAME, Context.MODE_PRIVATE);
@@ -601,7 +604,8 @@ public class BackgroundSrvc extends Service {
     	// Insert the value into the database
     	dbHelper.insertTimerHistory(curState.getTimerStartedAt(), curState.getTimerPausedAt(),
     			curState.peekAtTimerModeStack().getCurTime(),
-    			curState.getHistoryAsMultiLineStringReversed());
+    			//curState.getHistoryAsMultiLineStringReversed());
+    			curState.getHistoryAsMultiLineString());
     	dbHelper.close();
     	
 

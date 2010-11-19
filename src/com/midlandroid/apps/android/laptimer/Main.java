@@ -141,9 +141,16 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	// Disconnect from the service
     	_doUnbindService();
     	
-		stopService(new Intent(this, BackgroundSrvc.class));
     }
     
+    @Override
+    public void onDestroy() {
+    	super.onDestroy();
+    	
+    	// Terminate the service if the application is being destroyed.
+		stopService(new Intent(this, BackgroundSrvc.class));
+    }
+
     
     /////////////////////////////////
     // Overridden controls
