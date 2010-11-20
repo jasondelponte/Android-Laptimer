@@ -345,6 +345,7 @@ public class BackgroundSrvc extends Service {
                     
                     // Update the total runtime in case we were paused.
                     if (curState.getTimerStartOffset() != 0) {
+                        Log.i(LOG_TAG, "Timer offset: "+Long.toString(curState.getTimerStartOffset()));
                         // The baseline needs to be offset, to reflect the amount
                     	// of time that passed prior to the timer being restarted.
                     	baselineSystemTime -= curState.getTimerStartOffset();
@@ -572,7 +573,7 @@ public class BackgroundSrvc extends Service {
 			
 			// Update the state values so things make since on a restore
 			TimerState curState = state;
-			curState.setTimeStateRestoredAt(new Date().getTime());		
+			curState.setTimeStateRestoredAt(new Date().getTime());
 			if (curState.getRunningState() == RunningState.RUNNING)
 				curState.setTimerStartOffset((curState.getTimeStateRestoredAt() - curState.getTimerStartedAt()));
 			
@@ -653,7 +654,6 @@ public class BackgroundSrvc extends Service {
 	private void _autoSaveHistory() {
 		TimerState curState = state;
 		
-		dbHelper = new OpenDatabaseHelper(this);
 		// Get the timer history saved item if it already exists,
 		TimerHistoryDbRecord record = dbHelper.selectTimerHistoryByStartAt(curState.getTimerStartedAt());
 		if (record != null) { // Update

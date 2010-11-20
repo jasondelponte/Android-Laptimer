@@ -11,7 +11,6 @@ import com.midlandroid.apps.android.laptimer.util.UIUtil;
 import com.midlandroid.apps.android.laptimer.R;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -141,7 +140,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	
     	// Disconnect from the service
     	_doUnbindService();
-    	
     }
     
     @Override
