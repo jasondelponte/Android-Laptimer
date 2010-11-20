@@ -542,7 +542,7 @@ public class BackgroundSrvc extends Service {
 	private void _saveState() {
 		state.setWasSaved(true);
 		state.saveTimerModesData();
-		state.setTimeStateSavaedAt(new Date().getTime());
+		state.setTimeStateSavedAt(new Date().getTime());
 
 		deleteFile(TIMER_STATE_FILENAME);
 		

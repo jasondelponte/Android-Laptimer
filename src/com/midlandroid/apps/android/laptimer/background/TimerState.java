@@ -42,7 +42,7 @@ public final class TimerState implements Serializable {
 	private Stack<TimerModeData> timerModesData;
 	
 	// State time saved/restored at
-	private long timeStateSavaedAt;
+	private long timeStateSavedAt;
 	private long timeStateRestoredAt;
 	private boolean wasSaved;
 	
@@ -216,12 +216,12 @@ public final class TimerState implements Serializable {
 	 * Sets the real world time the timer state was saved to storage.
 	 * @param timeStateSavaedAt
 	 */
-	public void setTimeStateSavaedAt(long timeStateSavaedAt) { this.timeStateSavaedAt = timeStateSavaedAt; }
+	public void setTimeStateSavedAt(long timeStateSavaedAt) { this.timeStateSavedAt = timeStateSavaedAt; }
 	/**
 	 * Returns the real world time the timer state was saved to storage.
 	 * @return
 	 */
-	public long getTimeStateSavaedAt() { return timeStateSavaedAt; }
+	public long getTimeStateSavedAt() { return timeStateSavedAt; }
 	
 
 	/**
@@ -243,7 +243,7 @@ public final class TimerState implements Serializable {
 		timerCommand = timerCommandToRestore = ServiceCommand.CMD_DONT_PROC_TIMER_UPDATES;
 		runningState = RunningState.RESETTED;
 		
-		timerStartTime = timerPausedAt = timerStartOffset = timeStateSavaedAt = timeStateRestoredAt = 0;
+		timerStartTime = timerPausedAt = timerStartOffset = timeStateSavedAt = timeStateRestoredAt = 0;
 		wasSaved = wasDelayTimerAlreadyUsed = false;
 		
 		timerHistory.clear();
