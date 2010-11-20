@@ -343,18 +343,34 @@ public class BackgroundSrvc extends Service {
                     // get the time difference since last update
                     long curSystemTime = System.currentTimeMillis();
                     
-                    // Update the total runtime in case we were paused.
+                    // Update the total runtime in based on the time between when
+                    // the timer was started and 
                     if (curState.getTimerStartOffset() != 0) {
-                        Log.i(LOG_TAG, "Timer offset: "+Long.toString(curState.getTimerStartOffset()));
                         // The baseline needs to be offset, to reflect the amount
                     	// of time that passed prior to the timer being restarted.
                     	baselineSystemTime -= curState.getTimerStartOffset();
+                    	
                         runningTotalSystemTime = (curSystemTime - baselineSystemTime);
-                        curState.setTimerStartOffset(0);
+                        curState.setTimerStartOffset(0);   
                     }
                     
                     // Calculate the new run time and current slice
                     long timeSlice = (curSystemTime - baselineSystemTime) - runningTotalSystemTime;
+
+                    // Offset the time slice to factor in the time while the
+                    // timer service was not running.
+                    if (curState.getRuntimeOffset() != 0) {
+                    	// Get the amount of timer that has passed since the timer state was saved, and restored.
+                    	long offset = curState.getTimeStateRestoredAt() - curState.getTimeStateSavedAt();
+                    	
+                    	// Offset the slice, and baseline system time to account for the 
+                    	// the that passed between the state save and restore.
+                    	timeSlice += offset;
+                    	baselineSystemTime -= offset;
+                    	
+                    	curState.setRuntimeOffset(0);
+                    }
+                    
                     runningTotalSystemTime += timeSlice;
                     
                     // Do the time slice
@@ -575,7 +591,7 @@ public class BackgroundSrvc extends Service {
 			TimerState curState = state;
 			curState.setTimeStateRestoredAt(new Date().getTime());
 			if (curState.getRunningState() == RunningState.RUNNING)
-				curState.setTimerStartOffset((curState.getTimeStateRestoredAt() - curState.getTimerStartedAt()));
+				curState.setRuntimeOffset((curState.getTimeStateRestoredAt() - curState.getTimerStartedAt()));
 			
 		} catch (FileNotFoundException e) {
 			Log.i(LOG_TAG, "No saved state found", e);

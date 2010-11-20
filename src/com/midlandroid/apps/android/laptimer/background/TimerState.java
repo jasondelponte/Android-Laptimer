@@ -32,6 +32,7 @@ public final class TimerState implements Serializable {
 	private long timerPausedAt;
 	// System time in milliseconds
 	private long timerStartOffset;
+	private long runtimeOffset;
 	
 	private List<String> timerHistory;
 	
@@ -213,6 +214,18 @@ public final class TimerState implements Serializable {
 
 
 	/**
+	 * Sets the amount of time the timer has been running offset.
+	 * @param runtimeOffset
+	 */
+	public void setRuntimeOffset(long runtimeOffset) { this.runtimeOffset = runtimeOffset; }
+	/**
+	 * Returns the amount of time the timer has been running offset
+	 * @return
+	 */
+	public long getRuntimeOffset() { return runtimeOffset; }
+
+
+	/**
 	 * Sets the real world time the timer state was saved to storage.
 	 * @param timeStateSavaedAt
 	 */
@@ -243,7 +256,7 @@ public final class TimerState implements Serializable {
 		timerCommand = timerCommandToRestore = ServiceCommand.CMD_DONT_PROC_TIMER_UPDATES;
 		runningState = RunningState.RESETTED;
 		
-		timerStartTime = timerPausedAt = timerStartOffset = timeStateSavedAt = timeStateRestoredAt = 0;
+		timerStartTime = timerPausedAt = timerStartOffset = timeStateSavedAt = timeStateRestoredAt = runtimeOffset = 0;
 		wasSaved = wasDelayTimerAlreadyUsed = false;
 		
 		timerHistory.clear();
