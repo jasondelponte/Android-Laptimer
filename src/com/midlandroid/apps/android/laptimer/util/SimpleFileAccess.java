@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.util.Log;
@@ -20,7 +18,16 @@ public class SimpleFileAccess {
 	private String outText;
 	
 	
-	public void showOutFileAlertPromptAndWriteTo(Context context, final String fileName, final String outText) {	
+	/**
+	 * Writes the contents provided to the file path.  The user
+	 * will be given the chance change the file path, and 
+	 * if the file already exists overwrite it.
+	 * @param context
+	 * @param fileName
+	 * @param outText
+	 */
+	public void showOutFileAlertPromptAndWriteTo(Context context,
+			final String fileName, final String outText) {	
 		Log.d(LOG_TAG, "showOutFileAlertPromptAndWriteTo");
     	
     	// Save off the output text
@@ -29,61 +36,61 @@ public class SimpleFileAccess {
 		this.outFilePath = fileName;
     	
     	// Build the full path
-    	final  EditText input = new EditText(context);   
-    	    	
-    	// Create the alert that will prompt the user
-    	final AlertDialog.Builder alert = new AlertDialog.Builder(context);
-    	alert.setTitle("File Selection");
-    	alert.setMessage("Path to write to:");
+    	final  EditText input = new EditText(context);
     	input.setText(outFilePath);
-    	alert.setView(input);
-
-    	// Create the click listeners for user response
-    	alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				_writeTextToFlle(false);
-			}
-		});
-    	alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				// Canceled, do nothing.
-			}
-		});
-
-    	// Display the alert
-    	alert.show();
+    	
+    	// Ask the user to confirm the file name before writings
+    	UIUtil.showAlertPrompt(context,
+				"File Selection",
+				"Path to write to:",input,
+				"OK", "Cancel",
+				new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialogInf, int which) {
+						if (DialogInterface.BUTTON_POSITIVE == which) {
+							_writeTextToFlle(false);
+						} else if (DialogInterface.BUTTON_NEGATIVE == which) {
+							// Cancel, nothing to do.
+						}
+					}
+				});
     }
 	
 
+	/**
+	 * Displays a prompt to the user informing them that the
+	 * file path provided already exists, and questions them
+	 * if they want to overwrite it.
+	 */
     private void _showPromptToOverwriteFile() {
-    	final AlertDialog.Builder alert = new AlertDialog.Builder(context);
-    	
-    	alert.setTitle("File Exists");
-    	alert.setMessage("File exists overwrite it?");
-    	
     	final  TextView input = new TextView(context);    	
     	input.setText(outFilePath);
-    	alert.setView(input);
+    	input.setEnabled(false);
     	
-    	alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				_writeTextToFlle(true);
-			}
-		});
-    	
-    	alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				// Canceled, do nothing.
-			}
-		});
-    	
-    	alert.show();
+    	UIUtil.showAlertPrompt(context,
+				"File Exists",
+				"File exists overwrite it?",input,
+				"OK", "Cancel",
+				new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialogInf, int which) {
+						if (DialogInterface.BUTTON_POSITIVE == which) {
+							_writeTextToFlle(true);
+						} else if (DialogInterface.BUTTON_NEGATIVE == which) {
+							// Cancel, nothing to do.
+						}
+					}
+				});
     }
 
+    
+    /**
+     * Writes the file contents to the path provided.
+     * If the overwrite flag is and a file by that same name
+     * exist it will be overwritten if the user has permissions
+     * to do so.
+     * @param overwrite
+     */
     private void _writeTextToFlle(boolean overwrite) {
 		final File file = new File(outFilePath);
 		if (file.exists()==true && !overwrite) {
@@ -114,18 +121,23 @@ public class SimpleFileAccess {
 		}
 	}
     
+    
+    /**
+     * An error has occurred and the user needs to be informed
+     * @param e
+     */
     private void _showErrorCreatingOutfileAlert(IOException e) {
-    	final AlertDialog.Builder alert = new AlertDialog.Builder(context);
-    	
-    	alert.setTitle("Error!");
-    	alert.setMessage("Failed to save file because "+ e.getMessage());
-    	
-    	alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-			}
-		});
-    	
-    	alert.show();
+    	UIUtil.showAlertPrompt(context,
+				"Error!",
+				"Failed to save file because "+ e.getMessage(),
+				"OK",
+				new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialogInf, int which) {
+						if (DialogInterface.BUTTON_POSITIVE == which) {
+							// Nothing to do but to allow the use to acknowledge the error.
+						}
+					}
+				});
     }
 }

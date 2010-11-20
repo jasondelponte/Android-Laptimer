@@ -7,6 +7,7 @@ import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateUIList
 import com.midlandroid.apps.android.laptimer.background.timers.TimerMode.RunningState;
 import com.midlandroid.apps.android.laptimer.util.ServiceCommand;
 import com.midlandroid.apps.android.laptimer.util.TextUtil;
+import com.midlandroid.apps.android.laptimer.util.UIUtil;
 import com.midlandroid.apps.android.laptimer.R;
 
 import android.app.Activity;
@@ -332,26 +333,20 @@ public class Main extends Activity implements TimerUpdateUIListener {
      * reset the current timer.
      */
     private void _showPromptToResetTimer() {
-    	final AlertDialog.Builder alert = new AlertDialog.Builder(this);
-    	
-    	alert.setTitle("Confirm Timer Reset");
-    	alert.setMessage("Are you sure you want to reset the timer?");
-    	
-    	alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				_doResetTimer();
-			}
-		});
-    	
-    	alert.setNegativeButton("NO", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				// Canceled, do nothing.
-			}
-		});
-    	
-    	alert.show();
+    	UIUtil.showAlertPrompt(this,
+				"Confirm Timer Reset",
+				"Are you sure you want to reset the timer?",
+				"Yes", "No",
+				new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialogInf, int which) {
+						if (DialogInterface.BUTTON_POSITIVE == which) {
+							_doResetTimer();
+						} else if (DialogInterface.BUTTON_NEGATIVE == which) {
+							// Cancel, nothing to do.
+						}
+					}
+				});
     }
     
     /**

@@ -7,11 +7,13 @@ import java.util.List;
 import com.midlandroid.apps.android.laptimer.util.SimpleFileAccess;
 import com.midlandroid.apps.android.laptimer.util.TextUtil;
 import com.midlandroid.apps.android.laptimer.util.TimerHistoryDbRecord;
+import com.midlandroid.apps.android.laptimer.util.UIUtil;
 import com.midlandroid.apps.android.laptimer.util.db.OpenDatabaseHelper;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Environment;
@@ -160,10 +162,23 @@ public class TimerHistory extends Activity {
 	 * Delete all saved histories 
 	 */
 	private void _deleteAllSavedHistory() {
-		for (TimerHistoryDbRecord record : timerHistory) {
-    		dbHelper.deleteTimerHistoryById(record.getId());
-		}
-		_refreshHistoryList();
+		UIUtil.showAlertPrompt(TimerHistory.this,
+				"Delete All Saved History Items",
+				"Are you sure you want to delete all saved history items?",
+				"Yes", "Cancel",
+				new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialogInf, int which) {
+						if (DialogInterface.BUTTON_POSITIVE == which) {
+							for (TimerHistoryDbRecord record : timerHistory) {
+					    		dbHelper.deleteTimerHistoryById(record.getId());
+							}
+							_refreshHistoryList();
+						} else if (DialogInterface.BUTTON_NEGATIVE == which) {
+							// Cancel, nothing to do.
+						}
+					}
+				});
 	}
 	
 
@@ -212,10 +227,23 @@ public class TimerHistory extends Activity {
 		deleteBtn.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-	    		dbHelper.deleteTimerHistoryById(record.getId());
-	    		_refreshHistoryList();
-	    		
-	    		dialog.dismiss();
+				UIUtil.showAlertPrompt(TimerHistory.this,
+						"Delete Saved History Item",
+						"Are you sure you want to delete this saved history item?",
+						"Yes", "Cancel",
+						new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialogInf, int which) {
+								if (DialogInterface.BUTTON_POSITIVE == which) {
+						    		dbHelper.deleteTimerHistoryById(record.getId());
+						    		_refreshHistoryList();
+						    		
+						    		dialog.dismiss();
+								} else if (DialogInterface.BUTTON_NEGATIVE == which) {
+									// Cancel, nothing to do.
+								}
+							}
+						});
 			}
 		});
 		Button exportBtn = (Button) dialog.findViewById(R.id.history_item_export_btn);
