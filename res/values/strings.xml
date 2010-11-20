@@ -27,6 +27,7 @@
     <string name="preferences">Preferences</string>
     
     <string name="write_all_to_sdcard">Write all to SD card.</string>
+    <string name="delete_all_saved_history">Delete All</string>
     
     <string name="write_history_to_sdcard">Export To SD card</string>
     <string name="delete_saved_history">Delete Saved Item</string>

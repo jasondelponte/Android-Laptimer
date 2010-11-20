@@ -98,6 +98,9 @@ public class TimerHistory extends Activity {
     	case R.id.mi_write_all_to_sdcard:
     		_writeAllHistoryToSdCard();
     		return true;
+    	case R.id.mi_delete_all_saved_history:
+    		_deleteAllSavedHistory();
+    		return true;
     	}
     	
     	return false;
@@ -107,12 +110,19 @@ public class TimerHistory extends Activity {
     ////////////////////////////////////
     // Private Methods	
     ////////////////////////////////////
+    /**
+     * Export a select saved timer timer history to the SD card.
+     */
     private void _writeHistoryItemToSdCard(TimerHistoryDbRecord record) {
 		new SimpleFileAccess().showOutFileAlertPromptAndWriteTo(this,
 				"/sdcard/laptimer_"+DateFormat.format("yyyyMMdd-kkmmss",record.getStartedAt()) + ".txt",
 				record.getHistory());
     }
     
+    
+    /**
+     * Export all of the saved timer histories to the SD card
+     */
 	private void _writeAllHistoryToSdCard() {
 		// Create the number formatter that will be used later
 		NumberFormat numFormat = NumberFormat.getInstance();
@@ -146,6 +156,18 @@ public class TimerHistory extends Activity {
         	alert.show();
         }
 	}
+	
+	
+	/**
+	 * Delete all saved histories 
+	 */
+	private void _deleteAllSavedHistory() {
+		for (TimerHistoryDbRecord record : timerHistory) {
+    		dbHelper.deleteTimerHistoryById(record.getId());
+		}
+		_refreshHistoryList();
+	}
+	
 
 	/**
 	 * Using the values returned by querying for

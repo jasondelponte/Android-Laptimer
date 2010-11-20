@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-
 	<item android:title="@string/write_all_to_sdcard"
 		android:icon="@android:drawable/ic_menu_save"
-		android:id="@+id/mi_write_all_to_sdcard"
-	/>
+		android:id="@+id/mi_write_all_to_sdcard" />
+		
+	<item android:title="@string/delete_all_saved_history"
+	    android:icon="@android:drawable/ic_menu_delete"
+	    android:id="@+id/mi_delete_all_saved_history" />
+	    
 </menu>

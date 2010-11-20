@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<menu
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/write_history_to_sdcard"
-          android:title="@string/write_history_to_sdcard" />
-    <item android:id="@+id/delete_saved_history"
-          android:title="@string/delete_saved_history" />
-</menu>
