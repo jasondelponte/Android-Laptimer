@@ -48,7 +48,7 @@ public class SimpleFileAccess {
 					@Override
 					public void onClick(DialogInterface dialogInf, int which) {
 						if (DialogInterface.BUTTON_POSITIVE == which) {
-							_writeTextToFlle(false);
+							_writeTextToFile(false);
 						} else if (DialogInterface.BUTTON_NEGATIVE == which) {
 							// Cancel, nothing to do.
 						}
@@ -75,7 +75,7 @@ public class SimpleFileAccess {
 					@Override
 					public void onClick(DialogInterface dialogInf, int which) {
 						if (DialogInterface.BUTTON_POSITIVE == which) {
-							_writeTextToFlle(true);
+							_writeTextToFile(true);
 						} else if (DialogInterface.BUTTON_NEGATIVE == which) {
 							// Cancel, nothing to do.
 						}
@@ -91,7 +91,7 @@ public class SimpleFileAccess {
      * to do so.
      * @param overwrite
      */
-    private void _writeTextToFlle(boolean overwrite) {
+    private void _writeTextToFile(boolean overwrite) {
 		final File file = new File(outFilePath);
 		if (file.exists()==true && !overwrite) {
 			_showPromptToOverwriteFile();
