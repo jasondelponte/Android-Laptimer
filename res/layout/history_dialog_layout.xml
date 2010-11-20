@@ -3,14 +3,14 @@
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="fill_parent"
   android:layout_height="fill_parent"
-  android:orientation="vertical" >
+  android:orientation="vertical"
+  android:background="@drawable/main_bg" >
   
   <LinearLayout
     android:id="@+id/history_item_btn_grp"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-	android:background="@drawable/main_bg" >
+    android:orientation="horizontal" >
     <Button
       android:id="@+id/history_item_delete_btn"
       android:text="@string/history_item_delete_txt"
@@ -36,19 +36,17 @@
   
   <View
     android:layout_width="fill_parent"
-    android:layout_height="2dip"
-    android:background="@drawable/main_bg"/>
+    android:layout_height="2dip" />
 
   <ScrollView
     android:id="@+id/history_text_scrolltext"
 	android:layout_width="fill_parent"
-	android:layout_height="fill_parent"
-	android:background="@drawable/main_bg" >
+	android:layout_height="fill_parent" >
 	<TextView
 	  android:id="@+id/history_dialog_text"
 	  android:layout_width="fill_parent"
 	  android:layout_height="wrap_content"
-	  android:textColor="@drawable/lap_list_fg" />
+	  android:textColor="@drawable/main_timer_fg" />
   </ScrollView>
   
 </LinearLayout>
