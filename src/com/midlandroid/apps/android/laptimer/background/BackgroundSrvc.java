@@ -184,6 +184,10 @@ public class BackgroundSrvc extends Service {
             	_doRefreshMainUI();
             	break;
             	
+            case ServiceCommand.SAVE_TIMER_HISTORY:
+            	_saveCurrentTimerHistory();
+            	break;
+            	
             case ServiceCommand.CMD_TIMER_FINISHED:
             	_currTimerFinished();
             	break;
@@ -490,7 +494,7 @@ public class BackgroundSrvc extends Service {
 		serviceListener.setTimerHistory(curState.getHistoryAsMultiLineString());
 		
 		// Save the current timer's history to the local storage
-		_autoSaveHistory();
+		_saveCurrentTimerHistory();
 		
 		// Release the power manager wake lock if it was enabled
 		if (appPrefs.getUseWakeLock()) {
@@ -667,7 +671,7 @@ public class BackgroundSrvc extends Service {
 	/**
 	 * Auto saves the current timer history
 	 */
-	private void _autoSaveHistory() {
+	private void _saveCurrentTimerHistory() {
 		TimerState curState = state;
 		
 		// Get the timer history saved item if it already exists,

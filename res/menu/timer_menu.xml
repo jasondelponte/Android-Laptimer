@@ -12,7 +12,6 @@
 	<item android:title="@string/save_timer_history"
 		android:icon="@android:drawable/ic_menu_save"
 		android:id="@+id/mi_save_timer_history"
-		android:visible="false"
 	/>
 	<item android:title="@string/timer_history"
 		android:icon="@android:drawable/ic_input_get"

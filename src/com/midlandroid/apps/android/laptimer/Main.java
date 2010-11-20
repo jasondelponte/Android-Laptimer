@@ -196,6 +196,9 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	case R.id.mi_reset_timer:
     		_resetTimer();
     		return true;
+		case R.id.mi_save_timer_history:
+    		_saveTimerHistory();
+    		return true;
     	case R.id.mi_timer_history:
     		_showTimerHistory();
     		return true;
@@ -345,6 +348,13 @@ public class Main extends Activity implements TimerUpdateUIListener {
 						}
 					}
 				});
+    }
+    
+    /**
+     * Instructs the timer to save the current timer history.
+     */
+    private void _saveTimerHistory() {
+    	_msgTimerService(ServiceCommand.SAVE_TIMER_HISTORY);
     }
     
     /**
