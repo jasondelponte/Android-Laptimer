@@ -144,7 +144,7 @@ public class BackgroundSrvc extends Service {
 			_saveState();
 		
 		// Make sure to clean up and stop the timer on exit
-		_doStopTimer();
+		_doDestroyTimer();
 		
 		// Stop timer and clear it
 		if (timer != null) {
@@ -430,6 +430,25 @@ public class BackgroundSrvc extends Service {
 		// Tell the timer a new lap event was received
 		curState.setTimerCommandToRestore(curState.getTimerCommand());
 		curState.setTimerCommand(ServiceCommand.CMD_LAP_INCREMENT);
+	}
+	
+	
+	/**
+	 * Destroy's the timer, without the need to update the timer
+	 * state or main UI.
+	 */
+	private void _doDestroyTimer() {
+		Log.d(LOG_TAG, "doDestroyTimer");
+		
+		TimerState curState = state;
+		
+		// Tell the timer to stop processing updates.
+		curState.setTimerCommand(ServiceCommand.CMD_STOP_TIMER);
+		
+		// Release the power manager wake lock if it was enabled
+		if (appPrefs.getUseWakeLock()) {
+			_releaseWakeLock();
+		}
 	}
 	
 	
