@@ -22,11 +22,13 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnCreateContextMenuListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -62,13 +64,6 @@ public class TimerHistory extends Activity {
 				_showHistoryDialog(timerHistory.get(pos));
 			}
 		});
-		historyList.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
-			@Override
-			public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
-				MenuInflater inflater = getMenuInflater();
-				inflater.inflate(R.menu.history_item_menu, menu);
-			}
-		});
 	}
 	
 	@Override
@@ -102,25 +97,6 @@ public class TimerHistory extends Activity {
     	switch(item.getItemId()) {
     	case R.id.mi_write_all_to_sdcard:
     		_writeAllHistoryToSdCard();
-    		return true;
-    	}
-    	
-    	return false;
-    }
-    
-    
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
-        int index = info.position;
-
-    	switch(item.getItemId()) {
-    	case R.id.write_history_to_sdcard:
-    		_writeHistoryItemToSdCard(timerHistory.get(index));
-    		return true;
-    	case R.id.delete_saved_history:
-    		dbHelper.deleteTimerHistoryById(timerHistory.get(index).getId());
-    		_refreshHistoryList();
     		return true;
     	}
     	
@@ -204,13 +180,38 @@ public class TimerHistory extends Activity {
 	 * Displays a popup dialog displaying the selected timer history's history
 	 * @param record
 	 */
-	private void _showHistoryDialog(TimerHistoryDbRecord record) {
-		Dialog dialog = new Dialog(this);
+	private void _showHistoryDialog(final TimerHistoryDbRecord record) {
+		final Dialog dialog = new Dialog(this);
 		dialog.setContentView(R.layout.history_dialog_layout);
 		dialog.setTitle("Recorded Event History");
 		
 		TextView text = (TextView) dialog.findViewById(R.id.history_dialog_text);
 		text.setText(record.getHistory());
+
+		Button deleteBtn = (Button) dialog.findViewById(R.id.history_item_delete_btn);
+		deleteBtn.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+	    		dbHelper.deleteTimerHistoryById(record.getId());
+	    		_refreshHistoryList();
+	    		
+	    		dialog.dismiss();
+			}
+		});
+		Button exportBtn = (Button) dialog.findViewById(R.id.history_item_export_btn);
+		exportBtn.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				_writeHistoryItemToSdCard(record);
+			}
+		});
+		Button closeBtn  = (Button) dialog.findViewById(R.id.history_item_close_btn);
+		closeBtn.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+	    		dialog.dismiss();
+			}
+		});
 		
 		dialog.show();
 	}

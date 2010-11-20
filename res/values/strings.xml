@@ -16,6 +16,10 @@
 	<string name="timer_stop_btn_txt">Stop</string>
 	<string name="lap_increment_btn_txt">Lap 1</string>
 	
+	<string name="history_item_delete_txt">Delete</string>
+	<string name="history_item_export_txt">Export</string>
+	<string name="history_item_close_txt">Close</string>
+	
 	<string name="timer_reset">Reset</string>
 	<string name="timer_mode">Timer Mode</string>
 	<string name="save_timer_history">Save</string>

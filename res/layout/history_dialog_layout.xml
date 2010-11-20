@@ -1,23 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<LinearLayout
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="fill_parent"
-  android:layout_height="fill_parent" >
+  android:layout_height="fill_parent"
+  android:orientation="vertical" >
+  
+  <LinearLayout
+    android:id="@+id/history_item_btn_grp"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+	android:background="@drawable/main_bg" >
+    <Button
+      android:id="@+id/history_item_delete_btn"
+      android:text="@string/history_item_delete_txt"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+	  android:textSize="15sp" />
+    <Button
+      android:id="@+id/history_item_export_btn"
+      android:text="@string/history_item_export_txt"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+	  android:textSize="15sp" />
+    <Button
+      android:id="@+id/history_item_close_btn"
+      android:text="@string/history_item_close_txt"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+	  android:textSize="15sp" />
+  </LinearLayout>
   
   <View
-  	android:layout_width="fill_parent"
-  	android:layout_height="2dip"
-  	android:background="#FFFFFFFF" />
-  
+    android:layout_width="fill_parent"
+    android:layout_height="2dip"
+    android:background="@drawable/main_bg"/>
+
   <ScrollView
+    android:id="@+id/history_text_scrolltext"
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
 	android:background="@drawable/main_bg" >
-	  <TextView
-		android:id="@+id/history_dialog_text"
-		android:layout_width="fill_parent"
-		android:layout_height="wrap_content"
-	    android:textColor="@drawable/lap_list_fg" />
+	<TextView
+	  android:id="@+id/history_dialog_text"
+	  android:layout_width="fill_parent"
+	  android:layout_height="wrap_content"
+	  android:textColor="@drawable/lap_list_fg" />
   </ScrollView>
   
-</RelativeLayout>
+</LinearLayout>
