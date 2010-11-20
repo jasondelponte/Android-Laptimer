@@ -1,5 +1,6 @@
 package com.midlandroid.apps.android.laptimer;
 
+import java.io.File;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -112,10 +113,24 @@ public class TimerHistory extends Activity {
     /**
      * Export a select saved timer timer history to the SD card.
      */
-    private void _writeHistoryItemToSdCard(TimerHistoryDbRecord record) {
-		new SimpleFileAccess().showOutFileAlertPromptAndWriteTo(this,
-				"/sdcard/laptimer_"+DateFormat.format("yyyyMMdd-kkmmss",record.getStartedAt()) + ".txt",
-				record.getHistory());
+    private void _writeHistoryItemToSdCard(final TimerHistoryDbRecord record) {
+    	final String ExportDirectoryPath = Environment.getExternalStorageDirectory() + "/MidlandAndroid.LapTimer/";
+    	// Make sure the external storage device is actually mounted before continuing.
+    	String storageState = Environment.getExternalStorageState();
+    	if (Environment.MEDIA_MOUNTED.equals(storageState)) {
+    		// Create the directory the lap timer exports will be written to
+    		// if it does not already exist.
+    		File outDir = new File(ExportDirectoryPath);
+    		if (!outDir.exists()) {
+    			outDir.mkdir();
+    		}
+    		
+	    	// Export the timer history to the SD card
+			new SimpleFileAccess().showOutFileAlertPromptAndWriteTo(this,
+					ExportDirectoryPath + 
+					"laptimer_"+DateFormat.format("yyyyMMdd-kkmmss",record.getStartedAt()) + ".txt",
+					record.getHistory());
+    	}
     }
     
     
