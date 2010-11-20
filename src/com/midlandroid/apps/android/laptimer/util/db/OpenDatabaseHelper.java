@@ -52,10 +52,23 @@ public class OpenDatabaseHelper {
 	    		TIMER_HISTORY_COL_HISTORY     +
 			") values (?,?,?,?)";
     
+    private SQLiteStatement updateStmt;
+    private static final String TIMER_HISTORY_UPDATE = 
+    	"UPDATE " + TIMER_HISTORY_TABLE_NAME +
+    		" SET " +
+	    		TIMER_HISTORY_COL_STARTED_AT  +" = ?, "+
+	    		TIMER_HISTORY_COL_FINISHED_AT +" = ?, "+
+	    		TIMER_HISTORY_COL_DURATION    +" = ?, "+
+	    		TIMER_HISTORY_COL_HISTORY     +" = ?" +
+    		" WHERE "+TIMER_HISTORY_COL_STARTED_AT+" = ?;";
+    
     private SQLiteStatement deleteStmt;
     private static final String TIMER_HISTORY_DELETE = 
-    	"DELETE FROM " +  TIMER_HISTORY_TABLE_NAME +
+    	"DELETE FROM " + TIMER_HISTORY_TABLE_NAME +
     		" WHERE id = ?;";
+    
+    private static final String TIMER_HISTORY_SELECT_BY_START_AT = 
+    	TIMER_HISTORY_COL_STARTED_AT+" = ?";
     
     
     // instance variables
@@ -74,6 +87,7 @@ public class OpenDatabaseHelper {
 		
 		// precompile SQL statements
 		insertStmt = db.compileStatement(TIMER_HISTORY_INSERT);
+		updateStmt = db.compileStatement(TIMER_HISTORY_UPDATE);
 		deleteStmt = db.compileStatement(TIMER_HISTORY_DELETE);
 	}
     
@@ -102,6 +116,12 @@ public class OpenDatabaseHelper {
      * @param record
      */
     public void updateTimerHistory(TimerHistoryDbRecord record) {
+    	updateStmt.bindLong   (1, record.getStartedAt());
+    	updateStmt.bindLong   (2, record.getFinishedAt());
+    	updateStmt.bindLong   (3, record.getDuration());
+    	updateStmt.bindString (4, record.getHistory());
+    	updateStmt.bindLong   (5, record.getStartedAt());
+    	updateStmt.execute();
     }
     
     
@@ -116,11 +136,13 @@ public class OpenDatabaseHelper {
     
     
     /**
-     * Queries and returns from the database for all timer history records
+     * Selects a specific timer history from the the database
+     * @param startAt
      * @return
      */
-    public List<TimerHistoryDbRecord> selectAllTimerHistories() {
-    	List<TimerHistoryDbRecord> results = new ArrayList<TimerHistoryDbRecord>();
+    public TimerHistoryDbRecord selectTimerHistoryByStartAt(final long startAt) {
+    	TimerHistoryDbRecord record = null;
+    	
     	Cursor cursor = db.query(TIMER_HISTORY_TABLE_NAME,
     			new String[] {
     			    TIMER_HISTORY_COL_ID,
@@ -129,20 +151,56 @@ public class OpenDatabaseHelper {
 		            TIMER_HISTORY_COL_DURATION,
 		            TIMER_HISTORY_COL_HISTORY
 	            },
-    			null, null, null, null,
+	            TIMER_HISTORY_SELECT_BY_START_AT, new String[] {Long.toString(startAt)},
+    			null, null,
+    			TIMER_HISTORY_COL_STARTED_AT+" desc");
+    	
+    	if (cursor.moveToFirst()) {
+			// Get the first value from the database and get its values
+			record = new TimerHistoryDbRecord(
+					cursor.getInt(TIMER_HISTORY_COL_ID_IDX),
+					cursor.getLong(TIMER_HISTORY_COL_STARTED_AT_IDX),
+					cursor.getLong(TIMER_HISTORY_COL_FINISHED_AT_IDX),
+					cursor.getLong(TIMER_HISTORY_COL_DURATION_IDX),
+					cursor.getString(TIMER_HISTORY_COL_HISTORY_IDX));
+    	}
+    	
+    	// Release and close the db cursor
+    	if (cursor != null && !cursor.isClosed()) {
+    		cursor.close();
+        }
+    	
+    	return record;
+    }
+    
+    /**
+     * Queries and returns from the database for all timer history records
+     * @return
+     */
+    public List<TimerHistoryDbRecord> selectAllTimerHistories() {
+    	List<TimerHistoryDbRecord> record = new ArrayList<TimerHistoryDbRecord>();
+    	Cursor cursor = db.query(TIMER_HISTORY_TABLE_NAME,
+    			new String[] {
+    			    TIMER_HISTORY_COL_ID,
+		            TIMER_HISTORY_COL_STARTED_AT,
+		            TIMER_HISTORY_COL_FINISHED_AT,
+		            TIMER_HISTORY_COL_DURATION,
+		            TIMER_HISTORY_COL_HISTORY
+	            },
+	            null, null,
+	            null, null,
     			TIMER_HISTORY_COL_STARTED_AT+" desc");
     	
     	if (cursor.moveToFirst()) {
     		do {
     			// Get the value from the database and add it to the
     			// result list.
-    			TimerHistoryDbRecord result = new TimerHistoryDbRecord(
+    			record.add(new TimerHistoryDbRecord(
     					cursor.getInt(TIMER_HISTORY_COL_ID_IDX),
     					cursor.getLong(TIMER_HISTORY_COL_STARTED_AT_IDX),
     					cursor.getLong(TIMER_HISTORY_COL_FINISHED_AT_IDX),
     					cursor.getLong(TIMER_HISTORY_COL_DURATION_IDX),
-    					cursor.getString(TIMER_HISTORY_COL_HISTORY_IDX));
-    			results.add(result);
+    					cursor.getString(TIMER_HISTORY_COL_HISTORY_IDX)));
     			
     		} while (cursor.moveToNext());
     	}
@@ -152,7 +210,7 @@ public class OpenDatabaseHelper {
     		cursor.close();
         }
     	
-    	return results;
+    	return record;
     }
     
     

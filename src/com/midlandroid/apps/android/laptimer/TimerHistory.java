@@ -16,16 +16,11 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.format.DateFormat;
-import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnCreateContextMenuListener;
 import android.widget.AdapterView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -47,9 +42,6 @@ public class TimerHistory extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.timer_history);
 		
-		// get a connection to the database
-		dbHelper = new OpenDatabaseHelper(this);
-		
 		// Create the adapter that will be used to populate the history list
 		listItems = new ArrayList<String>();
 		adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listItems);
@@ -70,15 +62,21 @@ public class TimerHistory extends Activity {
 	public void onResume() {
 		super.onResume();
 		
+		// get a connection to the database
+		dbHelper = new OpenDatabaseHelper(this);
+		
 		_refreshHistoryList();
 	}
-
+	
 	@Override
-	public void onDestroy() {
-		super.onDestroy();
+	public void onPause() {
+		super.onPause();
 		
+    	// Disconnect from the database
     	dbHelper.close();
+    	dbHelper = null;
 	}
+	
 	
     ////////////////////////////////////
     // Options Menu

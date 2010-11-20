@@ -22,6 +22,7 @@ import com.midlandroid.apps.android.laptimer.background.timers.TimerUpdateUIList
 import com.midlandroid.apps.android.laptimer.util.AppPreferences;
 import com.midlandroid.apps.android.laptimer.util.ServiceCommand;
 import com.midlandroid.apps.android.laptimer.util.TextUtil;
+import com.midlandroid.apps.android.laptimer.util.TimerHistoryDbRecord;
 import com.midlandroid.apps.android.laptimer.util.db.OpenDatabaseHelper;
 
 import android.app.Service;
@@ -48,6 +49,8 @@ public class BackgroundSrvc extends Service {
 	private AppPreferences appPrefs;
 	private PowerManager.WakeLock wakeLock;
 	private TimerUpdateUIListener uiListener;
+	
+	private OpenDatabaseHelper dbHelper;
 	
 	// Timer controls	
 	private TimerState state;
@@ -113,7 +116,10 @@ public class BackgroundSrvc extends Service {
         // Create the background timer thread
         timer = new Timer(false);
         timer.schedule(timerTask, 0, TIMER_UPDATE_STEP_MILLS);
-        timerCreatedAt = System.currentTimeMillis();
+        timerCreatedAt = System.currentTimeMillis();  
+
+		// get a connection to the database
+		dbHelper = new OpenDatabaseHelper(this);
 	}
 	
 	
@@ -128,6 +134,10 @@ public class BackgroundSrvc extends Service {
 	public void onDestroy() {
 		super.onDestroy();
 		Log.d(LOG_TAG, "onDestroy");
+		
+    	// Disconnect from the database
+    	dbHelper.close();
+    	dbHelper = null;
 		
 		// Save off the timer state if we are not reseted
 		if (state.getRunningState() != RunningState.RESETTED)
@@ -176,10 +186,6 @@ public class BackgroundSrvc extends Service {
             	
             case ServiceCommand.CMD_TIMER_FINISHED:
             	_currTimerFinished();
-            	break;
-            	
-            case ServiceCommand.SAVE_TIMER_HISTORY:
-            	_saveTimerHistory();
             	break;
             	
 	        default:
@@ -447,6 +453,9 @@ public class BackgroundSrvc extends Service {
 		curState.addItemToTopOfHistory("Stopped at: " + TextUtil.formatDateToString(curTime,numFormat));
 		serviceListener.setTimerHistory(curState.getHistoryAsMultiLineString());
 		
+		// Save the current timer's history to the local storage
+		_autoSaveHistory();
+		
 		// Release the power manager wake lock if it was enabled
 		if (appPrefs.getUseWakeLock()) {
 			_releaseWakeLock();
@@ -592,24 +601,6 @@ public class BackgroundSrvc extends Service {
     private void _soundAudioAlert() {
     	// TODO create audio alert
     }
-    
-    
-    /**
-     * 
-     */
-    private void _saveTimerHistory() {
-    	TimerState curState = state;
-    	OpenDatabaseHelper dbHelper = new OpenDatabaseHelper(this);
-    	
-    	// Insert the value into the database
-    	dbHelper.insertTimerHistory(curState.getTimerStartedAt(), curState.getTimerPausedAt(),
-    			curState.peekAtTimerModeStack().getCurTime(),
-    			curState.getHistoryAsMultiLineStringReversed());
-    	dbHelper.close();
-    	
-
-    	Toast.makeText(this, R.string.timer_history_saved_toast, Toast.LENGTH_SHORT).show();
-    }
 	
 	
 	/**
@@ -634,6 +625,32 @@ public class BackgroundSrvc extends Service {
 		if (wakeLock != null && wakeLock.isHeld()) {
 			wakeLock.release();
 		}
+	}
+	
+	
+	/**
+	 * Auto saves the current timer history
+	 */
+	private void _autoSaveHistory() {
+		TimerState curState = state;
+		
+		dbHelper = new OpenDatabaseHelper(this);
+		// Get the timer history saved item if it already exists,
+		TimerHistoryDbRecord record = dbHelper.selectTimerHistoryByStartAt(curState.getTimerStartedAt());
+		if (record != null) { // Update
+			record.setStartedAt(curState.getTimerStartedAt());
+			record.setFinishedAt(curState.getTimerPausedAt());
+			record.setDuration(curState.peekAtTimerModeStack().getCurTime());
+			record.setHistory(curState.getHistoryAsMultiLineStringReversed());
+			dbHelper.updateTimerHistory(record);
+		} else { // Insert
+			dbHelper.insertTimerHistory(curState.getTimerStartedAt(), curState.getTimerPausedAt(),
+					curState.peekAtTimerModeStack().getCurTime(),
+					curState.getHistoryAsMultiLineStringReversed());
+		}
+	
+		Toast.makeText(this, R.string.timer_history_saved_toast, Toast.LENGTH_SHORT).show();
+		
 	}
 	
 	private

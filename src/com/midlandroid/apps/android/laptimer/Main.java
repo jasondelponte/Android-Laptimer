@@ -197,9 +197,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	case R.id.mi_reset_timer:
     		_resetTimer();
     		return true;
-    	case R.id.mi_save_timer_history:
-    		_saveTimerHistory();
-    		return true;
     	case R.id.mi_timer_history:
     		_showTimerHistory();
     		return true;
@@ -208,26 +205,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
     		return true;
     	}
     	return false;
-    }
-    
-    /**
-     * Save of the current activities state, so when it is 
-     * restored this data will be returned.
-     * 
-     * @param state  The package container holder the activities state.
-     */
-    @Override
-    public void onSaveInstanceState(Bundle state) {
-    }
-    
-    
-    /**
-     * Restores a previously saved activity state.
-     * 
-     * @param state The package containing a previously saved activity state.
-     */
-    @Override
-    public void onRestoreInstanceState(Bundle state) {
     }
     
     
@@ -376,11 +353,6 @@ public class Main extends Activity implements TimerUpdateUIListener {
     	
     	alert.show();
     }
-    
-    private void _saveTimerHistory() {
-    	_msgTimerService(ServiceCommand.SAVE_TIMER_HISTORY);
-    }
-    
     
     /**
      * Displays the timer history UI to the user.
