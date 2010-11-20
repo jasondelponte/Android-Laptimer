@@ -4,11 +4,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import com.midlandroid.apps.android.laptimer.R;
+
 import android.content.Context;
 import android.content.DialogInterface;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class SimpleFileAccess {
 	private static final String LOG_TAG = SimpleFileAccess.class.getSimpleName();
@@ -102,6 +105,8 @@ public class SimpleFileAccess {
 			} catch (IOException e) {
 				_showErrorCreatingOutfileAlert(e);
 			}
+
+			Toast.makeText(context, R.string.exporting_history_to_sd_toast, Toast.LENGTH_SHORT).show();
 			
 			// create a background thread to write the file to
 	    	final Thread thread = new Thread(new Runnable() {
@@ -110,7 +115,7 @@ public class SimpleFileAccess {
 					try {
 						FileOutputStream os = new FileOutputStream(file);
 						os.write(SimpleFileAccess.this.outText.getBytes());
-						
+
 						os.close();
 					} catch (IOException e) {
 						e.printStackTrace();

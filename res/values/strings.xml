@@ -35,6 +35,7 @@
     <string name="timer_mode_default_desc">No description provided</string>
     <string name="timer_history_saved_toast">Timer History Saved</string>
     <string name="text_copied_to_clipboard_toast">Text copied to the clipboard.</string>
+    <string name="exporting_history_to_sd_toast">Exporting saved history event to the SD card.</string>
     
     <string name="pref_timer_start_delay">Timer Start Delay</string>
     <string name="pref_timer_start_delay_key">timerStartDelayPref</string>
