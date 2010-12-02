@@ -11,10 +11,12 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal" >
-    <TextView
+    <EditText
       android:id="@+id/history_item_desc_txt"
       android:layout_width="fill_parent"
       android:layout_height="wrap_content"
+      android:maxLines = "4"
+      android:scrollbars="vertical"
 	  android:textSize="15sp" />
   </LinearLayout>
   

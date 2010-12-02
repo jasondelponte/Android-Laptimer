@@ -192,6 +192,7 @@ public class OpenDatabaseHelper {
     			new String[] {
     			    TIMER_HISTORY_COL_ID,
 		            TIMER_HISTORY_COL_STARTED_AT,
+		            TIMER_HISTORY_COL_DESC,
 		            TIMER_HISTORY_COL_FINISHED_AT,
 		            TIMER_HISTORY_COL_DURATION,
 		            TIMER_HISTORY_COL_HISTORY

@@ -18,6 +18,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,16 +27,20 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
 
 public class TimerHistory extends Activity {
+	private static final String LOG_TAG = TimerHistory.class.getSimpleName();
 	
 	private ListView historyList;
 	private List<TimerHistoryDbRecord> timerHistory;
 	private ArrayAdapter<String> adapter;
 	private ArrayList<String> listItems;
+	
+	private NumberFormat numFormat;
 	
 	private OpenDatabaseHelper dbHelper;
 	
@@ -43,6 +48,12 @@ public class TimerHistory extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.timer_history);
+
+		// Create the number formatter that will be used later
+		numFormat = NumberFormat.getInstance();
+        numFormat.setMinimumIntegerDigits(2);
+        numFormat.setMaximumIntegerDigits(2);
+        numFormat.setParseIntegerOnly(true);
 		
 		// Create the adapter that will be used to populate the history list
 		listItems = new ArrayList<String>();
@@ -138,12 +149,6 @@ public class TimerHistory extends Activity {
      * Export all of the saved timer histories to the SD card
      */
 	private void _writeAllHistoryToSdCard() {
-		// Create the number formatter that will be used later
-		NumberFormat numFormat = NumberFormat.getInstance();
-        numFormat.setMinimumIntegerDigits(2);
-        numFormat.setMaximumIntegerDigits(2);
-        numFormat.setParseIntegerOnly(true);
-        
         // Local reference to the timer history list
         List<TimerHistoryDbRecord> tmpHistory = timerHistory;
         
@@ -200,14 +205,7 @@ public class TimerHistory extends Activity {
 	 * Using the values returned by querying for
 	 * saved timer histories, build the history list.
 	 */
-	private void _populateListWithTimerHistory() {
-
-		// Create the number formatter that will be used later
-		NumberFormat numFormat = NumberFormat.getInstance();
-        numFormat.setMinimumIntegerDigits(2);
-        numFormat.setMaximumIntegerDigits(2);
-        numFormat.setParseIntegerOnly(true);
-        
+	private void _populateListWithTimerHistory() {      
         // Local reference to the timer history list
         List<TimerHistoryDbRecord> tmpHistory = timerHistory;
         
@@ -218,7 +216,7 @@ public class TimerHistory extends Activity {
 		for (TimerHistoryDbRecord result : tmpHistory) {
 			String str = new String(
 					TextUtil.formatDateToString(result.getStartedAt()) + "\n" +
-					"Duration: " + TextUtil.formatDateToString(result.getDuration(), numFormat));
+					result.getDesc());
 			listItems.add(str);
 		}
 		adapter.notifyDataSetChanged();
@@ -232,9 +230,10 @@ public class TimerHistory extends Activity {
 	private void _showHistoryDialog(final TimerHistoryDbRecord record) {
 		final Dialog dialog = new Dialog(this);
 		dialog.setContentView(R.layout.history_dialog_layout);
-		dialog.setTitle("Recorded Event History");
+		dialog.setTitle(new String(
+				"Duration: " + TextUtil.formatDateToString(record.getDuration(), numFormat)));
 		
-		TextView desc = (TextView) dialog.findViewById(R.id.history_item_desc_txt);
+		final EditText desc = (EditText) dialog.findViewById(R.id.history_item_desc_txt);
 		desc.setText(record.getDesc());
 		
 		TextView text = (TextView) dialog.findViewById(R.id.history_dialog_text);
@@ -274,6 +273,10 @@ public class TimerHistory extends Activity {
 		closeBtn.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
+				record.setDesc(desc.getText().toString());
+				dbHelper.updateTimerHistory(record);
+				
+	    		_refreshHistoryList();
 	    		dialog.dismiss();
 			}
 		});

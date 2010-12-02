@@ -72,8 +72,6 @@ public class MigrateVer2ToVer3 extends Migration {
     public MigrateVer2ToVer3(SQLiteDatabase db)  {
     	super(db);
 
-    	// precompile SQL statements
-    	insertStmt = db.compileStatement(TIMER_HISTORY_INSERT);
     }
 	
 	
@@ -85,6 +83,9 @@ public class MigrateVer2ToVer3 extends Migration {
 		// Drop and recreate the timer history table
 		db.execSQL(TIMER_HISTORY_TABLE_DROP);
 		db.execSQL(TIMER_HISTORY_TABLE_CREATE);
+		
+    	// compile SQL insert statement
+    	insertStmt = db.compileStatement(TIMER_HISTORY_INSERT);
 		
 		// Re-populate the table with our saved results
 		for (TimerHistoryDbRecord result : results) {
@@ -150,9 +151,9 @@ public class MigrateVer2ToVer3 extends Migration {
 		 // the bind uses a 1 based index not 0
 		insertStmt.bindLong   (1, startedAt);
 		insertStmt.bindString (2, desc);
-		insertStmt.bindLong   (2, finishedAt);
-		insertStmt.bindLong   (3, duration);
-		insertStmt.bindString (4, history);
+		insertStmt.bindLong   (3, finishedAt);
+		insertStmt.bindLong   (4, duration);
+		insertStmt.bindString (5, history);
 		// perform the insert
 		insertStmt.executeInsert();
 	}
