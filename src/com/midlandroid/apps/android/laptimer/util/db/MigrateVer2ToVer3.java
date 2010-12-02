@@ -122,7 +122,7 @@ public class MigrateVer2ToVer3 extends Migration {
 			TimerHistoryDbRecord result = new TimerHistoryDbRecord(
 					cursor.getInt(OLD_TIMER_HISTORY_COL_ID_IDX),
 					cursor.getLong(OLD_TIMER_HISTORY_COL_STARTED_AT_IDX),
-					"",
+					"New Saved Timer History",
 					cursor.getLong(OLD_TIMER_HISTORY_COL_FINISHED_AT_IDX),
 					cursor.getLong(OLD_TIMER_HISTORY_COL_DURATION_IDX),
 					cursor.getString(OLD_TIMER_HISTORY_COL_HISTORY_IDX));

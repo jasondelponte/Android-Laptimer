@@ -7,6 +7,18 @@
   android:background="@drawable/main_bg" >
   
   <LinearLayout
+    android:id="@+id/history_item_desc_txt_grp"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal" >
+    <TextView
+      android:id="@+id/history_item_desc_txt"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+	  android:textSize="15sp" />
+  </LinearLayout>
+  
+  <LinearLayout
     android:id="@+id/history_item_btn_grp"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"

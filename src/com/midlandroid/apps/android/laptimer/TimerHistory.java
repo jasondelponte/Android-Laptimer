@@ -234,6 +234,9 @@ public class TimerHistory extends Activity {
 		dialog.setContentView(R.layout.history_dialog_layout);
 		dialog.setTitle("Recorded Event History");
 		
+		TextView desc = (TextView) dialog.findViewById(R.id.history_item_desc_txt);
+		desc.setText(record.getDesc());
+		
 		TextView text = (TextView) dialog.findViewById(R.id.history_dialog_text);
 		text.setText(record.getHistory());
 
