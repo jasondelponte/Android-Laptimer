@@ -13,6 +13,7 @@ import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
 public class OpenDatabaseHelper {
+	@SuppressWarnings("unused")
 	private static final String LOG_TAG = OpenDatabaseHelper.class.getSimpleName();
 	
     private static final int DATABASE_VERSION = 3;

@@ -18,7 +18,6 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.format.DateFormat;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,6 +32,7 @@ import android.widget.TextView;
 
 
 public class TimerHistory extends Activity {
+	@SuppressWarnings("unused")
 	private static final String LOG_TAG = TimerHistory.class.getSimpleName();
 	
 	private ListView historyList;
