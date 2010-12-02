@@ -18,7 +18,7 @@
 	
 	<string name="history_item_delete_txt">Delete</string>
 	<string name="history_item_export_txt">Export</string>
-	<string name="history_item_close_txt">Close</string>
+	<string name="history_item_close_txt">Save/Close</string>
 	
 	<string name="timer_reset">Reset</string>
 	<string name="timer_mode">Timer Mode</string>

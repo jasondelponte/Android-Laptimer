@@ -15,7 +15,7 @@
       android:id="@+id/history_item_desc_txt"
       android:layout_width="fill_parent"
       android:layout_height="wrap_content"
-      android:maxLines = "4"
+      android:maxLines = "3"
       android:scrollbars="vertical"
 	  android:textSize="15sp" />
   </LinearLayout>
