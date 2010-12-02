@@ -15,18 +15,20 @@ import android.util.Log;
 public class OpenDatabaseHelper {
 	private static final String LOG_TAG = OpenDatabaseHelper.class.getSimpleName();
 	
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
     private static final String DATABASE_NAME = "laptimer.db";
     
     // Timer History Table
     private static final int   TIMER_HISTORY_COL_ID_IDX          = 0;
     private static final int   TIMER_HISTORY_COL_STARTED_AT_IDX  = 1;
-    private static final int   TIMER_HISTORY_COL_FINISHED_AT_IDX = 2;
-    private static final int   TIMER_HISTORY_COL_DURATION_IDX    = 3;
-    private static final int   TIMER_HISTORY_COL_HISTORY_IDX     = 4;
+    private static final int   TIMER_HISTORY_COL_DESC_IDX        = 2;
+    private static final int   TIMER_HISTORY_COL_FINISHED_AT_IDX = 3;
+    private static final int   TIMER_HISTORY_COL_DURATION_IDX    = 4;
+    private static final int   TIMER_HISTORY_COL_HISTORY_IDX     = 5;
 
     private static final String TIMER_HISTORY_COL_ID           = "id";
     private static final String TIMER_HISTORY_COL_STARTED_AT   = "started_at";
+    private static final String TIMER_HISTORY_COL_DESC         = "desc";
     private static final String TIMER_HISTORY_COL_FINISHED_AT  = "finished_at";
     private static final String TIMER_HISTORY_COL_DURATION     = "duration";
     private static final String TIMER_HISTORY_COL_HISTORY      = "history";
@@ -36,7 +38,8 @@ public class OpenDatabaseHelper {
             "CREATE TABLE " + TIMER_HISTORY_TABLE_NAME + 
 	            " (" +
 	                TIMER_HISTORY_COL_ID          + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-		            TIMER_HISTORY_COL_STARTED_AT  + " INTEGER, " + 
+		            TIMER_HISTORY_COL_STARTED_AT  + " INTEGER, " +
+		            TIMER_HISTORY_COL_DESC        + " STRING, "  +
 		            TIMER_HISTORY_COL_FINISHED_AT + " INTEGER, " +
 		            TIMER_HISTORY_COL_DURATION    + " INTEGER, " +
 		            TIMER_HISTORY_COL_HISTORY     + " TEXT"      +
@@ -47,16 +50,18 @@ public class OpenDatabaseHelper {
     	"INSERT INTO " + TIMER_HISTORY_TABLE_NAME +
 	    	"(" +
 	    		TIMER_HISTORY_COL_STARTED_AT  +"," +
+	    		TIMER_HISTORY_COL_DESC        +"," +
 	    		TIMER_HISTORY_COL_FINISHED_AT +"," +
 	    		TIMER_HISTORY_COL_DURATION    +"," +
 	    		TIMER_HISTORY_COL_HISTORY     +
-			") values (?,?,?,?)";
+			") values (?,?,?,?,?)";
     
     private SQLiteStatement updateStmt;
     private static final String TIMER_HISTORY_UPDATE = 
     	"UPDATE " + TIMER_HISTORY_TABLE_NAME +
     		" SET " +
 	    		TIMER_HISTORY_COL_STARTED_AT  +" = ?, "+
+	    		TIMER_HISTORY_COL_DESC        +" = ?, "+
 	    		TIMER_HISTORY_COL_FINISHED_AT +" = ?, "+
 	    		TIMER_HISTORY_COL_DURATION    +" = ?, "+
 	    		TIMER_HISTORY_COL_HISTORY     +" = ?" +
@@ -100,12 +105,13 @@ public class OpenDatabaseHelper {
      * @param history
      * @return
      */
-    public long insertTimerHistory(final long startedAt, final long finishedAt,
-    		final long duration, final String history) {
+    public long insertTimerHistory(final long startedAt, final String desc,
+    		final long finishedAt, final long duration, final String history) {
     	insertStmt.bindLong   (1, startedAt);
-    	insertStmt.bindLong   (2, finishedAt);
-    	insertStmt.bindLong   (3, duration);
-    	insertStmt.bindString (4, history);
+    	insertStmt.bindString (2, desc);
+    	insertStmt.bindLong   (3, finishedAt);
+    	insertStmt.bindLong   (4, duration);
+    	insertStmt.bindString (5, history);
     	
         return insertStmt.executeInsert();
     }
@@ -117,10 +123,11 @@ public class OpenDatabaseHelper {
      */
     public void updateTimerHistory(TimerHistoryDbRecord record) {
     	updateStmt.bindLong   (1, record.getStartedAt());
-    	updateStmt.bindLong   (2, record.getFinishedAt());
-    	updateStmt.bindLong   (3, record.getDuration());
-    	updateStmt.bindString (4, record.getHistory());
-    	updateStmt.bindLong   (5, record.getStartedAt());
+    	updateStmt.bindString (2, record.getDesc());
+    	updateStmt.bindLong   (3, record.getFinishedAt());
+    	updateStmt.bindLong   (4, record.getDuration());
+    	updateStmt.bindString (5, record.getHistory());
+    	updateStmt.bindLong   (6, record.getStartedAt());
     	updateStmt.execute();
     }
     
@@ -147,6 +154,7 @@ public class OpenDatabaseHelper {
     			new String[] {
     			    TIMER_HISTORY_COL_ID,
 		            TIMER_HISTORY_COL_STARTED_AT,
+		            TIMER_HISTORY_COL_DESC,
 		            TIMER_HISTORY_COL_FINISHED_AT,
 		            TIMER_HISTORY_COL_DURATION,
 		            TIMER_HISTORY_COL_HISTORY
@@ -158,10 +166,11 @@ public class OpenDatabaseHelper {
     	if (cursor.moveToFirst()) {
 			// Get the first value from the database and get its values
 			record = new TimerHistoryDbRecord(
-					cursor.getInt(TIMER_HISTORY_COL_ID_IDX),
-					cursor.getLong(TIMER_HISTORY_COL_STARTED_AT_IDX),
-					cursor.getLong(TIMER_HISTORY_COL_FINISHED_AT_IDX),
-					cursor.getLong(TIMER_HISTORY_COL_DURATION_IDX),
+					cursor.getInt   (TIMER_HISTORY_COL_ID_IDX),
+					cursor.getLong  (TIMER_HISTORY_COL_STARTED_AT_IDX),
+					cursor.getString(TIMER_HISTORY_COL_DESC_IDX),
+					cursor.getLong  (TIMER_HISTORY_COL_FINISHED_AT_IDX),
+					cursor.getLong  (TIMER_HISTORY_COL_DURATION_IDX),
 					cursor.getString(TIMER_HISTORY_COL_HISTORY_IDX));
     	}
     	
@@ -196,10 +205,11 @@ public class OpenDatabaseHelper {
     			// Get the value from the database and add it to the
     			// result list.
     			record.add(new TimerHistoryDbRecord(
-    					cursor.getInt(TIMER_HISTORY_COL_ID_IDX),
-    					cursor.getLong(TIMER_HISTORY_COL_STARTED_AT_IDX),
-    					cursor.getLong(TIMER_HISTORY_COL_FINISHED_AT_IDX),
-    					cursor.getLong(TIMER_HISTORY_COL_DURATION_IDX),
+    					cursor.getInt   (TIMER_HISTORY_COL_ID_IDX),
+    					cursor.getLong  (TIMER_HISTORY_COL_STARTED_AT_IDX),
+    					cursor.getString(TIMER_HISTORY_COL_DESC_IDX),
+    					cursor.getLong  (TIMER_HISTORY_COL_FINISHED_AT_IDX),
+    					cursor.getLong  (TIMER_HISTORY_COL_DURATION_IDX),
     					cursor.getString(TIMER_HISTORY_COL_HISTORY_IDX)));
     			
     		} while (cursor.moveToNext());
@@ -263,7 +273,10 @@ public class OpenDatabaseHelper {
 			switch (oldVer) {
 			case 1:
 				migrations.add(new MigrateVer1ToVer2(db));
-				break;
+				if (newVer == 2) break;
+			case 2:
+				migrations.add(new MigrateVer2ToVer3(db));
+				if (newVer == 3) break;
 			}
 			
 			return migrations;

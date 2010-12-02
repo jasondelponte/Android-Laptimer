@@ -683,7 +683,9 @@ public class BackgroundSrvc extends Service {
 			record.setHistory(curState.getHistoryAsMultiLineStringReversed());
 			dbHelper.updateTimerHistory(record);
 		} else { // Insert
-			dbHelper.insertTimerHistory(curState.getTimerStartedAt(), curState.getTimerPausedAt(),
+			dbHelper.insertTimerHistory(curState.getTimerStartedAt(),
+					"New Saved Timer History",
+					curState.getTimerPausedAt(),
 					curState.peekAtTimerModeStack().getCurTime(),
 					curState.getHistoryAsMultiLineStringReversed());
 		}
